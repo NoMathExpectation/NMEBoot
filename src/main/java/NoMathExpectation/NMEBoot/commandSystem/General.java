@@ -170,6 +170,7 @@ public final class General implements Executable {
                     case "protect":
                         if (!isAdminOrBot(e)) {
                             from.sendMessage("你没有权限执行此指令");
+                            break;
                         }
                         try {
                             if (Alias.INSTANCE.protect(from.getId(), Integer.decode(cmd[2]))) {
