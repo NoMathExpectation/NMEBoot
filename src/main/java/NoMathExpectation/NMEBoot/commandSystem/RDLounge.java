@@ -3,8 +3,12 @@ package NoMathExpectation.NMEBoot.commandSystem;
 import NoMathExpectation.NMEBoot.Mahjong;
 import NoMathExpectation.NMEBoot.Main;
 import NoMathExpectation.NMEBoot.RDLounge.cardSystem.*;
+import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.Contact;
+import net.mamoe.mirai.contact.Group;
+import net.mamoe.mirai.event.GlobalEventChannel;
 import net.mamoe.mirai.event.ListeningStatus;
+import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.event.events.MessageEvent;
 import net.mamoe.mirai.message.MessageReceipt;
 import net.mamoe.mirai.message.code.MiraiCode;
@@ -15,16 +19,14 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
-import java.util.List;
-import java.util.Locale;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 import static NoMathExpectation.NMEBoot.commandSystem.ExecuteCenter.atParse;
 import static NoMathExpectation.NMEBoot.commandSystem.ExecuteCenter.isAdminOrBot;
 
 public final class RDLounge implements Executable {
     public static final long GROUP_ID = 951070053L;
+    static final long NYAN_MILK_SUPPLIER = 916813153L;
     static final long UD2 = 2546915249L;
     static final long OFFSET_NYAN = 1909482450L;
 
@@ -194,6 +196,39 @@ public final class RDLounge implements Executable {
         return ListeningStatus.LISTENING;
     }
 
+    private MessageReceipt<Group> ud2Request;
+
+    @NotNull
+    private ListeningStatus ud2Listener(@NotNull GroupMessageEvent e) {
+        if (e.getSubject().getId() == NYAN_MILK_SUPPLIER && e.getSender().getId() == UD2) {
+            Contact group = e.getBot().getGroup(GROUP_ID);
+            if (group == null) {
+                Main.INSTANCE.getLogger().warning("传达ud2消息时未找到饭制部");
+            } else {
+                group.sendMessage(e.getMessage());
+            }
+            try {
+                ud2Request.recall();
+            } catch (Exception ignored) {}
+            Main.INSTANCE.getLogger().info("ud2监听结束");
+            return ListeningStatus.STOPPED;
+        }
+        return ListeningStatus.LISTENING;
+    }
+
+    private void newUd2Request(@NotNull String message) throws NoSuchElementException {
+        Group group = Bot.getInstances().get(0).getGroup(NYAN_MILK_SUPPLIER);
+        if (group == null) {
+            throw new NoSuchElementException("找不到指定群");
+        }
+        if (!group.contains(UD2)) {
+            throw new NoSuchElementException("ud2已退群");
+        }
+        ud2Request = group.sendMessage(message);
+        GlobalEventChannel.INSTANCE.subscribe(GroupMessageEvent.class, this::ud2Listener);
+        Main.INSTANCE.getLogger().info("ud2监听开始");
+    }
+
     @Override
     public boolean onMessage(@NotNull MessageEvent e, @NotNull NormalUser user, @NotNull String command, @NotNull String miraiCommand) throws Exception {
         if (e.getSubject().getId() != GROUP_ID) {
@@ -219,6 +254,23 @@ public final class RDLounge implements Executable {
             miraiMsg = miraiCommand;
         }
 
+        Contact from0 = e.getSubject();
+        LocalDate date = LocalDate.now();
+        if(date.getMonth() == Month.APRIL && date.getDayOfMonth() == 1) {
+            from0 = AprilFool.INSTANCE.getModifiedContact(from0);
+        }
+        Contact from = Alias.INSTANCE.alias(from0);
+
+        if (msg.startsWith("!~")) {
+            try {
+                newUd2Request(msg);
+            } catch (NoSuchElementException ex) {
+                Main.INSTANCE.getLogger().warning(ex);
+                from.sendMessage(ex.getMessage());
+            }
+            return true;
+        }
+
         if (!msg.startsWith("//")) {
             return false;
         }
@@ -226,13 +278,6 @@ public final class RDLounge implements Executable {
         if (!(msg.equals("//samurai") || msg.startsWith("//samurai ")) && ExecuteCenter.INSTANCE.saySamurai(false)) {
             return true;
         }
-
-        Contact from0 = e.getSubject();
-        LocalDate date = LocalDate.now();
-        if(date.getMonth() == Month.APRIL && date.getDayOfMonth() == 1) {
-            from0 = AprilFool.INSTANCE.getModifiedContact(from0);
-        }
-        Contact from = Alias.INSTANCE.alias(from0);
 
         if(atOffsetNyan(e, msg, from)) {
             return true;
