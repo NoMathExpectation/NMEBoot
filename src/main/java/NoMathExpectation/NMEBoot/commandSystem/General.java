@@ -5,7 +5,7 @@ import NoMathExpectation.NMEBoot.Main;
 import NoMathExpectation.NMEBoot.RDLounge.cardSystem.CardUser;
 import NoMathExpectation.NMEBoot.RDLounge.cardSystem.Item;
 import NoMathExpectation.NMEBoot.RDLounge.cardSystem.ItemLibrary;
-import kotlin.Pair;
+import kotlin.Triple;
 import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
@@ -139,15 +139,15 @@ public final class General implements Executable {
 
                         Matcher posMatcher = (Pattern.compile("\\d+").matcher(msg));
                         if (posMatcher.find(pos.get(3))) {
-                            Alias.INSTANCE.add(from.getId(), new Pair<>(patternFrom, patternTo), Integer.parseInt(msg.substring(posMatcher.start(), posMatcher.end())));
+                            Alias.INSTANCE.add(from.getId(), new Triple<>(patternFrom, patternTo, false), Integer.parseInt(msg.substring(posMatcher.start(), posMatcher.end())));
                         } else {
-                        Alias.INSTANCE.add(from.getId(), new Pair<>(patternFrom, patternTo));
+                        Alias.INSTANCE.add(from.getId(), new Triple<>(patternFrom, patternTo, false));
                         }
                         e.getSubject().sendMessage("已保存: " + patternFrom + " -> " + patternTo);
                         break;
                     case "remove":
                         try {
-                            Pair<String, String> pair = Alias.INSTANCE.remove(from.getId(), Integer.decode(cmd[2]), isAdminOrBot(e));
+                            Triple<String, String, Boolean> pair = Alias.INSTANCE.remove(from.getId(), Integer.decode(cmd[2]), isAdminOrBot(e));
                             e.getSubject().sendMessage("已移除: " + pair.getFirst() + " -> " + pair.getSecond());
                         } catch (NumberFormatException ex) {
                             from.sendMessage("请输入一个非负整数!");
@@ -183,6 +183,14 @@ public final class General implements Executable {
                         } catch (IndexOutOfBoundsException ex) {
                             from.sendMessage("未找到别称");
                         }
+                        break;
+                    case "clear":
+                        if (!isAdminOrBot(e)) {
+                            from.sendMessage("你没有权限执行此指令");
+                            break;
+                        }
+                        Alias.INSTANCE.clear(from.getId());
+                        from.sendMessage("已清除所有炒饭");
                         break;
                     default:
                         from.sendMessage("未知的参数，输入//alias help以查看帮助");

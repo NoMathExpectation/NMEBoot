@@ -9,8 +9,7 @@ import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.message.data.*
 
 object Alias: AutoSavePluginConfig("alias") {
-    private val replaces: MutableMap<Long, MutableList<Pair<String, String>>> by value()
-    private val protected: MutableMap<Long, MutableSet<Int>> by value()
+    private val replaces: MutableMap<Long, MutableList<Triple<String, String, Boolean>>> by value()
     private val logger = Main.INSTANCE.logger
 
     init {
@@ -83,24 +82,23 @@ object Alias: AutoSavePluginConfig("alias") {
             this@alias.sendMessage(message.alias(id))
     }
 
-    fun add(group: Long, p: Pair<String, String>) {
+    fun add(group: Long, p: Triple<String, String, Boolean>) {
         val replaces = replaces.computeIfAbsent(group) { ArrayList() }
         replaces.add(p)
         logger.info("Alias: Added '${p.first}' -> '${p.second}' at position ${replaces.size - 1}")
     }
 
-    fun add(group: Long, p: Pair<String, String>, pos: Int) {
+    fun add(group: Long, p: Triple<String, String, Boolean>, pos: Int) {
         val replaces = replaces.computeIfAbsent(group) { ArrayList() }
         replaces.add(pos, p)
         logger.info("Alias: Added '${p.first}' -> '${p.second}' at position $pos")
     }
 
-    fun remove(group: Long, pos: Int, forced: Boolean): Pair<String, String> {
-        val protected = protected.computeIfAbsent(group) {HashSet()}
-        if (!forced && protected.contains(pos)) {
+    fun remove(group: Long, pos: Int, forced: Boolean): Triple<String, String, Boolean> {
+        val replaces = replaces.computeIfAbsent(group) { ArrayList() }
+        if (!forced && replaces[pos].third) {
             throw IllegalStateException("被保护的别称")
         }
-        val replaces = replaces.computeIfAbsent(group) { ArrayList() }
         val p = replaces.removeAt(pos)
         logger.info("Alias: Removed '${p.first}' -> '${p.second}' at position $pos")
         return p
@@ -108,16 +106,15 @@ object Alias: AutoSavePluginConfig("alias") {
 
     fun protect(group: Long, pos: Int): Boolean {
         val replaces = replaces[group]?: throw IndexOutOfBoundsException()
-        val protected = protected.computeIfAbsent(group) {HashSet()}
-        val p = replaces[pos]
-        if (protected.contains(pos)) {
-            protected.remove(pos)
+        val p = replaces.removeAt(pos)
+        val pNew = Triple(p.first, p.second, !p.third)
+        replaces.add(pos, pNew)
+        if (pNew.third) {
             logger.info("Alias: Removed protection of '${p.first}' -> '${p.second}' at position $pos")
         } else {
-            protected.add(pos)
             logger.info("Alias: Protected '${p.first}' -> '${p.second}' at position $pos")
         }
-        return protected.contains(pos)
+        return pNew.third
     }
 
     fun clear(group: Long) {
@@ -139,7 +136,8 @@ object Alias: AutoSavePluginConfig("alias") {
         + "add '<regex>' '<regex>' [pos] :添加新别称，使用\\'来逃避\n"
         + "remove <pos> :移除一条别称\n"
         + "move <from> <to> :将一条别称移动到新的位置\n"
-        + "protect <pos> :保护/取消保护别称"
+        + "protect <pos> :保护/取消保护别称\n"
+        + "clear :清除所有别称"
     }
 
     fun toString(group: Long) = buildString {

@@ -1,11 +1,13 @@
 package NoMathExpectation.NMEBoot.commandSystem;
 
+import NoMathExpectation.NMEBoot.FileDownloader;
 import NoMathExpectation.NMEBoot.Mahjong;
 import NoMathExpectation.NMEBoot.Main;
 import NoMathExpectation.NMEBoot.RDLounge.cardSystem.*;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.contact.Group;
+import net.mamoe.mirai.contact.file.AbsoluteFile;
 import net.mamoe.mirai.event.GlobalEventChannel;
 import net.mamoe.mirai.event.ListeningStatus;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
@@ -196,35 +198,80 @@ public final class RDLounge implements Executable {
         return ListeningStatus.LISTENING;
     }
 
-    private MessageReceipt<Group> ud2Request;
+    private AbsoluteFile fileToUd2;
+    private MessageReceipt<Group> requestToUd2;
 
     @NotNull
     private ListeningStatus ud2Listener(@NotNull GroupMessageEvent e) {
         if (e.getSubject().getId() == NYAN_MILK_SUPPLIER && e.getSender().getId() == UD2) {
-            Contact group = e.getBot().getGroup(GROUP_ID);
+            Group group = e.getBot().getGroup(GROUP_ID);
             if (group == null) {
                 Main.INSTANCE.getLogger().warning("传达ud2消息时未找到饭制部");
             } else {
-                group.sendMessage(e.getMessage());
+                MessageChain msg = e.getMessage();
+                if (!msg.contains(FileMessage.Key)) {
+                    group.sendMessage(Alias.INSTANCE.alias(msg, GROUP_ID));
+                } else {
+                    AbsoluteFile file = msg.get(FileMessage.Key).toAbsoluteFile(e.getSubject());
+                    try {
+                        FileDownloader.shareFileToAnotherGroup(file, group, false);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        group.sendMessage(ex.getMessage());
+                    }
+                }
             }
+
             try {
-                ud2Request.recall();
+                requestToUd2.recall();
             } catch (Exception ignored) {}
+            requestToUd2 = null;
+
+            if (fileToUd2 != null && fileToUd2.exists()) {
+                fileToUd2.delete();
+            }
+            fileToUd2 = null;
+
             Main.INSTANCE.getLogger().info("ud2监听结束");
             return ListeningStatus.STOPPED;
         }
         return ListeningStatus.LISTENING;
     }
 
-    private void newUd2Request(@NotNull String message) throws NoSuchElementException {
-        Group group = Bot.getInstances().get(0).getGroup(NYAN_MILK_SUPPLIER);
-        if (group == null) {
+    private void newUd2Request(@NotNull Message message, @NotNull Group from) throws Exception {
+        Group targetGroup = Bot.getInstances().get(0).getGroup(NYAN_MILK_SUPPLIER);
+        if (targetGroup == null) {
             throw new NoSuchElementException("找不到指定群");
         }
-        if (!group.contains(UD2)) {
+        if (!targetGroup.contains(UD2)) {
             throw new NoSuchElementException("ud2已退群");
         }
-        ud2Request = group.sendMessage(message);
+        if (message instanceof MessageChain && ((MessageChain) message).contains(QuoteReply.Key)) {
+            String replyString = ((MessageChain) message).get(QuoteReply.Key).getSource().getOriginalMessage().contentToString();
+            if (!replyString.startsWith("[文件]")) {
+                return;
+            }
+            from.sendMessage("警告：目前不支持文件转发引用");
+            /*Thread fileUploadThread = new Thread(() -> {
+                fileToUd2 = from.getFiles().getRoot().filesStream().filter(f -> f.getName().equals(replyString.substring(4))).findFirst().get();
+                try {
+                    MessageReceipt<Group> fileUploadResult = FileDownloader.shareFileToAnotherGroup(fileToUd2, targetGroup, true);
+                    QuoteReply ud2FileQuote = fileUploadResult.quote();
+                    fileToUd2 = ud2FileQuote.getSource().getOriginalMessage().get(FileMessage.Key).toAbsoluteFile(targetGroup);
+                    GlobalEventChannel.INSTANCE.subscribe(GroupMessageEvent.class, this::ud2Listener);
+                    requestToUd2 = fileUploadResult.quoteReply(message);
+                    Main.INSTANCE.getLogger().info("ud2监听开始");
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    from.sendMessage(ex.getMessage());
+                }
+            });
+            fileUploadThread.setDaemon(true);
+            fileUploadThread.start();
+            return;*/
+        }
+
+        requestToUd2 = targetGroup.sendMessage(message);
         GlobalEventChannel.INSTANCE.subscribe(GroupMessageEvent.class, this::ud2Listener);
         Main.INSTANCE.getLogger().info("ud2监听开始");
     }
@@ -261,14 +308,12 @@ public final class RDLounge implements Executable {
         }
         Contact from = Alias.INSTANCE.alias(from0);
 
-        if (msg.startsWith("!~")) {
-            try {
-                newUd2Request(msg);
-            } catch (NoSuchElementException ex) {
-                Main.INSTANCE.getLogger().warning(ex);
-                from.sendMessage(ex.getMessage());
+        if (msg.startsWith("!~") || msg.equals("c!p")) {
+            if (((Group) e.getSubject()).contains(UD2)) {
+                return false;
             }
-            return true;
+            newUd2Request(Alias.INSTANCE.alias(e.getMessage(), GROUP_ID), (Group) e.getSubject());
+            return false;
         }
 
         if (!msg.startsWith("//")) {
