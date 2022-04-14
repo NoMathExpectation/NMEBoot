@@ -1,8 +1,9 @@
 package NoMathExpectation.NMEBoot.commandSystem;
 
-import NoMathExpectation.NMEBoot.FileDownloader;
-import NoMathExpectation.NMEBoot.Mahjong;
+import NoMathExpectation.NMEBoot.FileUtils;
 import NoMathExpectation.NMEBoot.Main;
+import NoMathExpectation.NMEBoot.RDLounge.Mahjong;
+import NoMathExpectation.NMEBoot.RDLounge.Utils;
 import NoMathExpectation.NMEBoot.RDLounge.cardSystem.*;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.Contact;
@@ -17,6 +18,7 @@ import net.mamoe.mirai.message.code.MiraiCode;
 import net.mamoe.mirai.message.data.*;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -43,6 +45,7 @@ public final class RDLounge implements Executable {
                     .append("RDL特供:\n")
                     .append("//rdhelp :编辑器帮助\n")
                     .append("//chart <n> <song> :快速下载匹配歌名的第n个谱子，如未找到则下载第一个谱子\n")
+                    .append("//convert <type> :将音视频文件转换成指定类型\n")
                     .append("//c 或 //card ://card help\n")
                     .append("//samurai :Samurai.\n")
                     .append("//majsoul :向听数计算，例子：//majsoul m123 p456 s789\n")
@@ -214,7 +217,7 @@ public final class RDLounge implements Executable {
                 } else {
                     AbsoluteFile file = msg.get(FileMessage.Key).toAbsoluteFile(e.getSubject());
                     try {
-                        FileDownloader.shareFileToAnotherGroup(file, group, false);
+                        FileUtils.shareFileToAnotherGroup(file, group, false);
                     } catch (Exception ex) {
                         ex.printStackTrace();
                         group.sendMessage(ex.getMessage());
@@ -385,6 +388,44 @@ public final class RDLounge implements Executable {
                 e.getBot().getEventChannel().subscribe(MessageEvent.class, this::levelSearchHandler);
                 levelSearchMessage = sendLevelSearchQuery(e.getSubject());
                 Main.INSTANCE.getLogger().info("回复监听开始");
+                break;
+            case "convert":
+                if (!hasQuote) {
+                    from.sendMessage("未找到引用消息");
+                    break;
+                }
+
+                Thread t = new Thread(() -> {
+                    try {
+                        Main.INSTANCE.getLogger().info("文件转换开始");
+                        from.sendMessage("开始转换");
+                        String type;
+                        try {
+                            type = cmd[1];
+                        } catch (IndexOutOfBoundsException ex) {
+                            type = "ogg";
+                        }
+                        Group group = (Group) e.getSubject();
+
+                        File before = FileUtils.download(FileUtils.getQuotedAbsoluteFile(group, e.getMessage()));
+
+                        if (before == null) {
+                            throw new NoSuchElementException("未找到引用文件");
+                        }
+
+                        Main.INSTANCE.getLogger().info("文件名：" + before.getName() + "，转换类型：" + type);
+
+                        File after = Utils.audioAndVideoConvert(before, type);
+                        FileUtils.uploadFile(group, after);
+
+                        Main.INSTANCE.getLogger().info("文件转换结束");
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        from.sendMessage(ex.getMessage());
+                    }
+                });
+                t.setDaemon(true);
+                t.start();
                 break;
             case "c":
             case "card":

@@ -6,8 +6,12 @@ import net.mamoe.mirai.event.GlobalEventChannel;
 import net.mamoe.mirai.event.ListeningStatus;
 import net.mamoe.mirai.event.events.GroupMessagePostSendEvent;
 import net.mamoe.mirai.message.MessageReceipt;
+import net.mamoe.mirai.message.data.MessageChain;
+import net.mamoe.mirai.message.data.QuoteReply;
 import net.mamoe.mirai.utils.ExternalResource;
+import net.mamoe.mirai.utils.MiraiLogger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.net.URI;
@@ -20,9 +24,10 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class FileDownloader {
+public class FileUtils {
     private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
     public static final Set<String> BLACK_LIST = Set.of("server-sent-events.deno.dev");
+    public static final MiraiLogger LOGGER = Main.INSTANCE.getLogger();
 
     @NotNull
     public static File download(@NotNull String url) throws URISyntaxException, IOException, InterruptedException {
@@ -32,7 +37,7 @@ public class FileDownloader {
 
     @NotNull
     public static File download(@NotNull String url, @NotNull String saveFile) throws URISyntaxException, IOException, InterruptedException {
-        Main.INSTANCE.getLogger().info("开始下载：" + url);
+        LOGGER.info("开始下载：" + url);
         for (String s : BLACK_LIST) {
             if (url.contains(s)) {
                 throw new IllegalArgumentException("418 I'm a teapot");
@@ -83,12 +88,27 @@ public class FileDownloader {
         return file;
     }
 
-    public static MessageReceipt<Group> shareFileToAnotherGroup(AbsoluteFile file, Group to, boolean receiptRequired) throws IOException, URISyntaxException, InterruptedException {
+    @Nullable
+    public static File download(AbsoluteFile file) throws IOException, InterruptedException {
         if (file == null || !file.exists()) {
+            return null;
+        }
+
+        try {
+            return download(file.getUrl(), "data/NoMathExpectation.NMEBoot/downloads/" + file.getName());
+        } catch (URISyntaxException ignored) {
+        }
+
+        return null;
+    }
+
+    @Nullable
+    public static MessageReceipt<Group> shareFileToAnotherGroup(@NotNull AbsoluteFile file, @NotNull Group to, boolean receiptRequired) throws IOException, URISyntaxException, InterruptedException {
+        if (!file.exists()) {
             throw new NoSuchElementException("找不到引用文件");
         }
 
-        File f = FileDownloader.download(file.getUrl(), "data/NoMathExpectation.NMEBoot/groupshare/" + file.getName());
+        File f = FileUtils.download(file.getUrl(), "data/NoMathExpectation.NMEBoot/groupshare/" + file.getName());
         f.deleteOnExit();
 
         AtomicReference<MessageReceipt<Group>> result = new AtomicReference<>();
@@ -104,9 +124,7 @@ public class FileDownloader {
             });
             Main.INSTANCE.getLogger().info("上传文件引用监听开始");
         }
-        try (ExternalResource er = ExternalResource.create(f)) {
-            to.getFiles().uploadNewFile("/" + f.getName(), er);
-        }
+        uploadFile(to, f);
         if (!receiptRequired) {
             return null;
         }
@@ -115,5 +133,30 @@ public class FileDownloader {
         }
 
         return result.get();
+    }
+
+    @NotNull
+    public static AbsoluteFile uploadFile(@NotNull Group group, @NotNull File file, @NotNull String path) throws IOException {
+        LOGGER.info("正在上传文件 " + file.getName() + " 至 " + group.getName() + " (id: " + group.getId() + ")");
+        try (ExternalResource er = ExternalResource.create(file)) {
+            return group.getFiles().uploadNewFile(path, er);
+        }
+    }
+
+    @NotNull
+    public static AbsoluteFile uploadFile(@NotNull Group group, @NotNull File file) throws IOException {
+        return uploadFile(group, file, "/" + file.getName());
+    }
+
+    @Nullable
+    public static AbsoluteFile getQuotedAbsoluteFile(@NotNull Group group, @NotNull MessageChain message) {
+        if (!message.contains(QuoteReply.Key)) {
+            return null;
+        }
+        String replyString = message.get(QuoteReply.Key).getSource().getOriginalMessage().contentToString();
+        if (!replyString.startsWith("[文件]")) {
+            return null;
+        }
+        return group.getFiles().getRoot().filesStream().filter(f -> f.getName().equals(replyString.substring(4))).findFirst().orElse(null);
     }
 }

@@ -1,6 +1,6 @@
 package NoMathExpectation.NMEBoot.commandSystem;
 
-import NoMathExpectation.NMEBoot.FileDownloader;
+import NoMathExpectation.NMEBoot.FileUtils;
 import NoMathExpectation.NMEBoot.Main;
 import NoMathExpectation.NMEBoot.RDLounge.cardSystem.CardUser;
 import NoMathExpectation.NMEBoot.RDLounge.cardSystem.Item;
@@ -16,7 +16,6 @@ import net.mamoe.mirai.message.data.At;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
 import net.mamoe.mirai.message.data.PlainText;
 import net.mamoe.mirai.message.data.QuoteReply;
-import net.mamoe.mirai.utils.ExternalResource;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -490,14 +489,12 @@ public final class General implements Executable {
                 new Thread(() ->
                 {
                     try {
-                        File download = FileDownloader.download(msg.replaceFirst("//download\\s+", ""));
-                        try(ExternalResource er = ExternalResource.create(download)) {
-                            if (e.getSubject() instanceof Group) {
-                                ((Group) e.getSubject()).getFiles().uploadNewFile("/" + download.getName(), er);
-                                return;
-                            }
+                        File download = FileUtils.download(msg.replaceFirst("//download\\s+", ""));
+                        if (!(e.getSubject() instanceof Group)) {
                             from.sendMessage("不支持私聊文件下载");
+                            return;
                         }
+                        FileUtils.uploadFile((Group) e.getSubject(), download);
                     } catch (Exception ex) {
                         ex.printStackTrace();
                         from.sendMessage(ex.getMessage());
@@ -517,7 +514,7 @@ public final class General implements Executable {
                         .append(")\n反馈内容：\n")
                         .append(MiraiCode.deserializeMiraiCode(miraiMsg.replaceFirst("//feedback(\\s+|(\\\\n)+)", "")))
                         .build());
-                e.getSubject().sendMessage("反馈已发送。");
+                from.sendMessage("反馈已发送。");
                 break;
             case "114514":
             case "1919810":
