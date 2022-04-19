@@ -10,6 +10,8 @@ plugins {
 group = "NoMathExpectation.NMEBoot"
 version = "1.1"
 
+val ktor_version: String by project
+
 repositories {
     maven("https://maven.aliyun.com/repository/public")
     mavenCentral()
@@ -17,6 +19,12 @@ repositories {
 }
 dependencies {
     implementation("org.junit.jupiter:junit-jupiter:5.8.2")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
+
+    implementation("io.ktor:ktor-client-core:$ktor_version")
+    implementation("io.ktor:ktor-client-java:$ktor_version")
+    implementation("io.ktor:ktor-client-resources:$ktor_version")
 }
 
 tasks.compileJava {

@@ -65,7 +65,7 @@ public class Utils {
             p.waitFor();
         } catch (InterruptedException ignored) {
         }
-
+        
         String[] message = writeStreamToString(p.getErrorStream()).split("\n");
         String errorMessage = message[message.length - 1];
         if (!after.isFile()) {

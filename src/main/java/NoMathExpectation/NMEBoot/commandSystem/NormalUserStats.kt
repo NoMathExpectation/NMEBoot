@@ -16,6 +16,7 @@ object NormalUserStats : AutoSavePluginData("normalUser") {
 
     fun getStatList() = buildMessageChain {
         + ".//stat|stats ...\n"
+        + "general : 通用"
         + "checkin : 签到时间排行榜\n"
         + "streak : 连续签到排行榜\n"
         + "chat|message : 聊天排行榜\n"
@@ -34,6 +35,8 @@ object NormalUserStats : AutoSavePluginData("normalUser") {
     fun getGeneral(group: Long) = buildMessageChain {
         + "总签到数："
         + checkInCountTotal.toString()
+        //+ "\n提问数："
+        //+ Conversation.queryTimes.toString()
         + "\n今日消息数："
         + NormalUser.getUsers().values.sumOf { it.totalMessageCountDaily }.toString()
         + "\n群今日消息数："

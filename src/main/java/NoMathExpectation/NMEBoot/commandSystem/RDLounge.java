@@ -44,7 +44,7 @@ public final class RDLounge implements Executable {
             mcb = mcb
                     .append("RDL特供:\n")
                     .append("//rdhelp :编辑器帮助\n")
-                    .append("//chart <n> <song> :快速下载匹配歌名的第n个谱子，如未找到则下载第一个谱子\n")
+                    .append("//chart <n> <song> :快速下载匹配歌名的第n个谱子，如未找到则下载第一个谱子（暂时停用）\n")
                     .append("//convert <type> :将音视频文件转换成指定类型\n")
                     .append("//c 或 //card ://card help\n")
                     .append("//samurai :Samurai.\n")
@@ -311,13 +311,13 @@ public final class RDLounge implements Executable {
         }
         Contact from = Alias.INSTANCE.alias(from0);
 
-        if (msg.startsWith("!~") || msg.equals("c!p")) {
+        /*if (msg.startsWith("!~") || msg.equals("c!p")) {
             if (((Group) e.getSubject()).contains(UD2)) {
                 return false;
             }
             newUd2Request(Alias.INSTANCE.alias(e.getMessage(), GROUP_ID), (Group) e.getSubject());
             return false;
-        }
+        }*/
 
         if (!msg.startsWith("//")) {
             return false;
@@ -369,7 +369,9 @@ public final class RDLounge implements Executable {
                 }
                 break;
             case "chart":
-                if (cmd.length < 3) {
+                from.sendMessage("此指令已暂停使用");
+                break;
+                /*if (cmd.length < 3) {
                     from.sendMessage("参数过少。");
                     break;
                 }
@@ -388,7 +390,7 @@ public final class RDLounge implements Executable {
                 e.getBot().getEventChannel().subscribe(MessageEvent.class, this::levelSearchHandler);
                 levelSearchMessage = sendLevelSearchQuery(e.getSubject());
                 Main.INSTANCE.getLogger().info("回复监听开始");
-                break;
+                break;*/
             case "convert":
                 if (!hasQuote) {
                     from.sendMessage("未找到引用消息");

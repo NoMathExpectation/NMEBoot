@@ -5,6 +5,7 @@ import NoMathExpectation.NMEBoot.Main;
 import NoMathExpectation.NMEBoot.RDLounge.cardSystem.CardUser;
 import NoMathExpectation.NMEBoot.RDLounge.cardSystem.Item;
 import NoMathExpectation.NMEBoot.RDLounge.cardSystem.ItemLibrary;
+import NoMathExpectation.NMEBoot.wolframAlpha.Conversation;
 import kotlin.Triple;
 import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.contact.Group;
@@ -49,6 +50,7 @@ public final class General implements Executable {
                 .append("//download <url> :下载文件\n")
                 .append("//wordle|w :wordle\n")
                 //.append("//moral <text>:AI预测是否道德（仅供参考，不作为任何依据）\n")
+                //.append("//ask :有什么问题可以问问这个指令\n")
                 .append("//feedback <text> :给作者反馈\n")
                 .append("//114514 [count]\n")
                 .append("//1919810 [count]\n\n");
@@ -189,7 +191,7 @@ public final class General implements Executable {
                             break;
                         }
                         Alias.INSTANCE.clear(from.getId());
-                        from.sendMessage("已清除所有炒饭");
+                        from.sendMessage("已清除所有别称");
                         break;
                     default:
                         from.sendMessage("未知的参数，输入//alias help以查看帮助");
@@ -398,6 +400,22 @@ public final class General implements Executable {
                         from.sendMessage("网络错误");
                     }
                 }).start();
+                break;
+            case "ask":
+                if (cmd.length < 2) {
+                    from.sendMessage("用法：\n" +
+                            "//ask <question>\n" +
+                            "（请使用英语）\n" +
+                            "\n" +
+                            "（本指令采用外部api，任何回复仅供参考，不代表开发者的任何言论与思想，任何试图输入或诱导输出不适宜信息的使用者将会被封禁或屏蔽！）\n");
+                    break;
+                }
+                try {
+                    from.sendMessage(Objects.requireNonNull(Conversation.Companion.get(from.getId()).query(msg.replaceFirst("//ask(\\s+|\n)", ""))));
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    from.sendMessage(ex.getMessage());
+                }
                 break;
             case "warn":
                 if (!isAdminOrBot(e)) {
