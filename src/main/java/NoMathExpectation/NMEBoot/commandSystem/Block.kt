@@ -57,7 +57,7 @@ object Block: AutoSavePluginConfig("block") {
     }
 
     fun checkBlocked(id: Long, target: Long, message: String): Boolean {
-        val memberBlocked = blocks.computeIfAbsent(id) { HashMap() }.computeIfAbsent(target) { ArrayList() }
+        val memberBlocked = blocks[id]?.get(target) ?: return false
 
         var blocked = false
         for (p in memberBlocked) {

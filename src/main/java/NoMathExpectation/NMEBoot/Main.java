@@ -20,7 +20,7 @@ public final class Main extends JavaPlugin {
     public static WordleMirai wordle = new WordleMirai(new File("config/NoMathExpectation.NMEBoot/wordle.txt"), 6, 25);
 
     private Main() {
-        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.1.31-2022042209")
+        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.1.31-20220422010")
                 .name("NMEBoot")
                 .author("NoMathExpectation")
                 .build());
