@@ -38,8 +38,11 @@ public final class General implements Executable {
     @Override
     @NotNull
     public MessageChainBuilder appendHelp(@NotNull MessageChainBuilder mcb, @NotNull MessageEvent e) {
+        mcb.append("通用:\n");
+        if (isAdminOrBot(e)) {
+            mcb.append("//admin :管理员指令\n");
+        }
         return mcb
-                .append("通用:\n")
                 .append("//hello :发送 \"Hello, world!\"\n")
                 .append("//help :显示所有指令\n")
                 .append("//repeat <text> :复读机\n")
@@ -87,6 +90,126 @@ public final class General implements Executable {
             return false;
         }
         switch (cmd[0]) {
+            case "admin":
+                if (!isGroup(e)) {
+                    from.sendMessage("此指令不支持私聊使用");
+                    break;
+                }
+
+                if (!isAdminOrBot(e)) {
+                    from.sendMessage("你没有权限使用此指令");
+                    break;
+                }
+
+                from.sendMessage("管理员指令：\n" +
+                        "//block :限制某个成员使用指令\n" +
+                        "//ban <@成员|@qq号> <P<天>DT<时>H<分>M<秒>S> [原因] :禁止某成员使用指令\n" +
+                        "//warn <@成员|@qq号> [原因] :警告某成员，达到3次则会封禁1天");
+                break;
+            case "block":
+                if (!isGroup(e)) {
+                    from.sendMessage("此指令不支持私聊使用");
+                    break;
+                }
+
+                if (!isAdminOrBot(e)) {
+                    from.sendMessage("你没有权限使用此指令");
+                    break;
+                }
+
+                if (cmd.length < 2) {
+                    from.sendMessage(Block.INSTANCE.sendHelp()).recallIn(30000);
+                    break;
+                }
+
+                switch (cmd[1]) {
+                    case "add":
+                        if (cmd.length < 4) {
+                            from.sendMessage("缺少参数");
+                            break;
+                        }
+
+                        Set<Long> ids = atParse(miraiCmd[2]);
+
+                        if(ids.isEmpty()) {
+                            from.sendMessage("未找到成员");
+                            break;
+                        }
+
+                        Pattern p = Pattern.compile("(?<!(?<!\\\\)\\\\)'");
+                        Matcher m = p.matcher(msg);
+                        List<Integer> pos = new ArrayList<>();
+                        while(m.find()) {
+                            pos.add(m.start());
+                        }
+                        if (pos.size() != 2) {
+                            from.sendMessage("错误的输入格式");
+                            break;
+                        }
+
+                        String regex = msg.substring(pos.get(0) + 1, pos.get(1)).replace("\\\\", "\\").replace("\\'", "'");
+                        try {
+                            Pattern.compile(regex);
+                        } catch (PatternSyntaxException ex) {
+                            from.sendMessage("错误的regex格式");
+                            break;
+                        }
+
+                        for(long id: ids) {
+                            Block.INSTANCE.add(from.getId(), id, regex);
+                        }
+                        from.sendMessage("已添加：" + regex);
+
+                        break;
+
+                    case "remove":
+                        if (cmd.length < 4) {
+                            from.sendMessage("缺少参数");
+                            break;
+                        }
+
+                        ids = atParse(miraiCmd[2]);
+
+                        if (ids.isEmpty()) {
+                            from.sendMessage("未找到成员");
+                            break;
+                        }
+
+                        try {
+                            int index = Integer.parseInt(cmd[3]);
+                            long id = ids.iterator().next();
+                            regex = Block.INSTANCE.remove(from.getId(), id, index);
+                            from.sendMessage("已移除：" + regex);
+                        } catch (NumberFormatException ex) {
+                            from.sendMessage("请输入一个非负整数!");
+                        } catch (IndexOutOfBoundsException ex) {
+                            from.sendMessage("未找到对应下标");
+                        }
+                        break;
+
+                    case "show":
+                        if (cmd.length < 3) {
+                            from.sendMessage(Block.INSTANCE.toString(from.getId())).recallIn(60000);
+                            break;
+                        }
+
+                        ids = atParse(cmd[2]);
+
+                        if (ids.isEmpty()) {
+                            from.sendMessage("未找到成员");
+                            break;
+                        }
+
+                        for (long id: ids) {
+                            from.sendMessage(Block.INSTANCE.toString(from.getId(), id)).recallIn(60000);
+                        }
+                        break;
+
+                    default:
+                        from.sendMessage("未知的参数，输入//block以获得帮助");
+                }
+
+                break;
             case "hello":
                 from.sendMessage("Hello, world!");
                 break;
@@ -97,7 +220,7 @@ public final class General implements Executable {
                 AprilFool.INSTANCE.getModifiedContact(from).sendMessage(new PlainText(".").plus(MiraiCode.deserializeMiraiCode(miraiMsg)));
                 break;
             case "alias":
-                if (!(e instanceof GroupMessageEvent || e instanceof GroupMessageSyncEvent)) {
+                if (!isGroup(e)) {
                     from.sendMessage("此指令不支持私聊使用");
                     break;
                 }

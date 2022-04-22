@@ -6,10 +6,7 @@ import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.contact.MemberPermission;
 import net.mamoe.mirai.event.EventHandler;
 import net.mamoe.mirai.event.SimpleListenerHost;
-import net.mamoe.mirai.event.events.GroupMessageEvent;
-import net.mamoe.mirai.event.events.MessageEvent;
-import net.mamoe.mirai.event.events.MessageRecallEvent;
-import net.mamoe.mirai.event.events.NudgeEvent;
+import net.mamoe.mirai.event.events.*;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
 import org.jetbrains.annotations.NotNull;
 
@@ -90,6 +87,10 @@ public final class ExecuteCenter extends SimpleListenerHost {
             ats.add(Long.decode(at.substring(digitMatcher.start(), digitMatcher.end())));
         }
         return ats;
+    }
+
+    public static boolean isGroup(@NotNull MessageEvent e) {
+        return e instanceof GroupMessageEvent || e instanceof GroupMessageSyncEvent;
     }
 
     public static boolean isAdminOrBot(@NotNull MessageEvent e) {
@@ -173,6 +174,11 @@ public final class ExecuteCenter extends SimpleListenerHost {
 
         if (!(msg.startsWith("//alias") || (e.getSubject().getId() == RDLounge.GROUP_ID && getSamurai() && msg.startsWith("//samurai")))) {
             miraiMsg = Alias.INSTANCE.alias(miraiMsg, lastContact.getId());
+        }
+
+        if (!isAdminOrBot(e) && msg.startsWith("//") && (Block.INSTANCE.checkBlocked(e.getSubject().getId(), e.getSender().getId(), msg) || Block.INSTANCE.checkBlocked(e.getSubject().getId(), e.getSender().getId(), miraiMsg))) {
+            lastContact.sendMessage("你没有权限使用此指令");
+            return;
         }
 
         try {
