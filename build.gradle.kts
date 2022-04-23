@@ -18,7 +18,7 @@ repositories {
     gradlePluginPortal()
 }
 dependencies {
-    implementation("org.junit.jupiter:junit-jupiter:5.8.2")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
 
