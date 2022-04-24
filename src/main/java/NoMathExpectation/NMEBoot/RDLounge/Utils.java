@@ -90,7 +90,12 @@ public class Utils {
                 writeStreamToStream(zip.getInputStream(level), new FileOutputStream("data/NoMathExpectation.NMEBoot/rdlevel/" + level.getName()));
                 sb.append(level.getName());
                 sb.append(" :\n");
-                sb.append(rdNurse(new File("data/NoMathExpectation.NMEBoot/rdlevel/" + level.getName()), args));
+                try {
+                    sb.append(rdNurse(new File("data/NoMathExpectation.NMEBoot/rdlevel/" + level.getName()), args));
+                } catch (RuntimeException e) {
+                    e.printStackTrace();
+                    sb.append(e.getMessage());
+                }
                 sb.append("\n");
             }
 
@@ -98,6 +103,10 @@ public class Utils {
         } catch (ZipException ignored) {}
 
         Process p = newRdNurseProcess(args, file);
+
+        try {
+            p.waitFor();
+        } catch (InterruptedException ignored) {}
 
         String error = writeStreamToString(p.getErrorStream());
         if (!error.isBlank()) {
