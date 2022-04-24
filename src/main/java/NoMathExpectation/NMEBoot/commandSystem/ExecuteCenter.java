@@ -8,6 +8,7 @@ import net.mamoe.mirai.event.EventHandler;
 import net.mamoe.mirai.event.SimpleListenerHost;
 import net.mamoe.mirai.event.events.*;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.http.HttpClient;
@@ -160,7 +161,7 @@ public final class ExecuteCenter extends SimpleListenerHost {
             user.name = e.getSenderName();
         }
 
-        if (msg.startsWith("//") && user.isBanned()) {
+        if (containsCommand(msg) && user.isBanned()) {
             Duration d = user.getBannedRemain();
             if (lastContact.getId() == RDLounge.GROUP_ID) {
                 lastContact.sendMessage(user.name + " was samuraied in " + d.toDays() + "d " + d.toHoursPart() + "h " + d.toMinutesPart() + "m " + d.toSecondsPart() + "s for " + user.getBannedReason() + ". " + getSamuraiWord());
@@ -176,7 +177,7 @@ public final class ExecuteCenter extends SimpleListenerHost {
             miraiMsg = Alias.INSTANCE.alias(miraiMsg, lastContact.getId());
         }
 
-        if (!isAdminOrBot(e) && msg.startsWith("//") && (Block.INSTANCE.checkBlocked(e.getSubject().getId(), e.getSender().getId(), msg) || Block.INSTANCE.checkBlocked(e.getSubject().getId(), e.getSender().getId(), miraiMsg))) {
+        if (!isAdminOrBot(e) && containsCommand(msg) && (Block.INSTANCE.checkBlocked(e.getSubject().getId(), e.getSender().getId(), msg) || Block.INSTANCE.checkBlocked(e.getSubject().getId(), e.getSender().getId(), miraiMsg))) {
             lastContact.sendMessage("你没有权限使用此指令");
             return;
         }
@@ -203,6 +204,11 @@ public final class ExecuteCenter extends SimpleListenerHost {
 
         LocalDateTime end = LocalDateTime.now();
         Main.INSTANCE.getLogger().info("执行时间：" + Duration.between(start, end).toMillis() + "ms");
+    }
+
+    @Contract(pure = true)
+    private boolean containsCommand(@NotNull String msg) {
+        return Pattern.compile(";?(\\s|\n)*//").matcher(msg).find();
     }
 
     public boolean execute(@NotNull MessageEvent e, @NotNull NormalUser user, @NotNull String cmd, @NotNull String miraiCmd) throws Exception {
