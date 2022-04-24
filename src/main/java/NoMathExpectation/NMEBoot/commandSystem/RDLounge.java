@@ -46,6 +46,7 @@ public final class RDLounge implements Executable {
                     .append("//rdhelp :编辑器帮助\n")
                     .append("//chart <n> <song> :快速下载匹配歌名的第n个谱子，如未找到则下载第一个谱子（暂时停用）\n")
                     .append("//convert <type> :将音视频文件转换成指定类型\n")
+                    .append("//nurse [-h|args] :检查谱面是否有错误(credits: ud2)\n")
                     .append("//c 或 //card ://card help\n")
                     .append("//samurai :Samurai.\n")
                     .append("//majsoul :向听数计算，例子：//majsoul m123 p456 s789\n")
@@ -421,6 +422,43 @@ public final class RDLounge implements Executable {
                         FileUtils.uploadFile(group, after);
 
                         Main.INSTANCE.getLogger().info("文件转换结束");
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        from.sendMessage(ex.getMessage());
+                    }
+                });
+                t.setDaemon(true);
+                t.start();
+                break;
+            case "nurse":
+                if (!hasQuote) {
+                    from.sendMessage("未找到引用消息");
+                    break;
+                }
+
+                t = new Thread(() -> {
+                    try {
+                        Main.INSTANCE.getLogger().info("rdnurse开始");
+                        from.sendMessage("开始检查");
+                        String args;
+                        try {
+                            args = cmd[1];
+                        } catch (IndexOutOfBoundsException ex) {
+                            args = "";
+                        }
+                        Group group = (Group) e.getSubject();
+
+                        File file = FileUtils.download(FileUtils.getQuotedAbsoluteFile(group, e.getMessage()));
+
+                        if (file == null) {
+                            throw new NoSuchElementException("未找到引用文件");
+                        }
+
+                        Main.INSTANCE.getLogger().info("文件名：" + file.getName());
+
+                        from.sendMessage(Utils.rdNurse(file, args));
+
+                        Main.INSTANCE.getLogger().info("rdnurse结束");
                     } catch (Exception ex) {
                         ex.printStackTrace();
                         from.sendMessage(ex.getMessage());
