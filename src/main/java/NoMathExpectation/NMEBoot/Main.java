@@ -1,5 +1,6 @@
 package NoMathExpectation.NMEBoot;
 
+import NoMathExpectation.NMEBoot.RDLounge.Subscribe;
 import NoMathExpectation.NMEBoot.RDLounge.cardSystem.*;
 import NoMathExpectation.NMEBoot.commandSystem.*;
 import NoMathExpectation.NMEBoot.naptcha.CaptchaDispatcher;
@@ -20,7 +21,7 @@ public final class Main extends JavaPlugin {
     public static WordleMirai wordle = new WordleMirai(new File("config/NoMathExpectation.NMEBoot/wordle.txt"), 6, 25);
 
     private Main() {
-        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.1.32-2022042502")
+        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.1.34-2022042701")
                 .name("NMEBoot")
                 .author("NoMathExpectation")
                 .build());
@@ -105,6 +106,8 @@ public final class Main extends JavaPlugin {
 
         //注册监听
         GlobalEventChannel.INSTANCE.registerListenerHost(executeCenter);
+
+        new Thread(Subscribe.INSTANCE::subscribeChatRank).start();
 
         //自动保存
         Thread t = new Thread(this::autoSave);

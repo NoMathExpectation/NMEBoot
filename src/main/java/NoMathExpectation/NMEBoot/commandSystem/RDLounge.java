@@ -3,7 +3,7 @@ package NoMathExpectation.NMEBoot.commandSystem;
 import NoMathExpectation.NMEBoot.FileUtils;
 import NoMathExpectation.NMEBoot.Main;
 import NoMathExpectation.NMEBoot.RDLounge.Mahjong;
-import NoMathExpectation.NMEBoot.RDLounge.Utils;
+import NoMathExpectation.NMEBoot.Utils;
 import NoMathExpectation.NMEBoot.RDLounge.cardSystem.*;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.Contact;

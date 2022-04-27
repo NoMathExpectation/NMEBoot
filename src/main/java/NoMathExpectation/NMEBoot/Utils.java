@@ -1,12 +1,12 @@
-package NoMathExpectation.NMEBoot.RDLounge;
+package NoMathExpectation.NMEBoot;
 
-import NoMathExpectation.NMEBoot.Main;
 import net.mamoe.mirai.utils.MiraiLogger;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
@@ -159,5 +159,22 @@ public class Utils {
         }
 
         return new File(path);
+    }
+
+    //see https://github.com/ytdl-org/youtube-dl
+    @NotNull
+    public static File[] downloadYoutubeVideo(@NotNull String link) throws IOException {
+        Process p = new ProcessBuilder("yt-dlp", "-q", "-o", "data/NoMathExpectation.NMEBoot/downloads/youtube/%(title)s [%(id)s].%(ext)s", link).start();
+        try {
+            p.waitFor();
+        } catch (InterruptedException ignored) {}
+
+        String error = writeStreamToString(p.getErrorStream());
+
+        if (!error.isBlank()) {
+            throw new RuntimeException(error);
+        }
+
+        return Objects.requireNonNull(new File("data/NoMathExpectation.NMEBoot/downloads/youtube/").listFiles());
     }
 }

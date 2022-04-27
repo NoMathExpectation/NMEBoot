@@ -3,6 +3,8 @@ package NoMathExpectation.NMEBoot.commandSystem
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.console.data.AutoSavePluginData
 import net.mamoe.mirai.console.data.value
+import net.mamoe.mirai.contact.Contact
+import net.mamoe.mirai.message.data.buildForwardMessage
 import net.mamoe.mirai.message.data.buildMessageChain
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -123,5 +125,11 @@ object NormalUserStats : AutoSavePluginData("normalUser") {
             + sortedUser[i].getMessageCountDaily(group).toString()
             + "条消息\n"
         }
+    }
+
+    fun getMessageCountAndDailyAsForwardMessage(contact: Contact) = buildForwardMessage(contact) {
+        val id = contact.id
+        NormalUser.getUsers().values.filter { it.getMessageCountDaily(id) > 0 }.sortedBy { it.getMessageCountDaily(id) }.reversed()[0].id says getMessageCountDaily(id)
+        NormalUser.getUsers().values.filter { it.getMessageCount(id) > 0 }.sortedBy { it.getMessageCount(id) }.reversed()[0].id says getMessageCount(id)
     }
 }

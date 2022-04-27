@@ -57,10 +57,15 @@ object Block: AutoSavePluginConfig("block") {
     }
 
     fun checkBlocked(id: Long, target: Long, message: String): Boolean {
-        val memberBlocked = blocks[id]?.get(target) ?: return false
+        val generalBlocked = blocks[id]?.get(0L)
+        val memberBlocked = blocks[id]?.get(target)
+
+        val blockList = ArrayList<String>()
+        memberBlocked?.let { blockList.addAll(it) }
+        generalBlocked?.let { blockList.addAll(it) }
 
         var blocked = false
-        for (p in memberBlocked) {
+        for (p in blockList) {
             val job = Thread {
                 if (Regex(p).containsMatchIn(message)) {
                     logger.info("Block: Blocked $message sent by $target with $p in $id.")

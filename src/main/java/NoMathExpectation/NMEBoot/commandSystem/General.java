@@ -5,6 +5,7 @@ import NoMathExpectation.NMEBoot.Main;
 import NoMathExpectation.NMEBoot.RDLounge.cardSystem.CardUser;
 import NoMathExpectation.NMEBoot.RDLounge.cardSystem.Item;
 import NoMathExpectation.NMEBoot.RDLounge.cardSystem.ItemLibrary;
+import NoMathExpectation.NMEBoot.Utils;
 import NoMathExpectation.NMEBoot.wolframAlpha.Conversation;
 import kotlin.Triple;
 import net.mamoe.mirai.contact.Contact;
@@ -622,6 +623,11 @@ public final class General implements Executable {
                 from.sendMessage(mcb.build());
                 break;
             case "download":
+                if (!(e.getSubject() instanceof Group)) {
+                    from.sendMessage("不支持私聊文件下载");
+                    break;
+                }
+
                 if (cmd.length < 2) {
                     from.sendMessage("缺少地址。");
                     break;
@@ -630,11 +636,17 @@ public final class General implements Executable {
                 new Thread(() ->
                 {
                     try {
-                        File download = FileUtils.download(msg.replaceFirst("//download\\s+", ""));
-                        if (!(e.getSubject() instanceof Group)) {
-                            from.sendMessage("不支持私聊文件下载");
+                        String link = msg.replaceFirst("//download[\\s\n]+", "");
+
+                        if (link.toLowerCase(Locale.ROOT).contains("youtube.com") || link.toLowerCase(Locale.ROOT).contains("youtu.be")) {
+                            for (File file : Utils.downloadYoutubeVideo(link)) {
+                                FileUtils.uploadFile((Group) e.getSubject(), file);
+                                file.delete();
+                            }
                             return;
                         }
+
+                        File download = FileUtils.download(link);
                         FileUtils.uploadFile((Group) e.getSubject(), download);
                     } catch (Exception ex) {
                         ex.printStackTrace();
@@ -698,6 +710,13 @@ public final class General implements Executable {
                     from.sendMessage(MiraiCode.deserializeMiraiCode(Objects.requireNonNull(e.getMessage().get(QuoteReply.Key)).getSource().getOriginalMessage().contentToString()));
                 } else {
                     from.sendMessage(MiraiCode.deserializeMiraiCode(msg.replaceFirst("//deserialize\\s+", "")));
+                }
+                break;
+            case "content":
+                if (hasQuote) {
+                    from.sendMessage("内容：" + Objects.requireNonNull(e.getMessage().get(QuoteReply.Key)).getSource().getOriginalMessage().contentToString());
+                } else {
+                    from.sendMessage("内容：" + msg);
                 }
                 break;
             default:

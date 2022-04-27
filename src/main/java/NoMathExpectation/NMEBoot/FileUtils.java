@@ -14,9 +14,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
+import java.net.InetSocketAddress;
+import java.net.ProxySelector;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
+import java.net.http.HttpConnectTimeoutException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
@@ -26,6 +29,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class FileUtils {
     private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
+    private static final HttpClient HTTP_CLIENT_WITH_PROXY = HttpClient.newBuilder().proxy(ProxySelector.of(new InetSocketAddress("127.0.0.1", 10809))).build();
     public static final Set<String> BLACK_LIST = Set.of("server-sent-events.deno.dev");
     public static final MiraiLogger LOGGER = Main.INSTANCE.getLogger();
 
@@ -58,8 +62,15 @@ public class FileUtils {
                 .version(HttpClient.Version.HTTP_2)
                 .build();
 
+        InputStream input0;
+        try {
+            input0 = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofInputStream()).body();
+        } catch (HttpConnectTimeoutException e) {
+            input0 = HTTP_CLIENT_WITH_PROXY.send(request, HttpResponse.BodyHandlers.ofInputStream()).body();
+        }
+
         File file;
-        try (InputStream input = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofInputStream()).body()) {
+        try (InputStream input = input0) {
             file = new File(saveFile);
             if (file.isFile() && !file.delete()) {
                 throw new RuntimeException("无法删除文件：" + file);
