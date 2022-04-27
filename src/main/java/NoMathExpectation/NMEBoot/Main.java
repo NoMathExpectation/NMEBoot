@@ -21,7 +21,7 @@ public final class Main extends JavaPlugin {
     public static WordleMirai wordle = new WordleMirai(new File("config/NoMathExpectation.NMEBoot/wordle.txt"), 6, 25);
 
     private Main() {
-        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.1.34-2022042701")
+        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.1.34-2022042702")
                 .name("NMEBoot")
                 .author("NoMathExpectation")
                 .build());
@@ -107,7 +107,7 @@ public final class Main extends JavaPlugin {
         //注册监听
         GlobalEventChannel.INSTANCE.registerListenerHost(executeCenter);
 
-        new Thread(Subscribe.INSTANCE::subscribeChatRank).start();
+        Subscribe.INSTANCE.subscribeChatRank();
 
         //自动保存
         Thread t = new Thread(this::autoSave);
