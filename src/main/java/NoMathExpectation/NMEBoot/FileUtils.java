@@ -2,6 +2,8 @@ package NoMathExpectation.NMEBoot;
 
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.contact.file.AbsoluteFile;
+import net.mamoe.mirai.contact.file.AbsoluteFileFolder;
+import net.mamoe.mirai.contact.file.AbsoluteFolder;
 import net.mamoe.mirai.event.GlobalEventChannel;
 import net.mamoe.mirai.event.ListeningStatus;
 import net.mamoe.mirai.event.events.GroupMessagePostSendEvent;
@@ -23,6 +25,8 @@ import java.net.http.HttpConnectTimeoutException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
@@ -169,6 +173,19 @@ public class FileUtils {
         if (!replyString.startsWith("[文件]")) {
             return null;
         }
-        return group.getFiles().getRoot().filesStream().filter(f -> f.getName().startsWith(replyString.substring(4))).findFirst().orElse(null);
+
+        ArrayList<AbsoluteFile> files = new ArrayList<>();
+        addFileOrFolderToFileList(files, group.getFiles().getRoot());
+
+
+        return files.stream().filter(f -> f.getName().startsWith(replyString.substring(4))).findFirst().orElse(null);
+    }
+
+    private static void addFileOrFolderToFileList(@NotNull List<AbsoluteFile> files, @NotNull AbsoluteFileFolder ff) {
+        if (ff instanceof AbsoluteFolder) {
+            ((AbsoluteFolder) ff).childrenStream().forEach(x -> addFileOrFolderToFileList(files, x));
+            return;
+        }
+        files.add((AbsoluteFile) ff);
     }
 }
