@@ -5,7 +5,6 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
@@ -96,7 +95,6 @@ public class Utils {
                     e.printStackTrace();
                     sb.append(e.getMessage());
                 }
-                sb.append("\n");
             }
 
             return sb.toString();
@@ -113,15 +111,19 @@ public class Utils {
             throw new RuntimeException(error);
         }
 
-        return writeStreamToString(p.getInputStream());
+        String result = writeStreamToString(p.getInputStream());
+        if (result.isBlank()) {
+            result = "未检测出错误\n";
+        }
+
+        return result;
     }
 
     public static final String FFMPEG = "plugin-libraries/ffmpeg/bin/ffmpeg.exe";
 
     @NotNull
-    public static Process newFfmpegProcess(String args) throws IOException {
-        LOGGER.info("ffmpeg " + args);
-        return Runtime.getRuntime().exec(FFMPEG + " " + args);
+    public static Process newFfmpegProcess(@NotNull String input, @NotNull String output) throws IOException {
+        return Runtime.getRuntime().exec(new String[] {FFMPEG, "-xerror", "-nostdin", "-y", "-i", input, output});
     }
 
     @NotNull
@@ -141,12 +143,9 @@ public class Utils {
         }
 
         File after = new File(path);
-        after.delete();
         after.deleteOnExit();
 
-        Process p = newFfmpegProcess("-i \"" + f.getPath() + "\" \"" + path + "\"");
-        p.getOutputStream().write("y\n".getBytes(StandardCharsets.UTF_8));
-        p.getOutputStream().flush();
+        Process p = newFfmpegProcess(f.getPath(), path);
         try {
             p.waitFor();
         } catch (InterruptedException ignored) {
@@ -154,7 +153,7 @@ public class Utils {
         
         String[] message = writeStreamToString(p.getErrorStream()).split("\n");
         String errorMessage = message[message.length - 1];
-        if (!after.isFile()) {
+        if (after.length() == 0) {
             throw new RuntimeException(errorMessage);
         }
 

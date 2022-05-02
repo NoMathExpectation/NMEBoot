@@ -72,6 +72,7 @@ public class FileUtils {
         File file;
         try (InputStream input = input0) {
             file = new File(saveFile);
+            file.deleteOnExit();
             if (file.isFile() && !file.delete()) {
                 throw new RuntimeException("无法删除文件：" + file);
             }
@@ -168,6 +169,6 @@ public class FileUtils {
         if (!replyString.startsWith("[文件]")) {
             return null;
         }
-        return group.getFiles().getRoot().filesStream().filter(f -> f.getName().equals(replyString.substring(4))).findFirst().orElse(null);
+        return group.getFiles().getRoot().filesStream().filter(f -> f.getName().startsWith(replyString.substring(4))).findFirst().orElse(null);
     }
 }

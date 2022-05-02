@@ -16,7 +16,7 @@ import net.mamoe.mirai.message.data.MessageChainBuilder
 import org.jetbrains.annotations.NotNull
 
 object FAQ : AutoSavePluginConfig("faq") {
-    /*private val groups: MutableMap<Long, MutableMap<String, Pair<String, Array<MessageChain>>>> by value()
+    private val groups: MutableMap<Long, MutableMap<String, Pair<String, Array<MessageChain>>>> by value()
 
     val preservedName: Array<String> = arrayOf("new", "save", "discard", "help", "remove")
 
@@ -109,5 +109,5 @@ object FAQ : AutoSavePluginConfig("faq") {
         }
 
         return group.sendMessage(mcb.build())
-    }*/
+    }
 }

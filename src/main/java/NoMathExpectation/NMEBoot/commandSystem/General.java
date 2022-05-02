@@ -54,7 +54,7 @@ public final class General implements Executable {
                 .append("//download <url> :下载文件\n")
                 .append("//wordle|w :wordle\n")
                 //.append("//moral <text>:AI预测是否道德（仅供参考，不作为任何依据）\n")
-                //.append("//ask :有什么问题可以问问这个指令\n")
+                .append("//ask :有什么问题可以问问这个指令\n")
                 .append("//feedback <text> :给作者反馈\n")
                 .append("//114514 [count]\n")
                 .append("//1919810 [count]\n\n");
