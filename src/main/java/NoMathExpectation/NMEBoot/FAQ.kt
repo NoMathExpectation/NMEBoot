@@ -1,10 +1,10 @@
 package NoMathExpectation.NMEBoot
 
 import NoMathExpectation.NMEBoot.commandSystem.UsingGroup
-import kotlinx.coroutines.runBlocking
 import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
 import net.mamoe.mirai.console.data.AutoSavePluginConfig
 import net.mamoe.mirai.console.data.value
+import net.mamoe.mirai.console.plugin.jvm.reloadPluginConfig
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.event.GlobalEventChannel
@@ -24,6 +24,7 @@ object FAQ : AutoSavePluginConfig("faq") {
     private val recordingContent: MutableMap<Long, MutableList<MessageChain>> = HashMap()
 
     init {
+        Main.INSTANCE.reloadPluginConfig(this)
         GlobalEventChannel.subscribeAlways<GroupMessageEvent> { e -> record(e.subject.id, e.sender.id, e.message) }
         GlobalEventChannel.subscribeAlways<GroupMessageSyncEvent> { e -> record(e.subject.id, e.bot.id, e.message) }
     }
