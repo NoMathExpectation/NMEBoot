@@ -2,6 +2,7 @@ package NoMathExpectation.NMEBoot.RDLounge
 
 import NoMathExpectation.NMEBoot.Main
 import NoMathExpectation.NMEBoot.commandSystem.NormalUserStats
+import NoMathExpectation.NMEBoot.commandSystem.NyanMilkSupplier
 import NoMathExpectation.NMEBoot.commandSystem.RDLounge
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -10,7 +11,7 @@ import net.mamoe.mirai.Bot
 import java.time.LocalDateTime
 
 object Subscribe {
-    private const val id = RDLounge.GROUP_ID
+    private const val id = NyanMilkSupplier.GROUP_ID
 
     fun subscribeChatRank() = Main.INSTANCE.launch {
         while (isActive) {

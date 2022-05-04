@@ -6,13 +6,12 @@ import net.mamoe.mirai.console.data.AutoSavePluginConfig
 import net.mamoe.mirai.console.data.value
 import net.mamoe.mirai.console.plugin.jvm.reloadPluginConfig
 import net.mamoe.mirai.contact.Contact
-import net.mamoe.mirai.contact.Group
+import net.mamoe.mirai.event.EventPriority
 import net.mamoe.mirai.event.GlobalEventChannel
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.events.GroupMessageSyncEvent
-import net.mamoe.mirai.message.MessageReceipt
 import net.mamoe.mirai.message.data.MessageChain
-import net.mamoe.mirai.message.data.MessageChainBuilder
+import net.mamoe.mirai.message.data.buildMessageChain
 import org.jetbrains.annotations.NotNull
 
 object FAQ : AutoSavePluginConfig("faq") {
@@ -25,8 +24,8 @@ object FAQ : AutoSavePluginConfig("faq") {
 
     init {
         Main.INSTANCE.reloadPluginConfig(this)
-        GlobalEventChannel.subscribeAlways<GroupMessageEvent> { e -> record(e.subject.id, e.sender.id, e.message) }
-        GlobalEventChannel.subscribeAlways<GroupMessageSyncEvent> { e -> record(e.subject.id, e.bot.id, e.message) }
+        GlobalEventChannel.subscribeAlways<GroupMessageEvent>(priority = EventPriority.MONITOR) { e -> record(e.subject.id, e.sender.id, e.message) }
+        GlobalEventChannel.subscribeAlways<GroupMessageSyncEvent>(priority = EventPriority.MONITOR) { e -> record(e.subject.id, e.bot.id, e.message) }
     }
 
     private fun record(group: Long, id: Long, message: MessageChain) {
@@ -72,43 +71,36 @@ object FAQ : AutoSavePluginConfig("faq") {
     }
 
     @JvmBlockingBridge
-    suspend fun send(group: Group, name: String) {
-        groups[group.id]?.get(name)?.second?.let {
+    suspend fun send(contact: Contact, name: String) {
+        groups[contact.id]?.get(name)?.second?.let {
             for (msg in it) {
-                group.sendMessage(msg)
+                contact.sendMessage(msg)
             }
             return
         }
-        group.sendMessage("未找到此faq")
+        contact.sendMessage("未找到此faq")
     }
 
     fun remove(group: Long, name: String) = groups[group]?.remove(name) ?: throw NoSuchElementException("未找到此faq")
 
     @NotNull
-    @JvmBlockingBridge
-    suspend fun getHelp(group: Contact, isAdmin: Boolean): MessageReceipt<Contact> {
-        val mcb = MessageChainBuilder().append(
-            "//faq...\n",
-            "help :获取此帮助\n"
-        )
+    fun getHelp(group: Contact, isAdmin: Boolean) = buildMessageChain {
+        + "//faq...\n"
+        + "help :获取此帮助\n"
 
         if (isAdmin) {
-            mcb.append(
-                "new :开始录制新的faq\n",
-                "save <名字> <描述>:保存正在录制的faq到对应名字\n",
-                "discard :丢弃正在录制的faq\n",
-                "remove <名字>:移除已录制的faq"
-            )
+            + "new :开始录制新的faq\n"
+            + "save <名字> <描述>:保存正在录制的faq到对应名字\n"
+            + "discard :丢弃正在录制的faq\n"
+            + "remove <名字>:移除已录制的faq\n\n"
         }
 
         groups[group.id]?.let {
             for(name in it.keys) {
                 it[name]?.let { it1 ->
-                    mcb.append("$name :${it1.first}\n")
+                    + "$name :${it1.first}\n"
                 }
             }
         }
-
-        return group.sendMessage(mcb.build())
     }
 }

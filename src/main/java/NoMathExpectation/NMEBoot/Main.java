@@ -20,12 +20,13 @@ public final class Main extends JavaPlugin {
     public static WordleMirai wordle = new WordleMirai(new File("config/NoMathExpectation.NMEBoot/wordle.txt"), 6, 25);
 
     private Main() {
-        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.1.35-2022050303")
+        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.2.0-2022050404")
                 .name("NMEBoot")
                 .author("NoMathExpectation")
                 .build());
         executeCenter = new ExecuteCenter()
                 .register(new General())
+                .register(new NyanMilkSupplier())
                 .register(new RDLounge());
         naptcha = new CaptchaDispatcher()
                 .register(new NumberSort(5, -100, 100))
@@ -118,7 +119,7 @@ public final class Main extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        RDLounge.AUCTION_CENTER.stop();
+        NyanMilkSupplier.AUCTION_CENTER.stop();
         save();
         getLogger().info("NMEBoot已停用。");
     }

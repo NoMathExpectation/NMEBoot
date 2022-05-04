@@ -1,6 +1,6 @@
 package NoMathExpectation.NMEBoot.naptcha.captchas;
 
-import NoMathExpectation.NMEBoot.commandSystem.RDLounge;
+import NoMathExpectation.NMEBoot.commandSystem.NyanMilkSupplier;
 import NoMathExpectation.NMEBoot.naptcha.CaptchaGenerator;
 import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.message.data.MessageChain;
@@ -17,7 +17,7 @@ public class OttoColor implements CaptchaGenerator {
         if (colors == null) {
             throw new RuntimeException("凹兔颜色文件夹缺失！");
         }
-        useOnlyIn.add(RDLounge.GROUP_ID);
+        useOnlyIn.add(NyanMilkSupplier.GROUP_ID);
     }
 
     private final File[] colors;

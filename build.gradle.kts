@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "NoMathExpectation.NMEBoot"
-version = "1.1"
+version = "1.2"
 
 val ktor_version: String by project
 

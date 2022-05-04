@@ -1,5 +1,6 @@
 package NoMathExpectation.NMEBoot.commandSystem
 
+import NoMathExpectation.NMEBoot.wolframAlpha.Conversation
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.console.data.AutoSavePluginData
 import net.mamoe.mirai.console.data.value
@@ -18,7 +19,7 @@ object NormalUserStats : AutoSavePluginData("normalUser") {
 
     fun getStatList() = buildMessageChain {
         + ".//stat|stats ...\n"
-        + "general : 通用"
+        + "general : 通用\n"
         + "checkin : 签到时间排行榜\n"
         + "streak : 连续签到排行榜\n"
         + "chat|message : 聊天排行榜\n"
@@ -37,8 +38,8 @@ object NormalUserStats : AutoSavePluginData("normalUser") {
     fun getGeneral(group: Long) = buildMessageChain {
         + "总签到数："
         + checkInCountTotal.toString()
-        //+ "\n提问数："
-        //+ Conversation.queryTimes.toString()
+        + "\n提问数："
+        + Conversation.queryTimes.toString()
         + "\n今日消息数："
         + NormalUser.getUsers().values.sumOf { it.totalMessageCountDaily }.toString()
         + "\n群今日消息数："
@@ -129,7 +130,9 @@ object NormalUserStats : AutoSavePluginData("normalUser") {
 
     fun getMessageCountAndDailyAsForwardMessage(contact: Contact) = buildForwardMessage(contact) {
         val id = contact.id
-        NormalUser.getUsers().values.filter { it.getMessageCountDaily(id) > 0 }.sortedBy { it.getMessageCountDaily(id) }.reversed()[0].id says getMessageCountDaily(id)
-        NormalUser.getUsers().values.filter { it.getMessageCount(id) > 0 }.sortedBy { it.getMessageCount(id) }.reversed()[0].id says getMessageCount(id)
+        val top1Day = NormalUser.getUsers().values.filter { it.getMessageCountDaily(id) > 0 }.sortedBy { it.getMessageCountDaily(id) }.reversed()[0]
+        val top1 = NormalUser.getUsers().values.filter { it.getMessageCount(id) > 0 }.sortedBy { it.getMessageCount(id) }.reversed()[0]
+        top1Day.id named top1Day.name says getMessageCountDaily(id)
+        top1.id named top1.name says getMessageCount(id)
     }
 }

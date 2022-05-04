@@ -1,5 +1,6 @@
 package NoMathExpectation.NMEBoot.commandSystem;
 
+import NoMathExpectation.NMEBoot.FAQ;
 import NoMathExpectation.NMEBoot.FileUtils;
 import NoMathExpectation.NMEBoot.Main;
 import NoMathExpectation.NMEBoot.RDLounge.cardSystem.CardUser;
@@ -43,21 +44,28 @@ public final class General implements Executable {
         if (isAdminOrBot(e)) {
             mcb.append("//admin :管理员指令\n");
         }
+
+        mcb.append("//help :显示所有指令\n");
+
+        if (e.getSubject().getId() != RDLounge.GROUP_ID) {
+            mcb
+                    .append("//hello :发送 \"Hello, world!\"\n")
+                    .append("//repeat <text> :复读机\n")
+                    .append("//luck :测测你今天的运气\n")
+                    .append("//alias :别称\n")
+                    .append("//stat|stats :统计数据\n")
+                    .append("//checkin :签到\n")
+                    .append("//wordle|w :wordle\n")
+                    .append("//ask :有什么问题可以问问这个指令\n")
+                    .append("//114514 [count]\n")
+                    .append("//1919810 [count]\n");
+                    //.append("//moral <text>:AI预测是否道德（仅供参考，不作为任何依据）\n")
+        }
+
         return mcb
-                .append("//hello :发送 \"Hello, world!\"\n")
-                .append("//help :显示所有指令\n")
-                .append("//repeat <text> :复读机\n")
-                .append("//luck :测测你今天的运气\n")
-                .append("//alias :别称\n")
-                .append("//stat|stats :统计数据\n")
-                .append("//checkin :签到\n")
                 .append("//download <url> :下载文件\n")
-                .append("//wordle|w :wordle\n")
-                //.append("//moral <text>:AI预测是否道德（仅供参考，不作为任何依据）\n")
-                .append("//ask :有什么问题可以问问这个指令\n")
-                .append("//feedback <text> :给作者反馈\n")
-                .append("//114514 [count]\n")
-                .append("//1919810 [count]\n\n");
+                .append("//faq :常见问题\n")
+                .append("//feedback <text> :给作者反馈\n\n");
     }
 
     @Override
@@ -82,7 +90,7 @@ public final class General implements Executable {
         }
         Contact from = Alias.INSTANCE.alias(from0);
 
-        if (from.getId() == RDLounge.GROUP_ID && ExecuteCenter.INSTANCE.getSamurai()) {
+        if (from.getId() == NyanMilkSupplier.GROUP_ID && ExecuteCenter.INSTANCE.getSamurai()) {
             return false;
         }
         String[] cmd = msg.substring(2).split("\\s+");
@@ -376,17 +384,17 @@ public final class General implements Executable {
                 }
                 from.sendMessage(NormalUserStats.INSTANCE.getStat(cmd[1], from.getId())).recallIn(60000);
                 break;
-            /*case "faq":
-                if (!(from instanceof Group)) {
+            case "faq":
+                if (!isGroup(e)) {
                     from.sendMessage("只有群内才能使用此指令");
                     break;
                 }
                 if (cmd.length < 2) {
-                    FAQ.INSTANCE.getHelp(from, isAdminOrBot(e)).recallIn(30000);
+                    from.sendMessage(FAQ.INSTANCE.getHelp(from, isAdminOrBot(e))).recallIn(30000);
                 }
                 switch (cmd[1]) {
                     case "help":
-                        FAQ.INSTANCE.getHelp(from, isAdminOrBot(e)).recallIn(30000);
+                        from.sendMessage(FAQ.INSTANCE.getHelp(from, isAdminOrBot(e))).recallIn(30000);
                         break;
                     case "new":
                         if (!isAdminOrBot(e)) {
@@ -441,9 +449,9 @@ public final class General implements Executable {
                         from.sendMessage("已移除");
                         break;
                     default:
-                        FAQ.INSTANCE.send((Group) from, cmd[1]);
+                        FAQ.INSTANCE.send(from, cmd[1]);
                 }
-                break;*/
+                break;
             case "checkin":
                 if (user.isCheckedIn()) {
                     from.sendMessage("你今天已经签到过了");
@@ -456,7 +464,7 @@ public final class General implements Executable {
                 if (Main.naptcha.checkAnswer(msg.replaceFirst("//checkin\\s+", ""), from)) {
                     user.checkIn();
                     from.sendMessage("签到成功！你是第" + user.getCheckInRank() + "个签到的。\n你已经连续签到了" + user.getCheckInStreak() + "天");
-                    if (user.getCheckInRank() <= 10000 && from.getId() == RDLounge.GROUP_ID) {
+                    if (user.getCheckInRank() <= 10000 && from.getId() == NyanMilkSupplier.GROUP_ID) {
                         CardUser cardUser = CardUser.getUsers().get(user.id);
                         if (cardUser == null) {
                             cardUser = new CardUser(user.id, user.name);
@@ -690,7 +698,7 @@ public final class General implements Executable {
                     break;
                 }
                 StringBuilder stinkBuilder = new StringBuilder();
-                if (cmd[0].equals("1919810") && (e instanceof GroupMessageEvent && ((GroupMessageEvent) e).getGroup().contains(RDLounge.UD2)) || (e instanceof GroupMessageSyncEvent && ((GroupMessageSyncEvent) e).getGroup().contains(RDLounge.UD2))) {
+                if (cmd[0].equals("1919810") && (e instanceof GroupMessageEvent && ((GroupMessageEvent) e).getGroup().contains(NyanMilkSupplier.UD2)) || (e instanceof GroupMessageSyncEvent && ((GroupMessageSyncEvent) e).getGroup().contains(RDLounge.UD2))) {
                     stinkBuilder.append("!~say 哼，哼，哼，");
                 } else {
                     stinkBuilder.append("哼，哼，哼，");

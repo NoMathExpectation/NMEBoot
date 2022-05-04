@@ -58,7 +58,7 @@ public final class ExecuteCenter extends SimpleListenerHost {
     }
 
     public boolean saySamurai(boolean forced) {
-        if (lastContact.getId() == RDLounge.GROUP_ID && samurai || forced) {
+        if (lastContact.getId() == NyanMilkSupplier.GROUP_ID && samurai || forced) {
             lastContact.sendMessage(getSamuraiWord());
         }
         return samurai;
@@ -126,7 +126,7 @@ public final class ExecuteCenter extends SimpleListenerHost {
     @Override
     public void handleException(@NotNull CoroutineContext context, @NotNull Throwable e) {
         e.printStackTrace();
-        if (lastContact.getId() == RDLounge.GROUP_ID) {
+        if (lastContact.getId() == NyanMilkSupplier.GROUP_ID) {
             lastContact.sendMessage("武士走进了妮可的咖啡店，要了一份甜甜圈。");
             if (!samurai) {
                 samurai();
@@ -163,17 +163,19 @@ public final class ExecuteCenter extends SimpleListenerHost {
 
         if (containsCommand(msg) && user.isBanned()) {
             Duration d = user.getBannedRemain();
-            if (lastContact.getId() == RDLounge.GROUP_ID) {
+            if (lastContact.getId() == NyanMilkSupplier.GROUP_ID) {
                 lastContact.sendMessage(user.name + " was samuraied in " + d.toDays() + "d " + d.toHoursPart() + "h " + d.toMinutesPart() + "m " + d.toSecondsPart() + "s for " + user.getBannedReason() + ". " + getSamuraiWord());
+            } else {
+                lastContact.sendMessage(user.name + "因为" + user.getBannedReason() + "被封禁至" + d.toDays() + "天" + d.toHoursPart() + "时" + d.toMinutesPart() + "分钟" + d.toSecondsPart() + "秒后。");
             }
             return;
         }
 
-        if (!(msg.startsWith("//alias") || (e.getSubject().getId() == RDLounge.GROUP_ID && getSamurai() && msg.startsWith("//samurai")))) {
+        if (!(msg.startsWith("//alias") || (e.getSubject().getId() == NyanMilkSupplier.GROUP_ID && getSamurai() && msg.startsWith("//samurai")))) {
             msg = Alias.INSTANCE.alias(msg, lastContact.getId());
         }
 
-        if (!(msg.startsWith("//alias") || (e.getSubject().getId() == RDLounge.GROUP_ID && getSamurai() && msg.startsWith("//samurai")))) {
+        if (!(msg.startsWith("//alias") || (e.getSubject().getId() == NyanMilkSupplier.GROUP_ID && getSamurai() && msg.startsWith("//samurai")))) {
             miraiMsg = Alias.INSTANCE.alias(miraiMsg, lastContact.getId());
         }
 
@@ -184,7 +186,7 @@ public final class ExecuteCenter extends SimpleListenerHost {
 
         try {
             if (msg.split("\\s+|\n+")[0].equals("//help")) {
-                if (samurai && lastContact.getId() == RDLounge.GROUP_ID) {
+                if (samurai && lastContact.getId() == NyanMilkSupplier.GROUP_ID) {
                     saySamurai(false);
                     return;
                 }
