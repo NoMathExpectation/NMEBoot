@@ -7,6 +7,7 @@ import NoMathExpectation.NMEBoot.naptcha.captchas.*;
 import net.mamoe.mirai.console.plugin.jvm.JavaPlugin;
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescriptionBuilder;
 import net.mamoe.mirai.event.GlobalEventChannel;
+import net.mamoe.mirai.event.events.MessagePreSendEvent;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,10 +18,11 @@ public final class Main extends JavaPlugin {
     public static final Main INSTANCE = new Main();
     public static ExecuteCenter executeCenter;
     public static CaptchaDispatcher naptcha;
+    public static final Random RANDOM = new Random();
     public static WordleMirai wordle = new WordleMirai(new File("config/NoMathExpectation.NMEBoot/wordle.txt"), 6, 25);
 
     private Main() {
-        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.2.0-2022050404")
+        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.2.3-2022052410")
                 .name("NMEBoot")
                 .author("NoMathExpectation")
                 .build());
@@ -104,7 +106,15 @@ public final class Main extends JavaPlugin {
         }
 
         //注册监听
-        GlobalEventChannel.INSTANCE.registerListenerHost(executeCenter);
+        GlobalEventChannel.INSTANCE.parentScope(this).registerListenerHost(executeCenter);
+
+        GlobalEventChannel.INSTANCE.parentScope(this).subscribeAlways(MessagePreSendEvent.class, e -> {
+            try {
+                Thread.sleep(RANDOM.nextInt(3000));
+            } catch (InterruptedException ignored) {
+
+            }
+        });
 
         //Subscribe.INSTANCE.subscribeChatRank();
 

@@ -2,6 +2,7 @@ package NoMathExpectation.NMEBoot.commandSystem;
 
 import NoMathExpectation.NMEBoot.FileUtils;
 import NoMathExpectation.NMEBoot.Main;
+import NoMathExpectation.NMEBoot.RDLounge.rhythmCafe.RhythmCafeSearchEngine;
 import NoMathExpectation.NMEBoot.Utils;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.Contact;
@@ -32,9 +33,9 @@ public final class RDLounge implements Executable {
             mcb = mcb
                     .append("RDL:\n")
                     .append("//rdhelp :编辑器帮助\n")
-                    .append("//chart <n> <song> :快速下载匹配歌名的第n个谱子，如未找到则下载第一个谱子（暂时停用）\n")
                     .append("//convert <type> :将音视频文件转换成指定类型\n")
-                    .append("//nurse [-h|args] :检查谱面是否有错误(credits: ud2)\n");
+                    .append("//nurse [-h|args] :检查谱面是否有错误(credits: ud2)\n")
+                    .append("//chart :搜索谱面\n");
         }
         return mcb;
     }
@@ -214,7 +215,7 @@ public final class RDLounge implements Executable {
                     MessageReceipt<Group> fileUploadResult = FileDownloader.shareFileToAnotherGroup(fileToUd2, targetGroup, true);
                     QuoteReply ud2FileQuote = fileUploadResult.quote();
                     fileToUd2 = ud2FileQuote.getSource().getOriginalMessage().get(FileMessage.Key).toAbsoluteFile(targetGroup);
-                    GlobalEventChannel.INSTANCE.subscribe(GroupMessageEvent.class, this::ud2Listener);
+                    GlobalEventChannel.INSTANCE.parentScope(Main.INSTANCE).subscribe(GroupMessageEvent.class, this::ud2Listener);
                     requestToUd2 = fileUploadResult.quoteReply(message);
                     Main.INSTANCE.getLogger().info("ud2监听开始");
                 } catch (Exception ex) {
@@ -228,7 +229,7 @@ public final class RDLounge implements Executable {
         }
 
         requestToUd2 = targetGroup.sendMessage(message);
-        GlobalEventChannel.INSTANCE.subscribe(GroupMessageEvent.class, this::ud2Listener);
+        GlobalEventChannel.INSTANCE.parentScope(Main.INSTANCE).subscribe(GroupMessageEvent.class, this::ud2Listener);
         Main.INSTANCE.getLogger().info("ud2监听开始");
     }
 
@@ -289,14 +290,85 @@ public final class RDLounge implements Executable {
             case "majsoul":
             case "c":
             case "card":
-                e.getSender().sendMessage("应群规要求，请移步群916813153使用指令");
+                from.sendMessage("请在水群使用此指令（不过还没搬");
                 break;
             case "rdhelp":
                 from.sendMessage("编辑器帮助网址：https://rd.rdlevel.cn");
                 break;
             case "chart":
-                from.sendMessage("此指令已暂停使用");
+                if (cmd.length < 2) {
+                    from.sendMessage(RhythmCafeSearchEngine.INSTANCE.sendHelp()).recallIn(30000);
+                    break;
+                }
+
+                switch (cmd[1]) {
+                    case "help":
+                        from.sendMessage(RhythmCafeSearchEngine.INSTANCE.sendHelp()).recallIn(30000);
+                        break;
+                    case "search":
+                        from.sendMessage(RhythmCafeSearchEngine.INSTANCE.search(msg.replaceFirst("//chart[\\s\n]search[\\s\n]", ""))).recallIn(60000);
+                        break;
+                    case "page":
+                        if (!RhythmCafeSearchEngine.INSTANCE.isSearched()) {
+                            from.sendMessage("请先进行一次搜索");
+                            break;
+                        }
+                        try {
+                            int page = Integer.decode(cmd[2]);
+                            from.sendMessage(RhythmCafeSearchEngine.INSTANCE.pageTo(page)).recallIn(60000);
+                        } catch (IllegalArgumentException ex) {
+                            from.sendMessage("请输入一个非负整数！");
+                        }
+                        break;
+                    case "info":
+                        if (!RhythmCafeSearchEngine.INSTANCE.isSearched()) {
+                            from.sendMessage("请先进行一次搜索");
+                            break;
+                        }
+                        try {
+                            int index = Integer.decode(cmd[2]);
+                            from.sendMessage(RhythmCafeSearchEngine.INSTANCE.getDescription(from, index)).recallIn(60000);
+                        } catch (IllegalArgumentException ex) {
+                            from.sendMessage("请输入一个非负整数！");
+                        } catch (IndexOutOfBoundsException ex) {
+                            from.sendMessage("未找到对应编号的谱面");
+                        }
+                        break;
+                    case "link":
+                        if (!RhythmCafeSearchEngine.INSTANCE.isSearched()) {
+                            from.sendMessage("请先进行一次搜索");
+                            break;
+                        }
+                        try {
+                            int index = Integer.decode(cmd[2]);
+                            from.sendMessage(RhythmCafeSearchEngine.INSTANCE.getLink(index)).recallIn(60000);
+                        } catch (IllegalArgumentException ex) {
+                            from.sendMessage("请输入一个非负整数！");
+                        } catch (IndexOutOfBoundsException ex) {
+                            from.sendMessage("未找到对应编号的谱面");
+                        }
+                        break;
+                    case "download":
+                        if (!RhythmCafeSearchEngine.INSTANCE.isSearched()) {
+                            from.sendMessage("请先进行一次搜索");
+                            break;
+                        }
+                        try {
+                            int index = Integer.decode(cmd[2]);
+                            from.sendMessage("开始下载");
+                            RhythmCafeSearchEngine.INSTANCE.downloadAndUpload((Group) e.getSubject(), index);
+                        } catch (IllegalArgumentException ex) {
+                            from.sendMessage("请输入一个非负整数！");
+                        } catch (IndexOutOfBoundsException ex) {
+                            from.sendMessage("未找到对应编号的谱面");
+                        }
+                        break;
+                    default:
+                        from.sendMessage("未知的指令，输入//chart help以获得帮助");
+                }
+
                 break;
+
                 /*if (cmd.length < 3) {
                     from.sendMessage("参数过少。");
                     break;

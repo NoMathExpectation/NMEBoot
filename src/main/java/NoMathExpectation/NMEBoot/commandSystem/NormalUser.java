@@ -74,9 +74,9 @@ public class NormalUser implements Serializable {
     }
 
     static {
-        GlobalEventChannel.INSTANCE.subscribeAlways(GroupMessageEvent.class, e -> increaseMessageCount(e.getSender().getId(), e.getSubject().getId()));
-        GlobalEventChannel.INSTANCE.subscribeAlways(GroupMessagePostSendEvent.class, e -> increaseMessageCount(e.getBot().getId(), e.getTarget().getId()));
-        GlobalEventChannel.INSTANCE.subscribeAlways(GroupMessageSyncEvent.class, e -> increaseMessageCount(e.getSender().getId(), e.getSubject().getId()));
+        GlobalEventChannel.INSTANCE.parentScope(Main.INSTANCE).subscribeAlways(GroupMessageEvent.class, e -> increaseMessageCount(e.getSender().getId(), e.getSubject().getId()));
+        GlobalEventChannel.INSTANCE.parentScope(Main.INSTANCE).subscribeAlways(GroupMessagePostSendEvent.class, e -> increaseMessageCount(e.getBot().getId(), e.getTarget().getId()));
+        GlobalEventChannel.INSTANCE.parentScope(Main.INSTANCE).subscribeAlways(GroupMessageSyncEvent.class, e -> increaseMessageCount(e.getSender().getId(), e.getSubject().getId()));
     }
 
     private int checkInStreak = 0;

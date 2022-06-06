@@ -15,7 +15,7 @@ import net.mamoe.mirai.message.data.buildMessageChain
 import org.jetbrains.annotations.NotNull
 
 object FAQ : AutoSavePluginConfig("faq") {
-    private val groups: MutableMap<Long, MutableMap<String, Pair<String, Array<MessageChain>>>> by value()
+    private val groups: MutableMap<Long, MutableMap<String, Pair<String, List<MessageChain>>>> by value()
 
     val preservedName: Array<String> = arrayOf("new", "save", "discard", "help", "remove")
 
@@ -66,7 +66,7 @@ object FAQ : AutoSavePluginConfig("faq") {
             throw IllegalArgumentException("已经存在一个相同名字的faq")
         }
 
-        map[name] = Pair(description, recordingContent[group]!!.toTypedArray())
+        map[name] = Pair(description, recordingContent[group]!!)
         discard(group)
     }
 

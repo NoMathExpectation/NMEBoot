@@ -39,13 +39,17 @@ public class FileUtils {
 
     @NotNull
     public static File download(@NotNull String url) throws URISyntaxException, IOException, InterruptedException {
-        String[] paths = url.split("[/\\\\]");
-        return download(url, "data/NoMathExpectation.NMEBoot/downloads/" + paths[paths.length - 1].replaceAll("\\?.*", ""));
+        return download(url, "data/NoMathExpectation.NMEBoot/downloads/" + getFileNameByUrl(url));
     }
 
     @NotNull
-    public static File download(@NotNull String url, @NotNull String saveFile) throws URISyntaxException, IOException, InterruptedException {
-        LOGGER.info("开始下载：" + url);
+    public static String getFileNameByUrl(@NotNull String url) {
+        String[] paths = url.split("[/\\\\]");
+        return paths[paths.length - 1].replaceAll("\\?.*", "");
+    }
+
+    @NotNull
+    public static InputStream getDownloadStream(@NotNull String url) throws IOException, InterruptedException, URISyntaxException {
         for (String s : BLACK_LIST) {
             if (url.contains(s)) {
                 throw new IllegalArgumentException("418 I'm a teapot");
@@ -66,15 +70,19 @@ public class FileUtils {
                 .version(HttpClient.Version.HTTP_2)
                 .build();
 
-        InputStream input0;
         try {
-            input0 = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofInputStream()).body();
+            return HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofInputStream()).body();
         } catch (HttpConnectTimeoutException e) {
-            input0 = HTTP_CLIENT_WITH_PROXY.send(request, HttpResponse.BodyHandlers.ofInputStream()).body();
+            return HTTP_CLIENT_WITH_PROXY.send(request, HttpResponse.BodyHandlers.ofInputStream()).body();
         }
+    }
+
+    @NotNull
+    public static File download(@NotNull String url, @NotNull String saveFile) throws URISyntaxException, IOException, InterruptedException {
+        LOGGER.info("开始下载：" + url);
 
         File file;
-        try (InputStream input = input0) {
+        try (InputStream input = getDownloadStream(url)) {
             file = new File(saveFile);
             file.deleteOnExit();
             if (file.isFile() && !file.delete()) {
@@ -124,12 +132,9 @@ public class FileUtils {
             throw new NoSuchElementException("找不到引用文件");
         }
 
-        File f = FileUtils.download(file.getUrl(), "data/NoMathExpectation.NMEBoot/groupshare/" + file.getName());
-        f.deleteOnExit();
-
         AtomicReference<MessageReceipt<Group>> result = new AtomicReference<>();
         if (receiptRequired) {
-            GlobalEventChannel.INSTANCE.subscribe(GroupMessagePostSendEvent.class, e -> {
+            GlobalEventChannel.INSTANCE.parentScope(Main.INSTANCE).subscribe(GroupMessagePostSendEvent.class, e -> {
                 if (e.getTarget().getId() != to.getId() || !e.getMessage().serializeToMiraiCode().startsWith("[mirai:file:" + file.getName())) {
                     return ListeningStatus.LISTENING;
                 }
@@ -140,7 +145,7 @@ public class FileUtils {
             });
             Main.INSTANCE.getLogger().info("上传文件引用监听开始");
         }
-        uploadFile(to, f);
+        uploadFile(to, file.getUrl());
         if (!receiptRequired) {
             return null;
         }
@@ -162,6 +167,24 @@ public class FileUtils {
     @NotNull
     public static AbsoluteFile uploadFile(@NotNull Group group, @NotNull File file) throws IOException {
         return uploadFile(group, file, "/" + file.getName());
+    }
+
+    @NotNull
+    public static AbsoluteFile uploadFile(@NotNull Group group, @NotNull InputStream inputStream, @NotNull String path) throws IOException {
+        LOGGER.info("正在通过流上传文件至 " + group.getName() + " (id: " + group.getId() + ")");
+        try (ExternalResource er = ExternalResource.create(inputStream)) {
+            return group.getFiles().uploadNewFile(path, er);
+        }
+    }
+
+    @NotNull
+    public static AbsoluteFile uploadFile(@NotNull Group group, @NotNull String url, @NotNull String path) throws IOException, URISyntaxException, InterruptedException {
+        return uploadFile(group, getDownloadStream(url), path);
+    }
+
+    @NotNull
+    public static AbsoluteFile uploadFile(@NotNull Group group, @NotNull String url) throws IOException, URISyntaxException, InterruptedException {
+        return uploadFile(group, url, "/" + getFileNameByUrl(url));
     }
 
     @Nullable

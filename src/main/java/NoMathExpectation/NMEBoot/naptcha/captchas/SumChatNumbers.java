@@ -28,7 +28,7 @@ public class SumChatNumbers extends SimpleListenerHost implements CaptchaGenerat
 
     public SumChatNumbers(int count) {
         sumCount = count;
-        GlobalEventChannel.INSTANCE.registerListenerHost(this);
+        GlobalEventChannel.INSTANCE.parentScope(Main.INSTANCE).registerListenerHost(this);
     }
 
     protected synchronized void addNumbers(long id, @NotNull MessageChain m) {

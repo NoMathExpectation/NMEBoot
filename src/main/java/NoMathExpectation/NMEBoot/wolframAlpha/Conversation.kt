@@ -5,22 +5,35 @@ import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.java.*
 import io.ktor.client.plugins.*
+import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.resources.*
 import io.ktor.client.request.*
+import io.ktor.serialization.kotlinx.json.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.produce
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.isActive
+import kotlinx.serialization.json.Json
 import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
 import net.mamoe.mirai.console.data.AutoSavePluginConfig
 import net.mamoe.mirai.console.data.value
+import net.mamoe.mirai.console.plugin.jvm.reloadPluginConfig
 
-class Conversation private constructor(){
+class Conversation private constructor() {
     companion object: AutoSavePluginConfig("wolframAlpha") {
         val HTTP_CLIENT = HttpClient(Java) {
             install(Resources)
+            install(ContentNegotiation) {
+                json(Json)
+            }
             defaultRequest {
                 url("https://api.wolframalpha.com")
             }
+        }
+
+        init {
+            Main.INSTANCE.reloadPluginConfig(this)
         }
 
         private val APP_ID: String by value("")
@@ -35,19 +48,18 @@ class Conversation private constructor(){
 
     private var lastResult: Result? = null
     private val queryChannel: Channel<Query> = Channel(1)
-    private val resultChannel = runBlocking {
-        produce {
-            while (true) {
-                val query = queryChannel.receive()
-                lastResult = if (lastResult == null) {
-                    HTTP_CLIENT.get(query).body()
-                } else {
-                    HTTP_CLIENT.get(query) {
-                        url("https://${lastResult!!.host}/api")
-                    }.body()
-                }
-                send(lastResult!!)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val resultChannel = CoroutineScope(Main.INSTANCE.coroutineContext).produce {
+        while (isActive) {
+            val query = queryChannel.receive()
+            lastResult = if (lastResult == null) {
+                HTTP_CLIENT.get(query).body()
+            } else {
+                HTTP_CLIENT.get(query) {
+                    url("https://${lastResult!!.host}/api")
+                }.body()
             }
+            send(lastResult!!)
         }
     }
 
@@ -57,7 +69,7 @@ class Conversation private constructor(){
         queryChannel.send(Query(APP_ID, question, conversationid = lastResult?.conversationID, s = lastResult?.s))
         val result = resultChannel.receive()
         queryTimes++
-        if (result.error == null) {
+        if (result.error != null) {
             throw RuntimeException(result.error as String?)
         }
         logger.info("请求结束，结果：${result.result}")

@@ -125,8 +125,12 @@ public final class ExecuteCenter extends SimpleListenerHost {
 
     @Override
     public void handleException(@NotNull CoroutineContext context, @NotNull Throwable e) {
+        if (e instanceof EventCancelledException) {
+            return;
+        }
+
         e.printStackTrace();
-        if (lastContact.getId() == NyanMilkSupplier.GROUP_ID) {
+        if (lastContact.getId() == NyanMilkSupplier.GROUP_ID || lastContact.getId() == RDLounge.GROUP_ID) {
             lastContact.sendMessage("武士走进了妮可的咖啡店，要了一份甜甜圈。");
             if (!samurai) {
                 samurai();
@@ -190,7 +194,8 @@ public final class ExecuteCenter extends SimpleListenerHost {
                     saySamurai(false);
                     return;
                 }
-                sendHelp(e);
+                lastContact.sendMessage("(叉腰，无动于衷)");
+                //sendHelp(e);
                 return;
             }
         } catch (Exception ignored) {}
