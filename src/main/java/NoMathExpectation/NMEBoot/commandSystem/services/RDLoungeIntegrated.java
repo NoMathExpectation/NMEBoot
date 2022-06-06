@@ -1,4 +1,4 @@
-package NoMathExpectation.NMEBoot.commandSystem;
+package NoMathExpectation.NMEBoot.commandSystem.services;
 
 import NoMathExpectation.NMEBoot.FileUtils;
 import NoMathExpectation.NMEBoot.Main;
@@ -6,6 +6,7 @@ import NoMathExpectation.NMEBoot.RDLounge.Mahjong;
 import NoMathExpectation.NMEBoot.RDLounge.cardSystem.*;
 import NoMathExpectation.NMEBoot.RDLounge.rhythmCafe.RhythmCafeSearchEngine;
 import NoMathExpectation.NMEBoot.Utils;
+import NoMathExpectation.NMEBoot.commandSystem.*;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.contact.Group;
@@ -29,29 +30,58 @@ import java.util.*;
 import static NoMathExpectation.NMEBoot.commandSystem.ExecuteCenter.atParse;
 import static NoMathExpectation.NMEBoot.commandSystem.ExecuteCenter.isAdminOrBot;
 
-public final class NyanMilkSupplier implements Executable {
-    public static final long GROUP_ID = 916813153L;
+public final class RDLoungeIntegrated implements Executable {
+    public static final long RDLOUNGE = 951070053L;
+    public static final long NYAN_MILK = 916813153L;
     static final long UD2 = 2546915249L;
     static final long OFFSET_NYAN = 1909482450L;
 
-    private static final Random RANDOM = ExecuteCenter.INSTANCE.RANDOM;
+    public static final Set<Long> USING_GROUP = Set.of(951070053L, 916813153L, 884249803L);
+    public static final Set<Long> FULL_FUNCTION_GROUP = Set.of(916813153L, 884249803L);
+
+    public static boolean isUsingGroup(long id) {
+        return USING_GROUP.contains(id);
+    }
+
+    public static boolean isFullFunctionGroup(long id) {
+        return FULL_FUNCTION_GROUP.contains(id);
+    }
+
+    private static boolean testNotFullFunctionGroup(@NotNull Contact contact) {
+        if (!isFullFunctionGroup(contact.getId())) {
+            replyNotFullFunctionGroup(contact);
+            return true;
+        }
+        return false;
+    }
+
+    private static void replyNotFullFunctionGroup(@NotNull Contact contact) {
+        contact.sendMessage("请在水群使用此指令");
+    }
+
+    private static final Random RANDOM = new Random();
     public static final AuctionCenter AUCTION_CENTER = new AuctionCenter();
 
     @Override
     @NotNull
     public MessageChainBuilder appendHelp(@NotNull MessageChainBuilder mcb, @NotNull MessageEvent e) {
-        if (e.getSubject().getId() == GROUP_ID) {
-            mcb = mcb
-                    .append("真·RDL特供:\n")
+        long id = e.getSubject().getId();
+        if (isUsingGroup(id)) {
+            if(isFullFunctionGroup(id)) {
+                mcb.append("真·");
+            }
+            mcb.append("RDL特供:\n")
                     .append("//rdhelp :编辑器帮助\n")
                     .append("//convert <type> :将音视频文件转换成指定类型\n")
                     .append("//nurse [-h|args] :检查谱面是否有错误(credits: ud2)\n")
-                    .append("//chart :搜索谱面\n")
-                    .append("//c 或 //card ://card help\n")
-                    .append("//samurai :Samurai.\n")
-                    .append("//majsoul :向听数计算，例子：//majsoul m123 p456 s789\n")
-                    .append("//brainpower\n")
-                    .append("//heyall\n\n");
+                    .append("//chart :搜索谱面\n");
+            if(isFullFunctionGroup(id)) {
+                mcb.append("//c 或 //card ://card help\n")
+                        .append("//samurai :Samurai.\n")
+                        .append("//majsoul :向听数计算，例子：//majsoul m123 p456 s789\n")
+                        .append("//brainpower\n")
+                        .append("//heyall\n\n");
+            }
         }
         return mcb;
     }
@@ -113,108 +143,36 @@ public final class NyanMilkSupplier implements Executable {
     }
 
     private void repeat(@NotNull MessageEvent e, @NotNull String msg) {
-        if (e.getSubject().getId() == GROUP_ID) {
-            if (msg.equals(repeat)) {
-                if (++repeatCount == 5) {
-                    if (ExecuteCenter.INSTANCE.saySamurai(false)) {
-                        return;
-                    }
-                    e.getSubject().sendMessage(MiraiCode.deserializeMiraiCode(repeat));
+        if (msg.equals(repeat)) {
+            if (++repeatCount == 5) {
+                if (ExecuteCenter.INSTANCE.saySamurai(false)) {
+                    return;
                 }
-            } else {
-                repeat = msg;
-                repeatCount = 1;
+                e.getSubject().sendMessage(MiraiCode.deserializeMiraiCode(repeat));
             }
+        } else {
+            repeat = msg;
+            repeatCount = 1;
         }
-        Main.INSTANCE.getLogger().info("repeat:" + repeatCount);
+        Main.INSTANCE.getLogger().debug("repeat:" + repeatCount);
     }
 
-    private MessageReceipt<Contact> levelSearchMessage;
     private String chart;
     private int chartChosen;
-
-    @NotNull
-    private MessageReceipt<Contact> sendLevelSearchQuery(@NotNull Contact contact) {
-        return contact.sendMessage(new MessageChainBuilder()
-                .append("!~rdlevel search song \"")
-                .append(MiraiCode.deserializeMiraiCode(chart.replace("\"", "\\\\\"")))
-                .append("\" page ")
-                .append(String.valueOf((chartChosen - 1) / 5 + 1))
-                .build());
-    }
-
-    @NotNull
-    private ListeningStatus levelSearchHandler(@NotNull MessageEvent e) {
-        if (e.getSubject().getId() == GROUP_ID && e.getSender().getId() == UD2) {
-            if (e.getMessage().size() < 3) {
-                return ListeningStatus.LISTENING;
-            }
-            String result = e.getMessage().get(2).contentToString();
-            Main.INSTANCE.getLogger().info("\n" + result);
-            if (result.startsWith("网络")) {
-                try {
-                    levelSearchMessage.recall();
-                } catch (Exception ignored) {}
-                e.getSubject().sendMessage("请不要使用铁丝上网(");
-                Main.INSTANCE.getLogger().info("网络请求错误，监听结束");
-                return ListeningStatus.STOPPED;
-            }
-            if (result.startsWith("无结果")) {
-                try {
-                    levelSearchMessage.recall();
-                } catch (Exception ignored) {}
-                if (chartChosen > 5) {
-                    Main.INSTANCE.getLogger().info("未在此页找到谱面，搜索第一页中...");
-                    chartChosen = 1;
-                    levelSearchMessage = sendLevelSearchQuery(e.getSubject());
-                    return ListeningStatus.LISTENING;
-                }
-                e.getSubject().sendMessage("无结果");
-                Main.INSTANCE.getLogger().info("未找到谱面，监听结束");
-                return ListeningStatus.STOPPED;
-            }
-            if (result.startsWith("参数后应有空格分隔") || result.startsWith("引号内的字符串")) {
-                try {
-                    levelSearchMessage.recall();
-                } catch (Exception ignored) {
-                }
-                e.getSubject().sendMessage("非法的歌曲名");
-                Main.INSTANCE.getLogger().info("非法的歌曲名，监听结束");
-                return ListeningStatus.STOPPED;
-            }
-            String uuid;
-            try {
-                uuid = result.split("\n")[(chartChosen - 1) % 5 * 2];
-            } catch (Exception exception) {
-                Main.INSTANCE.getLogger().info("此页无指定序号谱面，将使用此页的第一个谱面");
-                uuid = result.split("\n")[0];
-            }
-            if (uuid.matches("[0-9a-zA-Z]{22}")) {
-                try {
-                    levelSearchMessage.recall();
-                } catch (Exception ignored) {
-                }
-                e.getSubject().sendMessage("!~rdlevel download " + uuid);
-                Main.INSTANCE.getLogger().info("已找到谱面，监听结束");
-                return ListeningStatus.STOPPED;
-            }
-        }
-        return ListeningStatus.LISTENING;
-    }
 
     private AbsoluteFile fileToUd2;
     private MessageReceipt<Group> requestToUd2;
 
     @NotNull
     private ListeningStatus ud2Listener(@NotNull GroupMessageEvent e) {
-        if (e.getSubject().getId() == GROUP_ID && e.getSender().getId() == UD2) {
-            Group group = e.getBot().getGroup(GROUP_ID);
+        if (e.getSubject().getId() == NYAN_MILK && e.getSender().getId() == UD2) {
+            Group group = e.getBot().getGroup(NYAN_MILK);
             if (group == null) {
                 Main.INSTANCE.getLogger().warning("传达ud2消息时未找到饭制部");
             } else {
                 MessageChain msg = e.getMessage();
                 if (!msg.contains(FileMessage.Key)) {
-                    group.sendMessage(Alias.INSTANCE.alias(msg, GROUP_ID));
+                    group.sendMessage(Alias.INSTANCE.alias(msg, NYAN_MILK));
                 } else {
                     AbsoluteFile file = msg.get(FileMessage.Key).toAbsoluteFile(e.getSubject());
                     try {
@@ -243,7 +201,7 @@ public final class NyanMilkSupplier implements Executable {
     }
 
     private void newUd2Request(@NotNull Message message, @NotNull Group from) throws Exception {
-        Group targetGroup = Bot.getInstances().get(0).getGroup(GROUP_ID);
+        Group targetGroup = Bot.getInstances().get(0).getGroup(NYAN_MILK);
         if (targetGroup == null) {
             throw new NoSuchElementException("找不到指定群");
         }
@@ -282,7 +240,7 @@ public final class NyanMilkSupplier implements Executable {
 
     @Override
     public boolean onMessage(@NotNull MessageEvent e, @NotNull NormalUser user, @NotNull String command, @NotNull String miraiCommand) throws Exception {
-        if (e.getSubject().getId() != GROUP_ID) {
+        if (!isUsingGroup(e.getSubject().getId())) {
             return false;
         }
 
@@ -291,9 +249,9 @@ public final class NyanMilkSupplier implements Executable {
         /*if(autoRDNurse(e))
         {return true;}*/
 
-        /*if (atOtto(e)) {
+        if (atOtto(e)) {
             return true;
-        }*/
+        }
 
         String msg, miraiMsg;
         boolean hasQuote = e.getMessage().contains(QuoteReply.Key);
@@ -324,13 +282,13 @@ public final class NyanMilkSupplier implements Executable {
             return false;
         }
 
-        if (!(msg.equals("//samurai") || msg.startsWith("//samurai ")) && ExecuteCenter.INSTANCE.saySamurai(false)) {
+        if (isFullFunctionGroup(from.getId()) && !(msg.equals("//samurai") || msg.startsWith("//samurai ")) && ExecuteCenter.INSTANCE.saySamurai(false)) {
             return true;
         }
 
-        if(atOffsetNyan(e, msg, from)) {
+        /*if(atOffsetNyan(e, msg, from)) {
             return true;
-        }
+        }*/
 
         if (tiredPaige(from)) {
             return true;
@@ -345,19 +303,35 @@ public final class NyanMilkSupplier implements Executable {
             case "rdhelp":
                 from.sendMessage("编辑器帮助网址：https://rd.rdlevel.cn");
                 break;
+
             case "brainpower":
+                if (testNotFullFunctionGroup(from)) {
+                    break;
+                }
                 from.sendMessage("\uD835\uDCDE-\uD835\uDCF8\uD835\uDCF8\uD835\uDCF8\uD835\uDCF8\uD835\uDCF8\uD835\uDCF8\uD835\uDCF8\uD835\uDCF8\uD835\uDCF8\uD835\uDCF8 \uD835\uDCD0\uD835\uDCD0\uD835\uDCD0\uD835\uDCD0\uD835\uDCD4-\uD835\uDCD0-\uD835\uDCD0-\uD835\uDCD8-\uD835\uDCD0-\uD835\uDCE4- \uD835\uDCD9\uD835\uDCDE-\uD835\uDCF8\uD835\uDCF8\uD835\uDCF8\uD835\uDCF8\uD835\uDCF8\uD835\uDCF8\uD835\uDCF8\uD835\uDCF8\uD835\uDCF8\uD835\uDCF8\uD835\uDCF8\uD835\uDCF8 \uD835\uDCD0\uD835\uDCD0\uD835\uDCD4-\uD835\uDCDE-\uD835\uDCD0-\uD835\uDCD0-\uD835\uDCE4-\uD835\uDCE4-\uD835\uDCD0- \uD835\uDCD4-\uD835\uDC86\uD835\uDC86\uD835\uDC86-\uD835\uDC86\uD835\uDC86-\uD835\uDC86\uD835\uDC86\uD835\uDC86 \uD835\uDCD0\uD835\uDCD0\uD835\uDCD0\uD835\uDCD0\uD835\uDCD4-\uD835\uDCD0-\uD835\uDCD4-\uD835\uDCD8-\uD835\uDCD4-\uD835\uDCD0-\uD835\uDCD9\uD835\uDCDE-\uD835\uDCF8\uD835\uDCF8\uD835\uDCF8-\uD835\uDCF8\uD835\uDCF8-\uD835\uDCF8\uD835\uDCF8-\uD835\uDCF8\uD835\uDCF8 \uD835\uDCD4\uD835\uDCD4\uD835\uDCD4\uD835\uDCD4\uD835\uDCDE-\uD835\uDCD0-\uD835\uDCD0\uD835\uDCD0\uD835\uDCD0-\uD835\uDCD0\uD835\uDCD0\uD835\uDCD0\uD835\uDCD0\uD835\uDCD0\uD835\uDCD0");
                 break;
+
             case "heyall":
+                if (testNotFullFunctionGroup(from)) {
+                    break;
+                }
                 from.sendMessage("Hey all, Scott here.");
                 break;
+
             case "samurai":
+                if (testNotFullFunctionGroup(from)) {
+                    break;
+                }
                 ExecuteCenter.INSTANCE.samurai();
                 if (!ExecuteCenter.INSTANCE.saySamurai(false)) {
                     from.sendMessage("武士离开了咖啡店。");
                 }
                 break;
+
             case "majsoul":
+                if (testNotFullFunctionGroup(from)) {
+                    break;
+                }
                 if(cmd.length < 2) {
                     from.sendMessage("请附加参数");
                     break;
@@ -369,18 +343,22 @@ public final class NyanMilkSupplier implements Executable {
                     ex.printStackTrace();
                 }
                 break;
+
             case "chart":
                 if (cmd.length < 2) {
                     from.sendMessage(RhythmCafeSearchEngine.INSTANCE.sendHelp()).recallIn(30000);
                     break;
                 }
+
                 switch (cmd[1]) {
                     case "help":
                         from.sendMessage(RhythmCafeSearchEngine.INSTANCE.sendHelp()).recallIn(30000);
                         break;
+
                     case "search":
                         from.sendMessage(RhythmCafeSearchEngine.INSTANCE.search(msg.replaceFirst("//chart[\\s\n]search[\\s\n]", ""))).recallIn(60000);
                         break;
+
                     case "page":
                         if (!RhythmCafeSearchEngine.INSTANCE.isSearched()) {
                             from.sendMessage("请先进行一次搜索");
@@ -393,6 +371,7 @@ public final class NyanMilkSupplier implements Executable {
                             from.sendMessage("请输入一个非负整数！");
                         }
                         break;
+
                     case "info":
                         if (!RhythmCafeSearchEngine.INSTANCE.isSearched()) {
                             from.sendMessage("请先进行一次搜索");
@@ -407,6 +386,7 @@ public final class NyanMilkSupplier implements Executable {
                             from.sendMessage("未找到对应编号的谱面");
                         }
                         break;
+
                     case "link":
                         if (!RhythmCafeSearchEngine.INSTANCE.isSearched()) {
                             from.sendMessage("请先进行一次搜索");
@@ -421,6 +401,7 @@ public final class NyanMilkSupplier implements Executable {
                             from.sendMessage("未找到对应编号的谱面");
                         }
                         break;
+
                     case "download":
                         if (!RhythmCafeSearchEngine.INSTANCE.isSearched()) {
                             from.sendMessage("请先进行一次搜索");
@@ -436,32 +417,12 @@ public final class NyanMilkSupplier implements Executable {
                             from.sendMessage("未找到对应编号的谱面");
                         }
                         break;
+
                     default:
                         from.sendMessage("未知的指令，输入//chart help以获得帮助");
                 }
-
                 break;
 
-                /*if (cmd.length < 3) {
-                    from.sendMessage("参数过少。");
-                    break;
-                }
-                try {
-                    chartChosen = Integer.decode(cmd[1]);
-                    if (chartChosen <= 0) {
-                        throw new IllegalArgumentException("必须为正数");
-                    }
-                } catch (Exception exception) {
-                    from.sendMessage("非法谱面序号");
-                    break;
-                }
-                chart = miraiMsg.replaceFirst("//chart(\\s+|(\\\\n)+)\\d*(\\s+|(\\\\n)+)", "");
-                Main.INSTANCE.getLogger().info("开始搜索谱面:" + chart);
-                Main.INSTANCE.getLogger().info("请求序号:" + cmd[1]);
-                e.getBot().getEventChannel().subscribe(MessageEvent.class, this::levelSearchHandler);
-                levelSearchMessage = sendLevelSearchQuery(e.getSubject());
-                Main.INSTANCE.getLogger().info("回复监听开始");
-                break;*/
             case "convert":
                 if (!hasQuote) {
                     from.sendMessage("未找到引用消息");
@@ -500,6 +461,7 @@ public final class NyanMilkSupplier implements Executable {
                 t.setDaemon(true);
                 t.start();
                 break;
+
             case "nurse":
                 if (!hasQuote) {
                     from.sendMessage("未找到引用消息");
@@ -537,15 +499,18 @@ public final class NyanMilkSupplier implements Executable {
                 t.setDaemon(true);
                 t.start();
                 break;
+
             case "c":
             case "card":
-                from.sendMessage("此指令暂时停用");
-                break;
-            case "card!!":
+                if (testNotFullFunctionGroup(from)) {
+                    break;
+                }
+
                 if (cmd.length < 2) {
                     from.sendMessage("使用//card help来显示抽卡帮助");
                     break;
                 }
+
                 CardUser cardUser = CardUser.getUsers().get(user.id);
                 if (cardUser == null) {
                     cardUser = new CardUser(user.id, user.name);
@@ -572,6 +537,7 @@ public final class NyanMilkSupplier implements Executable {
                                         .build())
                                 .recallIn(60000);
                         break;
+
                     case "stat":
                     case "stats":
                         if (cmd.length < 3) {
@@ -600,6 +566,7 @@ public final class NyanMilkSupplier implements Executable {
                                 from.sendMessage("无效的项目");
                         }
                         break;
+
                     case "p":
                     case "pull":
                         Card card = cardUser.pull(CardPool.getPools().get("general"));
@@ -615,6 +582,7 @@ public final class NyanMilkSupplier implements Executable {
                                     .build());
                         }
                         break;
+
                     case "level":
                         int levelToken = 2;
                         if (!cardUser.pay(levelToken)) {
@@ -635,6 +603,7 @@ public final class NyanMilkSupplier implements Executable {
                                     .build());
                         }
                         break;
+
                     case "pray":
                     case "claim":
                         Duration d = cardUser.pray();
@@ -644,10 +613,12 @@ public final class NyanMilkSupplier implements Executable {
                             from.sendMessage("请再等待" + d.toDays() + "天" + d.toHoursPart() + "时" + d.toMinutesPart() + "分" + d.toSecondsPart() + "秒");
                         }
                         break;
+
                     case "inv":
                     case "inventory":
                         from.sendMessage(cardUser.getInventoryMessageChain()).recallIn(60000);
                         break;
+
                     case "b":
                     case "box":
                         if (cmd.length < 3) {
@@ -674,6 +645,7 @@ public final class NyanMilkSupplier implements Executable {
                                 }
                                 from.sendMessage(chain.plus(suffix));
                                 break;
+
                             case "out":
                                 int tokenOut = 2;
                                 if (!cardUser.pay(tokenOut)) {
@@ -686,15 +658,18 @@ public final class NyanMilkSupplier implements Executable {
                                 }
                                 from.sendMessage(chain);
                                 break;
+
                             case "get":
                                 if (isAdminOrBot(e)) {
                                     from.sendMessage(CardPool.getPools().get("box").getCards().toString());
                                     break;
                                 }
+
                             default:
                                 from.sendMessage("未知参数。可用参数：in/out/不填");
                         }
                         break;
+
                     case "throw":
                         if (cmd.length < 3) {
                             from.sendMessage("请输入你要扔出的物品的名字或id");
@@ -763,6 +738,7 @@ public final class NyanMilkSupplier implements Executable {
                             }
                         }
                         break;
+
                     case "catch":
                         item = ItemPool.getPools().get("ground").pull();
                         if (item.equals(Card.EMPTY)) {
@@ -787,6 +763,7 @@ public final class NyanMilkSupplier implements Executable {
                         }
                         cardUser.addItem(item);
                         break;
+
                     case "show":
                         if (cmd.length < 3) {
                             from.sendMessage("请输入你要展示的物品的名字或id");
@@ -810,6 +787,7 @@ public final class NyanMilkSupplier implements Executable {
                                 .append(CardUser.getInventoryMessageChain(searchItems))
                                 .build()).recallIn(30000);
                         break;
+
                     case "use":
                         if (cmd.length < 3) {
                             from.sendMessage("请输入你要使用的物品的名字或id");
@@ -819,6 +797,7 @@ public final class NyanMilkSupplier implements Executable {
                             from.sendMessage("没有找到对应物品，或此物品目前不可使用");
                         }
                         break;
+
                     case "auc":
                     case "auction":
                         if (cmd.length < 3) {
@@ -830,6 +809,7 @@ public final class NyanMilkSupplier implements Executable {
                                     .build()).recallIn(30000);
                             break;
                         }
+
                         switch (cmd[2]) {
                             case "new":
                                 int cost;
@@ -849,6 +829,7 @@ public final class NyanMilkSupplier implements Executable {
                                 }
                                 from.sendMessage(AUCTION_CENTER.newAuction(cardUser, id, from, cost));
                                 break;
+
                             case "bid":
                                 try {
                                     cost = Integer.decode(cmd[3]);
@@ -861,6 +842,7 @@ public final class NyanMilkSupplier implements Executable {
                                 }
                                 from.sendMessage(AUCTION_CENTER.bid(cardUser, cost));
                                 break;
+
                             case "stop":
                                 if (isAdminOrBot(e)) {
                                     from.sendMessage(AUCTION_CENTER.stopCurrentAuction());
@@ -868,10 +850,12 @@ public final class NyanMilkSupplier implements Executable {
                                     from.sendMessage(AUCTION_CENTER.stopCurrentAuction(cardUser));
                                 }
                                 break;
+
                             default:
                                 from.sendMessage("未知的参数，可用参数有：new/bid/stop");
                         }
                         break;
+
                     case "reload":
                         if (isAdminOrBot(e)) {
                             CardPool.removeLoaded();
@@ -879,10 +863,12 @@ public final class NyanMilkSupplier implements Executable {
                             from.sendMessage("重载完成");
                             break;
                         }
+
                     default:
                         from.sendMessage("未知的参数，输入//c help以查看帮助");
                 }
                 break;
+
             default:
                 return false;
         }

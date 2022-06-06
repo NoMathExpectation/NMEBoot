@@ -1,4 +1,4 @@
-package NoMathExpectation.NMEBoot.commandSystem;
+package NoMathExpectation.NMEBoot.commandSystem.services;
 
 import NoMathExpectation.NMEBoot.FAQ;
 import NoMathExpectation.NMEBoot.FileUtils;
@@ -7,6 +7,7 @@ import NoMathExpectation.NMEBoot.RDLounge.cardSystem.CardUser;
 import NoMathExpectation.NMEBoot.RDLounge.cardSystem.Item;
 import NoMathExpectation.NMEBoot.RDLounge.cardSystem.ItemLibrary;
 import NoMathExpectation.NMEBoot.Utils;
+import NoMathExpectation.NMEBoot.commandSystem.*;
 import NoMathExpectation.NMEBoot.wolframAlpha.Conversation;
 import kotlin.Triple;
 import net.mamoe.mirai.contact.Contact;
@@ -47,7 +48,7 @@ public final class General implements Executable {
 
         mcb.append("//help :显示所有指令\n");
 
-        if (e.getSubject().getId() != RDLounge.GROUP_ID) {
+        if (e.getSubject().getId() != RDLoungeIntegrated.RDLOUNGE) {
             mcb
                     .append("//hello :发送 \"Hello, world!\"\n")
                     .append("//repeat <text> :复读机\n")
@@ -90,7 +91,7 @@ public final class General implements Executable {
         }
         Contact from = Alias.INSTANCE.alias(from0);
 
-        if (from.getId() == NyanMilkSupplier.GROUP_ID && ExecuteCenter.INSTANCE.getSamurai()) {
+        if (RDLoungeIntegrated.isFullFunctionGroup(from.getId()) && ExecuteCenter.INSTANCE.getSamurai()) {
             return false;
         }
         String[] cmd = msg.substring(2).split("\\s+");
@@ -464,7 +465,7 @@ public final class General implements Executable {
                 if (Main.naptcha.checkAnswer(msg.replaceFirst("//checkin\\s+", ""), from)) {
                     user.checkIn();
                     from.sendMessage("签到成功！你是第" + user.getCheckInRank() + "个签到的。\n你已经连续签到了" + user.getCheckInStreak() + "天");
-                    if (user.getCheckInRank() <= 10000 && from.getId() == NyanMilkSupplier.GROUP_ID) {
+                    if (user.getCheckInRank() <= 10000 && RDLoungeIntegrated.isFullFunctionGroup(from.getId())) {
                         CardUser cardUser = CardUser.getUsers().get(user.id);
                         if (cardUser == null) {
                             cardUser = new CardUser(user.id, user.name);
@@ -698,7 +699,7 @@ public final class General implements Executable {
                     break;
                 }
                 StringBuilder stinkBuilder = new StringBuilder();
-                if (cmd[0].equals("1919810") && (e instanceof GroupMessageEvent && ((GroupMessageEvent) e).getGroup().contains(NyanMilkSupplier.UD2)) || (e instanceof GroupMessageSyncEvent && ((GroupMessageSyncEvent) e).getGroup().contains(RDLounge.UD2))) {
+                if (cmd[0].equals("1919810") && (e instanceof GroupMessageEvent && ((GroupMessageEvent) e).getGroup().contains(RDLoungeIntegrated.UD2)) || (e instanceof GroupMessageSyncEvent && ((GroupMessageSyncEvent) e).getGroup().contains(RDLoungeIntegrated.UD2))) {
                     stinkBuilder.append("!~say 哼，哼，哼，");
                 } else {
                     stinkBuilder.append("哼，哼，哼，");

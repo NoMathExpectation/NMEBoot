@@ -1,6 +1,7 @@
 package NoMathExpectation.NMEBoot.commandSystem;
 
 import NoMathExpectation.NMEBoot.Main;
+import NoMathExpectation.NMEBoot.commandSystem.services.RDLoungeIntegrated;
 import kotlin.coroutines.CoroutineContext;
 import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.contact.MemberPermission;
@@ -58,7 +59,7 @@ public final class ExecuteCenter extends SimpleListenerHost {
     }
 
     public boolean saySamurai(boolean forced) {
-        if (lastContact.getId() == NyanMilkSupplier.GROUP_ID && samurai || forced) {
+        if (RDLoungeIntegrated.isUsingGroup(lastContact.getId()) && samurai || forced) {
             lastContact.sendMessage(getSamuraiWord());
         }
         return samurai;
@@ -130,7 +131,7 @@ public final class ExecuteCenter extends SimpleListenerHost {
         }
 
         e.printStackTrace();
-        if (lastContact.getId() == NyanMilkSupplier.GROUP_ID || lastContact.getId() == RDLounge.GROUP_ID) {
+        if (RDLoungeIntegrated.isUsingGroup(lastContact.getId())) {
             lastContact.sendMessage("武士走进了妮可的咖啡店，要了一份甜甜圈。");
             if (!samurai) {
                 samurai();
@@ -165,9 +166,9 @@ public final class ExecuteCenter extends SimpleListenerHost {
             user.name = e.getSenderName();
         }
 
-        if (containsCommand(msg) && user.isBanned()) {
+        if (isCommand(msg) && user.isBanned()) {
             Duration d = user.getBannedRemain();
-            if (lastContact.getId() == NyanMilkSupplier.GROUP_ID) {
+            if (RDLoungeIntegrated.isUsingGroup(lastContact.getId())) {
                 lastContact.sendMessage(user.name + " was samuraied in " + d.toDays() + "d " + d.toHoursPart() + "h " + d.toMinutesPart() + "m " + d.toSecondsPart() + "s for " + user.getBannedReason() + ". " + getSamuraiWord());
             } else {
                 lastContact.sendMessage(user.name + "因为" + user.getBannedReason() + "被封禁至" + d.toDays() + "天" + d.toHoursPart() + "时" + d.toMinutesPart() + "分钟" + d.toSecondsPart() + "秒后。");
@@ -175,27 +176,22 @@ public final class ExecuteCenter extends SimpleListenerHost {
             return;
         }
 
-        if (!(msg.startsWith("//alias") || (e.getSubject().getId() == NyanMilkSupplier.GROUP_ID && getSamurai() && msg.startsWith("//samurai")))) {
+        if (!(msg.startsWith("//alias") || (RDLoungeIntegrated.isFullFunctionGroup(e.getSubject().getId()) && getSamurai() && msg.startsWith("//samurai")))) {
             msg = Alias.INSTANCE.alias(msg, lastContact.getId());
         }
 
-        if (!(msg.startsWith("//alias") || (e.getSubject().getId() == NyanMilkSupplier.GROUP_ID && getSamurai() && msg.startsWith("//samurai")))) {
+        if (!(msg.startsWith("//alias") || (RDLoungeIntegrated.isFullFunctionGroup(e.getSubject().getId()) && getSamurai() && msg.startsWith("//samurai")))) {
             miraiMsg = Alias.INSTANCE.alias(miraiMsg, lastContact.getId());
-        }
-
-        if (!isAdminOrBot(e) && containsCommand(msg) && (Block.INSTANCE.checkBlocked(e.getSubject().getId(), e.getSender().getId(), msg) || Block.INSTANCE.checkBlocked(e.getSubject().getId(), e.getSender().getId(), miraiMsg))) {
-            lastContact.sendMessage("你没有权限使用此指令");
-            return;
         }
 
         try {
             if (msg.split("\\s+|\n+")[0].equals("//help")) {
-                if (samurai && lastContact.getId() == NyanMilkSupplier.GROUP_ID) {
+                if (samurai && RDLoungeIntegrated.isFullFunctionGroup(lastContact.getId())) {
                     saySamurai(false);
                     return;
                 }
-                lastContact.sendMessage("(叉腰，无动于衷)");
-                //sendHelp(e);
+                //lastContact.sendMessage("(叉腰，无动于衷)");
+                sendHelp(e);
                 return;
             }
         } catch (Exception ignored) {}
@@ -214,14 +210,19 @@ public final class ExecuteCenter extends SimpleListenerHost {
     }
 
     @Contract(pure = true)
-    private boolean containsCommand(@NotNull String msg) {
-        return Pattern.compile(";?(\\s|\n)*//").matcher(msg).find();
+    private boolean isCommand(@NotNull String msg) {
+        return Pattern.compile("^//").matcher(msg).find();
     }
 
     public boolean execute(@NotNull MessageEvent e, @NotNull NormalUser user, @NotNull String cmd, @NotNull String miraiCmd) throws Exception {
         //Main.INSTANCE.getLogger().info("cmd: " + cmd);
         //Main.INSTANCE.getLogger().info("miraicmd: " + miraiCmd);
 
+        if (!isAdminOrBot(e) && isCommand(cmd) && (Block.INSTANCE.checkBlocked(e.getSubject().getId(), e.getSender().getId(), cmd) || Block.INSTANCE.checkBlocked(e.getSubject().getId(), e.getSender().getId(), miraiCmd))) {
+            lastContact.sendMessage("你没有权限使用此指令");
+            return false;
+        }
+        
         for (Executable s : cmdSet) {
             if (s.onMessage(e, user, cmd, miraiCmd)) {
                 return true;
@@ -235,7 +236,7 @@ public final class ExecuteCenter extends SimpleListenerHost {
     }
 
     @EventHandler
-    public void nudge(@NotNull NudgeEvent e) throws Exception {
+    public void nudge(@NotNull NudgeEvent e) {
         long to = e.getTarget().getId();
         if (to == e.getBot().getId() && to != e.getFrom().getId()) {
             e.getFrom().nudge().sendTo(e.getSubject());
@@ -243,6 +244,6 @@ public final class ExecuteCenter extends SimpleListenerHost {
     }
 
     @EventHandler
-    public void recall(@NotNull MessageRecallEvent e) throws Exception {
+    public void recall(@NotNull MessageRecallEvent e) {
     }
 }

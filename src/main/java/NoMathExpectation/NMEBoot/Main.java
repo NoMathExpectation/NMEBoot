@@ -1,7 +1,12 @@
 package NoMathExpectation.NMEBoot;
 
 import NoMathExpectation.NMEBoot.RDLounge.cardSystem.*;
-import NoMathExpectation.NMEBoot.commandSystem.*;
+import NoMathExpectation.NMEBoot.commandSystem.ExecuteCenter;
+import NoMathExpectation.NMEBoot.commandSystem.NormalUser;
+import NoMathExpectation.NMEBoot.commandSystem.NormalUserStats;
+import NoMathExpectation.NMEBoot.commandSystem.Samurai;
+import NoMathExpectation.NMEBoot.commandSystem.services.General;
+import NoMathExpectation.NMEBoot.commandSystem.services.RDLoungeIntegrated;
 import NoMathExpectation.NMEBoot.naptcha.CaptchaDispatcher;
 import NoMathExpectation.NMEBoot.naptcha.captchas.*;
 import net.mamoe.mirai.console.plugin.jvm.JavaPlugin;
@@ -22,14 +27,13 @@ public final class Main extends JavaPlugin {
     public static WordleMirai wordle = new WordleMirai(new File("config/NoMathExpectation.NMEBoot/wordle.txt"), 6, 25);
 
     private Main() {
-        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.2.3-2022052410")
+        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.2.4-2022060602")
                 .name("NMEBoot")
                 .author("NoMathExpectation")
                 .build());
         executeCenter = new ExecuteCenter()
                 .register(new General())
-                .register(new NyanMilkSupplier())
-                .register(new RDLounge());
+                .register(new RDLoungeIntegrated());
         naptcha = new CaptchaDispatcher()
                 .register(new NumberSort(5, -100, 100))
                 //.register(new SumChatNumbers(5))
@@ -129,7 +133,7 @@ public final class Main extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        NyanMilkSupplier.AUCTION_CENTER.stop();
+        RDLoungeIntegrated.AUCTION_CENTER.stop();
         save();
         getLogger().info("NMEBoot已停用。");
     }

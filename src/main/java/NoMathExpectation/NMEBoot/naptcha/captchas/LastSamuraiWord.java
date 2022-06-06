@@ -1,7 +1,7 @@
 package NoMathExpectation.NMEBoot.naptcha.captchas;
 
 import NoMathExpectation.NMEBoot.commandSystem.ExecuteCenter;
-import NoMathExpectation.NMEBoot.commandSystem.NyanMilkSupplier;
+import NoMathExpectation.NMEBoot.commandSystem.services.RDLoungeIntegrated;
 import NoMathExpectation.NMEBoot.naptcha.CaptchaGenerator;
 import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.message.data.MessageChain;
@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class LastSamuraiWord implements CaptchaGenerator {
     public LastSamuraiWord() {
-        useOnlyIn.add(NyanMilkSupplier.GROUP_ID);
+        useOnlyIn.addAll(RDLoungeIntegrated.USING_GROUP);
     }
 
     @Override
