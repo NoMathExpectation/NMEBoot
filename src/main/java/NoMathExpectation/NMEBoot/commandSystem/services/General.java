@@ -392,6 +392,7 @@ public final class General implements Executable {
                 }
                 if (cmd.length < 2) {
                     from.sendMessage(FAQ.INSTANCE.getHelp(from, isAdminOrBot(e))).recallIn(30000);
+                    break;
                 }
                 switch (cmd[1]) {
                     case "help":

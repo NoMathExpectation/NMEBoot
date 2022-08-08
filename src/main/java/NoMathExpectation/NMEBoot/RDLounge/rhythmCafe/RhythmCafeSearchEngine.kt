@@ -3,7 +3,7 @@ package NoMathExpectation.NMEBoot.RDLounge.rhythmCafe
 import NoMathExpectation.NMEBoot.FileUtils
 import io.ktor.client.*
 import io.ktor.client.call.*
-import io.ktor.client.engine.java.*
+import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.resources.*
@@ -18,7 +18,7 @@ import net.mamoe.mirai.message.data.buildMessageChain
 
 object RhythmCafeSearchEngine {
     private const val apiKey = "nicolebestgirl"
-    private val httpClient = HttpClient(Java) {
+    private val httpClient = HttpClient(CIO) {
         install(Resources)
         install(ContentNegotiation) {
             json(Json)
@@ -50,6 +50,8 @@ object RhythmCafeSearchEngine {
     }
 
     fun getLink(index: Int) = currentSearch.hits[index - 1].document.url
+
+    fun getLink2(index: Int) = currentSearch.hits[index - 1].document.url2
 
     @JvmBlockingBridge
     suspend fun downloadAndUpload(group: Group, index: Int) = FileUtils.uploadFile(group, FileUtils.download(getLink(index)))
@@ -114,6 +116,7 @@ object RhythmCafeSearchEngine {
         append("page <i> :将搜索结果翻到第i页\n")
         append("info <i> :显示当前页中第i个谱面的描述\n")
         append("link <i> :获取当前页中第i个谱面的链接\n")
+        append("link2 <i> :获取当前页中第i个谱面的镜像链接\n")
         append("download <i> :下载当前页中第i个谱面")
     }
 }

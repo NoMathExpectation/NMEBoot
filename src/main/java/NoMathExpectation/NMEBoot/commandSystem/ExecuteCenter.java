@@ -206,7 +206,7 @@ public final class ExecuteCenter extends SimpleListenerHost {
         }
 
         LocalDateTime end = LocalDateTime.now();
-        Main.INSTANCE.getLogger().info("执行时间：" + Duration.between(start, end).toMillis() + "ms");
+        Main.INSTANCE.getLogger().debug("执行时间：" + Duration.between(start, end).toMillis() + "ms");
     }
 
     @Contract(pure = true)

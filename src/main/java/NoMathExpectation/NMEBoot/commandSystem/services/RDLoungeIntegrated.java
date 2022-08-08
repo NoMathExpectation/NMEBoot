@@ -71,12 +71,12 @@ public final class RDLoungeIntegrated implements Executable {
                 mcb.append("真·");
             }
             mcb.append("RDL特供:\n")
-                    .append("//rdhelp :编辑器帮助\n")
-                    .append("//convert <type> :将音视频文件转换成指定类型\n")
-                    .append("//nurse [-h|args] :检查谱面是否有错误(credits: ud2)\n")
                     .append("//chart :搜索谱面\n");
             if(isFullFunctionGroup(id)) {
-                mcb.append("//c 或 //card ://card help\n")
+                mcb.append("//nurse [-h|args] :检查谱面是否有错误(credits: ud2)\n")
+                        .append("//rdhelp :编辑器帮助\n")
+                        .append("//convert <type> :将音视频文件转换成指定类型\n")
+                        .append("//c 或 //card ://card help\n")
                         .append("//samurai :Samurai.\n")
                         .append("//majsoul :向听数计算，例子：//majsoul m123 p456 s789\n")
                         .append("//brainpower\n")
@@ -145,7 +145,7 @@ public final class RDLoungeIntegrated implements Executable {
     private void repeat(@NotNull MessageEvent e, @NotNull String msg) {
         if (msg.equals(repeat)) {
             if (++repeatCount == 5) {
-                if (ExecuteCenter.INSTANCE.saySamurai(false)) {
+                if (isFullFunctionGroup(e.getSubject().getId()) && ExecuteCenter.INSTANCE.saySamurai(false)) {
                     return;
                 }
                 e.getSubject().sendMessage(MiraiCode.deserializeMiraiCode(repeat));
@@ -301,6 +301,9 @@ public final class RDLoungeIntegrated implements Executable {
         }
         switch (cmd[0]) {
             case "rdhelp":
+                if (testNotFullFunctionGroup(from)) {
+                    break;
+                }
                 from.sendMessage("编辑器帮助网址：https://rd.rdlevel.cn");
                 break;
 
@@ -388,13 +391,20 @@ public final class RDLoungeIntegrated implements Executable {
                         break;
 
                     case "link":
+                    case "link2":
                         if (!RhythmCafeSearchEngine.INSTANCE.isSearched()) {
                             from.sendMessage("请先进行一次搜索");
                             break;
                         }
                         try {
                             int index = Integer.decode(cmd[2]);
-                            from.sendMessage(RhythmCafeSearchEngine.INSTANCE.getLink(index)).recallIn(60000);
+                            String link;
+                            if (cmd[1].equals("link")) {
+                                link = RhythmCafeSearchEngine.INSTANCE.getLink(index);
+                            } else {
+                                link = RhythmCafeSearchEngine.INSTANCE.getLink2(index);
+                            }
+                            from.sendMessage(link).recallIn(60000);
                         } catch (IllegalArgumentException ex) {
                             from.sendMessage("请输入一个非负整数！");
                         } catch (IndexOutOfBoundsException ex) {
@@ -424,6 +434,10 @@ public final class RDLoungeIntegrated implements Executable {
                 break;
 
             case "convert":
+                if (testNotFullFunctionGroup(from)) {
+                    break;
+                }
+
                 if (!hasQuote) {
                     from.sendMessage("未找到引用消息");
                     break;
@@ -463,6 +477,10 @@ public final class RDLoungeIntegrated implements Executable {
                 break;
 
             case "nurse":
+                if (testNotFullFunctionGroup(from)) {
+                    break;
+                }
+
                 if (!hasQuote) {
                     from.sendMessage("未找到引用消息");
                     break;
@@ -488,7 +506,7 @@ public final class RDLoungeIntegrated implements Executable {
 
                         Main.INSTANCE.getLogger().info("文件名：" + file.getName());
 
-                        from.sendMessage(Utils.rdNurse(file, args));
+                        from.sendMessage(Utils.rdNurse(file, args)).recallIn(60000);
 
                         Main.INSTANCE.getLogger().info("rdnurse结束");
                     } catch (Exception ex) {

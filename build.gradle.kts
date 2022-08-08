@@ -18,13 +18,13 @@ repositories {
     gradlePluginPortal()
 }
 dependencies {
-    testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.9.0")
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.6.21")
 
     implementation("io.ktor:ktor-client-core:$ktor_version")
-    implementation("io.ktor:ktor-client-java:$ktor_version")
+    implementation("io.ktor:ktor-client-cio:$ktor_version")
     implementation("io.ktor:ktor-client-resources:$ktor_version")
     implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")

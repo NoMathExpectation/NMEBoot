@@ -3,7 +3,7 @@ package NoMathExpectation.NMEBoot.wolframAlpha
 import NoMathExpectation.NMEBoot.Main
 import io.ktor.client.*
 import io.ktor.client.call.*
-import io.ktor.client.engine.java.*
+import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.resources.*
@@ -22,7 +22,7 @@ import net.mamoe.mirai.console.plugin.jvm.reloadPluginConfig
 
 class Conversation private constructor() {
     companion object: AutoSavePluginConfig("wolframAlpha") {
-        val HTTP_CLIENT = HttpClient(Java) {
+        val HTTP_CLIENT = HttpClient(CIO) {
             install(Resources)
             install(ContentNegotiation) {
                 json(Json)
