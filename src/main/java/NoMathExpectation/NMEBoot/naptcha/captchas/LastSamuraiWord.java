@@ -8,9 +8,12 @@ import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Set;
+
 public class LastSamuraiWord implements CaptchaGenerator {
-    public LastSamuraiWord() {
-        useOnlyIn.addAll(RDLoungeIntegrated.USING_GROUP);
+    @Override
+    public Set<Long> getUseOnlyIn() {
+        return RDLoungeIntegrated.USING_GROUP;
     }
 
     @Override

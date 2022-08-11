@@ -16,8 +16,34 @@ public class CaptchaDispatcher {
     private final Map<Long, LocalDateTime> lastUsed = new HashMap<>();
     public static final Duration ExpireTime = Duration.ofMinutes(5);
 
+    public static final CaptchaGenerator fallbackGenerator = new CaptchaGenerator() {
+        @NotNull
+        @Override
+        public MessageChain generate(@NotNull Contact contact) {
+            return new MessageChainBuilder()
+                    .append("输入任意字符以签到")
+                    .build();
+        }
+
+        @NotNull
+        @Override
+        public MessageChain get(@NotNull Contact contact) {
+            return generate(contact);
+        }
+
+        @Override
+        public boolean check(@NotNull String answer, @NotNull Contact contact) {
+            return true;
+        }
+    };
+
+    public CaptchaDispatcher() {
+        generators.add(fallbackGenerator);
+    }
+
     @NotNull
     public CaptchaDispatcher register(CaptchaGenerator generator) {
+        generators.remove(fallbackGenerator);
         generators.add(generator);
         return this;
     }
@@ -58,7 +84,7 @@ public class CaptchaDispatcher {
 
     @NotNull
     public MessageChain generate(@NotNull Contact contact) {
-        List<CaptchaGenerator> filteredGenerators = generators.stream().filter(c -> c.useOnlyIn.isEmpty() || c.useOnlyIn.contains(contact.getId())).collect(Collectors.toList());
+        List<CaptchaGenerator> filteredGenerators = generators.stream().filter(c -> c.getUseOnlyIn().isEmpty() || c.getUseOnlyIn().contains(contact.getId())).collect(Collectors.toList());
         CaptchaGenerator captcha = filteredGenerators.get(random.nextInt(filteredGenerators.size()));
         currentCaptcha.put(contact.getId(), captcha);
         lastUsed.put(contact.getId(), LocalDateTime.now());

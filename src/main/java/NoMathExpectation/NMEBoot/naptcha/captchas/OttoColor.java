@@ -10,14 +10,19 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.Random;
+import java.util.Set;
 
 public class OttoColor implements CaptchaGenerator {
+    @Override
+    public Set<Long> getUseOnlyIn() {
+        return RDLoungeIntegrated.USING_GROUP;
+    }
+
     public OttoColor() {
         colors = new File("config/NoMathExpectation.NMEBoot/ottocolor").listFiles();
         if (colors == null) {
             throw new RuntimeException("凹兔颜色文件夹缺失！");
         }
-        useOnlyIn.addAll(RDLoungeIntegrated.USING_GROUP);
     }
 
     private final File[] colors;

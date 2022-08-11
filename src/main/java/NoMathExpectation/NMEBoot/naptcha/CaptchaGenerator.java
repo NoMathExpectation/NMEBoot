@@ -4,11 +4,13 @@ import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.message.data.MessageChain;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.Set;
 
 public interface CaptchaGenerator {
-    Set<Long> useOnlyIn = new HashSet<>();
+    default Set<Long> getUseOnlyIn() {
+        return Collections.emptySet();
+    }
 
     @NotNull
     MessageChain generate(@NotNull Contact contact);
