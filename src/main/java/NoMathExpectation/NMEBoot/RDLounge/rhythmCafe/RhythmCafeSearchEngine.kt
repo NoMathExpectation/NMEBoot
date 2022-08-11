@@ -23,6 +23,9 @@ object RhythmCafeSearchEngine {
         install(ContentNegotiation) {
             json(Json)
         }
+        install(HttpTimeout) {
+            requestTimeoutMillis = 5000
+        }
         defaultRequest {
             url("https://api.rhythm.cafe")
             header("x-typesense-api-key", apiKey)

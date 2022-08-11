@@ -103,7 +103,7 @@ public class CardPool implements Serializable {
             Card card = new Card(splitName[0], splitName[1], splitName[2], file);
             LOADED_CARDS.add(card);
             cards.add(card);
-            logger.info("已加载卡片：" + file.getName());
+            logger.debug("已加载卡片：" + file.getName());
             return this;
         }
         if (!file.isDirectory() && !file.mkdirs()) {

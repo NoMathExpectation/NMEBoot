@@ -58,6 +58,7 @@ public final class General implements Executable {
                     .append("//checkin :签到\n")
                     .append("//wordle|w :wordle\n")
                     .append("//ask :有什么问题可以问问这个指令\n")
+                    //.append("//cave [留言]: 放入留言，或是查看并销毁随机一条留言\n")
                     .append("//114514 [count]\n")
                     .append("//1919810 [count]\n");
                     //.append("//moral <text>:AI预测是否道德（仅供参考，不作为任何依据）\n")
