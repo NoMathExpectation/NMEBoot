@@ -42,14 +42,22 @@ object RhythmCafeSearchEngine {
 
     @JvmBlockingBridge
     suspend fun search(query: String?): String {
-        sendRequest(Request(q = query?: ""))
-        return toString()
+        return try {
+            sendRequest(Request(q = query ?: ""))
+            toString()
+        } catch (e: HttpRequestTimeoutException) {
+            "请求超时"
+        }
     }
 
     @JvmBlockingBridge
     suspend fun pageTo(page: Int): String {
-        sendRequest(currentRequest.copy(page = page))
-        return toString()
+        return try {
+            sendRequest(currentRequest.copy(page = page))
+            toString()
+        } catch (e: HttpRequestTimeoutException) {
+            "请求超时"
+        }
     }
 
     fun getLink(index: Int) = currentSearch.hits[index - 1].document.url
@@ -57,7 +65,8 @@ object RhythmCafeSearchEngine {
     fun getLink2(index: Int) = currentSearch.hits[index - 1].document.url2
 
     @JvmBlockingBridge
-    suspend fun downloadAndUpload(group: Group, index: Int) = FileUtils.uploadFile(group, FileUtils.download(getLink(index)))
+    suspend fun downloadAndUpload(group: Group, index: Int) =
+        FileUtils.uploadFile(group, FileUtils.download(getLink(index)))
 
     fun isSearched() = ::currentSearch.isInitialized
 
@@ -81,35 +90,37 @@ object RhythmCafeSearchEngine {
     suspend fun getDescription(contact: Contact, index: Int) = buildMessageChain {
         val level = currentSearch.hits[index - 1].document
 
-        + contact.uploadImage(FileUtils.getDownloadStream(level.image))
-        + "\n"
+        FileUtils.getDownloadStream(level.image).use {
+            +contact.uploadImage(it)
+        }
+        +"\n"
 
-        + "歌曲名: ${level.song}\n"
+        +"歌曲名: ${level.song}\n"
 
-        + "作曲家: ${level.artist}\n"
+        +"作曲家: ${level.artist}\n"
 
-        + "作者: ${level.authors.joinToString()}\n"
+        +"作者: ${level.authors.joinToString()}\n"
 
-        + "难度: ${level.getDifficulty()}\n"
+        +"难度: ${level.getDifficulty()}\n"
 
         if (level.seizure_warning) {
-            + "癫痫警告!\n"
+            +"癫痫警告!\n"
         }
 
-        + "同行评审: ${level.peerReviewed()}\n"
+        +"同行评审: ${level.peerReviewed()}\n"
 
-        + "描述:\n${level.description}\n"
+        +"描述:\n${level.description}\n"
 
-        + "模式: "
+        +"模式: "
         if (level.single_player) {
-            + "1p "
+            +"1p "
         }
         if (level.two_player) {
-            + "2p "
+            +"2p "
         }
-        + "\n"
+        +"\n"
 
-        + "标签: ${level.tags.joinToString()}"
+        +"标签: ${level.tags.joinToString()}"
     }
 
     fun sendHelp() = buildString {
