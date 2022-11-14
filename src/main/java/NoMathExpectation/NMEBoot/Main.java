@@ -9,6 +9,8 @@ import NoMathExpectation.NMEBoot.commandSystem.services.General;
 import NoMathExpectation.NMEBoot.commandSystem.services.RDLoungeIntegrated;
 import NoMathExpectation.NMEBoot.naptcha.CaptchaDispatcher;
 import NoMathExpectation.NMEBoot.naptcha.captchas.*;
+import NoMathExpectation.NMEBoot.utils.DatabaseConfig;
+import NoMathExpectation.NMEBoot.utils.MessageHistory;
 import net.mamoe.mirai.console.plugin.jvm.JavaPlugin;
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescriptionBuilder;
 import net.mamoe.mirai.event.GlobalEventChannel;
@@ -27,7 +29,7 @@ public final class Main extends JavaPlugin {
     public static WordleMirai wordle = new WordleMirai(new File("config/NoMathExpectation.NMEBoot/wordle.txt"), 6, 25);
 
     private Main() {
-        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.2.6-2022081102")
+        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.2.9-2022111401")
                 .name("NMEBoot")
                 .author("NoMathExpectation")
                 .build());
@@ -110,6 +112,8 @@ public final class Main extends JavaPlugin {
         }
 
         //注册监听
+        DatabaseConfig.INSTANCE.load();
+
         GlobalEventChannel.INSTANCE.parentScope(this).registerListenerHost(executeCenter);
 
         GlobalEventChannel.INSTANCE.parentScope(this).subscribeAlways(MessagePreSendEvent.class, e -> {
@@ -119,6 +123,11 @@ public final class Main extends JavaPlugin {
 
             }
         });
+
+        MessageHistory.INSTANCE.recordStart();
+
+        //凹兔喝水
+        //OttoCheck.INSTANCE.subscribe();
 
         //Subscribe.INSTANCE.subscribeChatRank();
 

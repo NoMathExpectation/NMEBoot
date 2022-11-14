@@ -8,7 +8,9 @@ import NoMathExpectation.NMEBoot.RDLounge.cardSystem.Item;
 import NoMathExpectation.NMEBoot.RDLounge.cardSystem.ItemLibrary;
 import NoMathExpectation.NMEBoot.Utils;
 import NoMathExpectation.NMEBoot.commandSystem.*;
+import NoMathExpectation.NMEBoot.utils.MessageHistory;
 import NoMathExpectation.NMEBoot.wolframAlpha.Conversation;
+import kotlin.Pair;
 import kotlin.Triple;
 import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.contact.Group;
@@ -16,10 +18,7 @@ import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.event.events.GroupMessageSyncEvent;
 import net.mamoe.mirai.event.events.MessageEvent;
 import net.mamoe.mirai.message.code.MiraiCode;
-import net.mamoe.mirai.message.data.At;
-import net.mamoe.mirai.message.data.MessageChainBuilder;
-import net.mamoe.mirai.message.data.PlainText;
-import net.mamoe.mirai.message.data.QuoteReply;
+import net.mamoe.mirai.message.data.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -52,22 +51,23 @@ public final class General implements Executable {
             mcb
                     .append("//hello :发送 \"Hello, world!\"\n")
                     .append("//repeat <text> :复读机\n")
+                    .append("//history :随机一条历史消息\n")
                     .append("//luck :测测你今天的运气\n")
+                    .append("//faq :常见问题\n")
                     .append("//alias :别称\n")
                     .append("//stat|stats :统计数据\n")
                     .append("//checkin :签到\n")
                     .append("//wordle|w :wordle\n")
                     .append("//ask :有什么问题可以问问这个指令\n")
                     //.append("//cave [留言]: 放入留言，或是查看并销毁随机一条留言\n")
+                    .append("//download <url> :下载文件\n")
+                    .append("//feedback <text> :给作者反馈\n\n")
                     .append("//114514 [count]\n")
                     .append("//1919810 [count]\n");
                     //.append("//moral <text>:AI预测是否道德（仅供参考，不作为任何依据）\n")
         }
 
-        return mcb
-                .append("//download <url> :下载文件\n")
-                .append("//faq :常见问题\n")
-                .append("//feedback <text> :给作者反馈\n\n");
+        return mcb;
     }
 
     @Override
@@ -370,6 +370,11 @@ public final class General implements Executable {
                         .append(MiraiCode.deserializeMiraiCode(miraiMsg.replaceFirst("//repeat[!]?(\\s+|(\\\\n)+)", "")))
                         .build());
                 break;
+            case "history":
+                Pair<MessageChain, MessageChain> msgPair = MessageHistory.INSTANCE.randomAsMessage(from.getId());
+                from.sendMessage(new QuoteReply(e.getSource()).plus(msgPair.getFirst()));
+                from.sendMessage(msgPair.getSecond());
+                break;
             case "luck":
             case "辣氪":
                 from.sendMessage(new MessageChainBuilder()
@@ -546,7 +551,7 @@ public final class General implements Executable {
                     break;
                 }
                 try {
-                    from.sendMessage(Objects.requireNonNull(Conversation.Companion.get(from.getId()).query(msg.replaceFirst("//ask(\\s+|\n)", ""))));
+                    from.sendMessage(Objects.requireNonNull(Conversation.get(from.getId()).query(msg.replaceFirst("//ask(\\s+|\n)", ""))));
                 } catch (Exception ex) {
                     ex.printStackTrace();
                     from.sendMessage(ex.getMessage());

@@ -11,6 +11,7 @@ group = "NoMathExpectation.NMEBoot"
 version = "1.2"
 
 val ktor_version: String by project
+val exposedVersion: String by project
 
 repositories {
     maven("https://maven.aliyun.com/repository/public")
@@ -20,14 +21,20 @@ repositories {
 dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.0")
 
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.7.10")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
 
     implementation("io.ktor:ktor-client-core:$ktor_version")
     implementation("io.ktor:ktor-client-cio:$ktor_version")
     implementation("io.ktor:ktor-client-resources:$ktor_version")
     implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
+
+    implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
+    implementation("org.xerial:sqlite-jdbc:3.39.3.0")
 }
 
 tasks.compileJava {
