@@ -21,7 +21,9 @@ object RhythmCafeSearchEngine {
     private val httpClient = HttpClient(CIO) {
         install(Resources)
         install(ContentNegotiation) {
-            json(Json)
+            json(Json {
+                ignoreUnknownKeys = true
+            })
         }
         install(HttpTimeout) {
             requestTimeoutMillis = 5000

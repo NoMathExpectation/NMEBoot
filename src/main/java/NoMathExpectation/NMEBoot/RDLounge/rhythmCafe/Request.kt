@@ -14,6 +14,6 @@ internal data class Request(
     val max_facet_values: Int = 10,
     val filter_by: String = "approval:=[-1..20]",
     val page: Int = 1,
-    val sort_by: String = "_text_match:desc,last_updated:desc",
+    val sort_by: String = "_text_match:desc,indexed:desc,last_updated:desc",
     val num_typos: String = "2, 1, 1, 1, 0"
 )
