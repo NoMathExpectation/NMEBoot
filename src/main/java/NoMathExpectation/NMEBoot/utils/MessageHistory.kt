@@ -35,7 +35,7 @@ object MessageHistory {
     }
 
     fun random(group: Long) = transaction {
-        MessageHistoryTable.select { (MessageHistoryTable.group eq group) and (MessageHistoryTable.message notLike "%//history%") }
+        MessageHistoryTable.select { (MessageHistoryTable.group eq group) and (MessageHistoryTable.message notLike "//history%") and (MessageHistoryTable.message neq "") }
             .orderBy(Random()).limit(1).first()
     }
 
