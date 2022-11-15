@@ -371,7 +371,7 @@ public final class General implements Executable {
                         .build());
                 break;
             case "history":
-                Pair<MessageChain, MessageChain> msgPair = MessageHistory.INSTANCE.randomAsMessage(from.getId());
+                Pair<MessageChain, MessageChain> msgPair = MessageHistory.INSTANCE.randomAsMessage(from.getId(), from.getBot().getId());
                 from.sendMessage(new QuoteReply(e.getSource()).plus(msgPair.getFirst()));
                 from.sendMessage(msgPair.getSecond());
                 break;

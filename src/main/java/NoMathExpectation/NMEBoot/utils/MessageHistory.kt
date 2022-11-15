@@ -1,18 +1,15 @@
 package NoMathExpectation.NMEBoot.utils
 
 import kotlinx.datetime.Clock
+import net.mamoe.mirai.contact.Contact
+import net.mamoe.mirai.contact.nameCardOrNick
 import net.mamoe.mirai.event.GlobalEventChannel
-import net.mamoe.mirai.event.events.GroupMessageEvent
-import net.mamoe.mirai.event.events.GroupMessageSyncEvent
-import net.mamoe.mirai.event.events.MessageEvent
+import net.mamoe.mirai.event.events.*
 import net.mamoe.mirai.message.code.MiraiCode.deserializeMiraiCode
 import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.data.buildMessageChain
 import org.jetbrains.exposed.dao.id.LongIdTable
-import org.jetbrains.exposed.sql.Random
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object MessageHistory {
@@ -30,17 +27,53 @@ object MessageHistory {
         }
     }
 
-    fun recordStart() = GlobalEventChannel.subscribeAlways<MessageEvent> {
-        record(it)
+    private fun record(event: MessagePostSendEvent<out Contact>) {
+        if (event.isFailure) {
+            return
+        }
+
+        transaction {
+            MessageHistoryTable.insert {
+                it[sender] = event.bot.id
+                it[group] = when (event) {
+                    is GroupMessagePostSendEvent -> event.target.id
+                    else -> null
+                }
+                it[name] = when (event) {
+                    is GroupMessagePostSendEvent -> event.target.botAsMember.nameCardOrNick
+                    is FriendMessagePostSendEvent -> event.bot.nameCardOrNick
+                    is GroupTempMessagePostSendEvent -> event.group.botAsMember.nameCardOrNick
+                    is StrangerMessagePostSendEvent -> event.bot.nameCardOrNick
+                }
+                it[message] = event.message.serializeToMiraiCode()
+                it[time] = Clock.System.now().toEpochMilliseconds()
+            }
+        }
     }
 
-    fun random(group: Long) = transaction {
-        MessageHistoryTable.select { (MessageHistoryTable.group eq group) and (MessageHistoryTable.message notLike "//history%") and (MessageHistoryTable.message neq "") }
-            .orderBy(Random()).limit(1).first()
+    fun recordStart() {
+        GlobalEventChannel.subscribeAlways<MessageEvent> {
+            record(it)
+        }
+        GlobalEventChannel.subscribeAlways<MessagePostSendEvent<out Contact>> {
+            record(it)
+        }
     }
 
-    fun randomAsMessage(group: Long): Pair<MessageChain, MessageChain> {
-        val message = random(group)
+    fun random(group: Long? = null, bot: Long? = null) = transaction {
+        var query =
+            MessageHistoryTable.select { ((MessageHistoryTable.message notLike "//history%") and (MessageHistoryTable.message neq "")) }
+        group?.let {
+            query = query.andWhere { MessageHistoryTable.group eq it }
+        }
+        bot?.let {
+            query = query.andWhere { MessageHistoryTable.sender neq it }
+        }
+        query.orderBy(Random()).limit(1).first()
+    }
+
+    fun randomAsMessage(group: Long? = null, bot: Long? = null): Pair<MessageChain, MessageChain> {
+        val message = random(group, bot)
         val msg1 = buildMessageChain {
             +"${message[MessageHistoryTable.name]} 曾经说过："
         }
