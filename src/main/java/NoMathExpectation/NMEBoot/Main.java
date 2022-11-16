@@ -29,7 +29,7 @@ public final class Main extends JavaPlugin {
     public static WordleMirai wordle = new WordleMirai(new File("config/NoMathExpectation.NMEBoot/wordle.txt"), 6, 25);
 
     private Main() {
-        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.2.9-2022111503")
+        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.2.9-2022111701")
                 .name("NMEBoot")
                 .author("NoMathExpectation")
                 .build());
@@ -125,11 +125,6 @@ public final class Main extends JavaPlugin {
         });
 
         MessageHistory.INSTANCE.recordStart();
-
-        //凹兔喝水
-        //OttoCheck.INSTANCE.subscribe();
-
-        //Subscribe.INSTANCE.subscribeChatRank();
 
         //自动保存
         Thread t = new Thread(this::autoSave);

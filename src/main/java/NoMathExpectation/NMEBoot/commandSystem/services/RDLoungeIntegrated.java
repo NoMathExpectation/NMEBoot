@@ -249,9 +249,9 @@ public final class RDLoungeIntegrated implements Executable {
         /*if(autoRDNurse(e))
         {return true;}*/
 
-        if (atOtto(e)) {
+        /*if (atOtto(e)) {
             return true;
-        }
+        }*/
 
         String msg, miraiMsg;
         boolean hasQuote = e.getMessage().contains(QuoteReply.Key);

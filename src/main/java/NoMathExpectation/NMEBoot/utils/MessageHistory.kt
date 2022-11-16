@@ -1,5 +1,6 @@
 package NoMathExpectation.NMEBoot.utils
 
+import NoMathExpectation.NMEBoot.Main
 import kotlinx.datetime.Clock
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.nameCardOrNick
@@ -52,10 +53,11 @@ object MessageHistory {
     }
 
     fun recordStart() {
-        GlobalEventChannel.subscribeAlways<MessageEvent> {
+        val channel = GlobalEventChannel.parentScope(Main.INSTANCE)
+        channel.subscribeAlways<MessageEvent> {
             record(it)
         }
-        GlobalEventChannel.subscribeAlways<MessagePostSendEvent<out Contact>> {
+        channel.subscribeAlways<MessagePostSendEvent<out Contact>> {
             record(it)
         }
     }

@@ -85,9 +85,13 @@ public final class General implements Executable {
             return false;
         }
 
+        if (!RDLoungeIntegrated.isFullFunctionGroup(e.getSubject().getId())) {
+            return false;
+        }
+
         Contact from0 = e.getSubject();
         LocalDate date = LocalDate.now();
-        if(date.getMonth() == Month.APRIL && date.getDayOfMonth() == 1) {
+        if (date.getMonth() == Month.APRIL && date.getDayOfMonth() == 1) {
             from0 = AprilFool.INSTANCE.getModifiedContact(from0);
         }
         Contact from = Alias.INSTANCE.alias(from0);
