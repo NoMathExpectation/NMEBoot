@@ -30,7 +30,7 @@ internal object Repeat : AutoSavePluginConfig("repeat") {
             record[id] = pair
         }
 
-        return pair.second >= repeatCount
+        return pair.second == repeatCount
     }
 
     suspend fun repeat(event: MessageEvent) = when (event) {
