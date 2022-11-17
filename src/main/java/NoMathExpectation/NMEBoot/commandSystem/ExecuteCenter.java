@@ -222,11 +222,15 @@ public final class ExecuteCenter extends SimpleListenerHost {
             lastContact.sendMessage("你没有权限使用此指令");
             return false;
         }
-        
+
         for (Executable s : cmdSet) {
             if (s.onMessage(e, user, cmd, miraiCmd)) {
                 return true;
             }
+        }
+
+        if (e.getSubject().getId() == RDLoungeIntegrated.RDLOUNGE) {
+            return true;
         }
 
         if (cmd.startsWith("//") && (UsingGroup.INSTANCE.getGroup().contains(e.getSubject().getId()) || e.getSender().getId() == e.getBot().getId())) {

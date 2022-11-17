@@ -85,8 +85,8 @@ public final class General implements Executable {
             return false;
         }
 
-        if (!RDLoungeIntegrated.isFullFunctionGroup(e.getSubject().getId())) {
-            return false;
+        if (e.getSubject().getId() == RDLoungeIntegrated.RDLOUNGE) {
+            return true;
         }
 
         Contact from0 = e.getSubject();

@@ -246,6 +246,10 @@ public final class RDLoungeIntegrated implements Executable {
 
         repeat(e, miraiCommand);
 
+        if (e.getSubject().getId() == RDLoungeIntegrated.RDLOUNGE) {
+            return true;
+        }
+
         /*if(autoRDNurse(e))
         {return true;}*/
 
