@@ -22,7 +22,7 @@ internal object Repeat : AutoSavePluginConfig("repeat") {
         }
 
         var pair = record[id]
-        if (pair == null || pair.first.contentEquals(msg)) {
+        if (pair == null || !pair.first.contentEquals(msg)) {
             pair = msg to 1
             record[id] = pair
         } else {
