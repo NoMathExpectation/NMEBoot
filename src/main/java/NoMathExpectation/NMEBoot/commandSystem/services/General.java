@@ -85,10 +85,6 @@ public final class General implements Executable {
             return false;
         }
 
-        if (e.getSubject().getId() == RDLoungeIntegrated.RDLOUNGE) {
-            return true;
-        }
-
         Contact from0 = e.getSubject();
         LocalDate date = LocalDate.now();
         if (date.getMonth() == Month.APRIL && date.getDayOfMonth() == 1) {

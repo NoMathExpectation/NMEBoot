@@ -16,7 +16,6 @@ import net.mamoe.mirai.event.ListeningStatus;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.event.events.MessageEvent;
 import net.mamoe.mirai.message.MessageReceipt;
-import net.mamoe.mirai.message.code.MiraiCode;
 import net.mamoe.mirai.message.data.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -36,7 +35,7 @@ public final class RDLoungeIntegrated implements Executable {
     static final long UD2 = 2546915249L;
     static final long OFFSET_NYAN = 1909482450L;
 
-    public static final Set<Long> USING_GROUP = Set.of(951070053L, 916813153L, 884249803L);
+    public static final Set<Long> USING_GROUP = Set.of(/*951070053L, */916813153L, 884249803L);
     public static final Set<Long> FULL_FUNCTION_GROUP = Set.of(916813153L, 884249803L);
 
     public static boolean isUsingGroup(long id) {
@@ -128,9 +127,6 @@ public final class RDLoungeIntegrated implements Executable {
         return false;
     }
 
-    private String repeat;
-    private int repeatCount = 0;
-
     private boolean tiredPaige(Contact from) {
         int work = RANDOM.nextInt(1024);
         Main.INSTANCE.getLogger().info("现在是" + LocalDateTime.now().getHour() + "时" + LocalDateTime.now().getMinute() + "分，工作值：" + work);
@@ -140,21 +136,6 @@ public final class RDLoungeIntegrated implements Executable {
             return true;
         }
         return false;
-    }
-
-    private void repeat(@NotNull MessageEvent e, @NotNull String msg) {
-        if (msg.equals(repeat)) {
-            if (++repeatCount == 5) {
-                if (isFullFunctionGroup(e.getSubject().getId()) && ExecuteCenter.INSTANCE.saySamurai(false)) {
-                    return;
-                }
-                e.getSubject().sendMessage(MiraiCode.deserializeMiraiCode(repeat));
-            }
-        } else {
-            repeat = msg;
-            repeatCount = 1;
-        }
-        Main.INSTANCE.getLogger().debug("repeat:" + repeatCount);
     }
 
     private String chart;
@@ -242,12 +223,6 @@ public final class RDLoungeIntegrated implements Executable {
     public boolean onMessage(@NotNull MessageEvent e, @NotNull NormalUser user, @NotNull String command, @NotNull String miraiCommand) throws Exception {
         if (!isUsingGroup(e.getSubject().getId())) {
             return false;
-        }
-
-        repeat(e, miraiCommand);
-
-        if (e.getSubject().getId() == RDLoungeIntegrated.RDLOUNGE) {
-            return true;
         }
 
         /*if(autoRDNurse(e))

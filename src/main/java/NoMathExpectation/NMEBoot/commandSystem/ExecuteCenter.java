@@ -145,7 +145,7 @@ public final class ExecuteCenter extends SimpleListenerHost {
     @EventHandler
     public synchronized void message(@NotNull MessageEvent e) throws Exception {
         LocalDateTime start = LocalDateTime.now();
-        if (!UsingGroup.INSTANCE.getGroup().contains(e.getSubject().getId()) && e.getSubject().getId() != e.getBot().getId()) {
+        if (!UsingGroup.INSTANCE.getGroup().contains(e.getSubject().getId())) {
             return;
         }
 
@@ -227,10 +227,6 @@ public final class ExecuteCenter extends SimpleListenerHost {
             if (s.onMessage(e, user, cmd, miraiCmd)) {
                 return true;
             }
-        }
-
-        if (e.getSubject().getId() == RDLoungeIntegrated.RDLOUNGE) {
-            return true;
         }
 
         if (cmd.startsWith("//") && (UsingGroup.INSTANCE.getGroup().contains(e.getSubject().getId()) || e.getSender().getId() == e.getBot().getId())) {
