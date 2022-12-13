@@ -64,7 +64,7 @@ object MessageHistory {
 
     fun random(group: Long? = null, bot: Long? = null) = transaction {
         var query =
-            MessageHistoryTable.select { ((MessageHistoryTable.message notLike "//history%") and (MessageHistoryTable.message neq "")) }
+            MessageHistoryTable.select { ((MessageHistoryTable.message notLike "//%") and (MessageHistoryTable.message neq "")) }
         group?.let {
             query = query.andWhere { MessageHistoryTable.group eq it }
         }

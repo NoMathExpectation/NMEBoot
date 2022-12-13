@@ -5,7 +5,9 @@ import NoMathExpectation.NMEBoot.commandSystem.services.RDLoungeIntegrated;
 import kotlin.coroutines.CoroutineContext;
 import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.contact.MemberPermission;
+import net.mamoe.mirai.event.Event;
 import net.mamoe.mirai.event.EventHandler;
+import net.mamoe.mirai.event.ExceptionInEventHandlerException;
 import net.mamoe.mirai.event.SimpleListenerHost;
 import net.mamoe.mirai.event.events.*;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
@@ -131,13 +133,24 @@ public final class ExecuteCenter extends SimpleListenerHost {
         }
 
         e.printStackTrace();
-        if (RDLoungeIntegrated.isUsingGroup(lastContact.getId())) {
+
+        if (!(e instanceof ExceptionInEventHandlerException)) {
+            return;
+        }
+
+        Event origin = ((ExceptionInEventHandlerException) e).getEvent();
+        if (!(origin instanceof MessageEvent)) {
+            return;
+        }
+        Contact contact = ((MessageEvent) origin).getSubject();
+
+        if (RDLoungeIntegrated.isUsingGroup(contact.getId())) {
             lastContact.sendMessage("武士走进了妮可的咖啡店，要了一份甜甜圈。");
             if (!samurai) {
                 samurai();
                 saySamurai(false);
             }
-        } else if (UsingGroup.INSTANCE.getGroup().contains(lastContact.getId())) {
+        } else if (UsingGroup.INSTANCE.getGroup().contains(contact.getId())) {
             lastContact.sendMessage("发生了一个错误，请查看控制台了解详情。");
         }
     }
@@ -149,12 +162,16 @@ public final class ExecuteCenter extends SimpleListenerHost {
             return;
         }
 
-        lastContact = e.getSubject();
+        Contact contact = e.getSubject();
+
+        //deprecated, for removal
+        lastContact = contact;
+
         LocalDate date = LocalDate.now();
         if (date.getMonth() == Month.APRIL && date.getDayOfMonth() == 1) {
-            lastContact = AprilFool.INSTANCE.getModifiedContact(lastContact);
+            contact = AprilFool.INSTANCE.getModifiedContact(contact);
         }
-        lastContact = Alias.INSTANCE.alias(e.getSubject());
+        contact = Alias.INSTANCE.alias(e.getSubject());
 
         String msg = e.getMessage().contentToString();
         String miraiMsg = e.getMessage().serializeToMiraiCode();
@@ -168,25 +185,25 @@ public final class ExecuteCenter extends SimpleListenerHost {
 
         if (isCommand(msg) && user.isBanned()) {
             Duration d = user.getBannedRemain();
-            if (RDLoungeIntegrated.isUsingGroup(lastContact.getId())) {
-                lastContact.sendMessage(user.name + " was samuraied in " + d.toDays() + "d " + d.toHoursPart() + "h " + d.toMinutesPart() + "m " + d.toSecondsPart() + "s for " + user.getBannedReason() + ". " + getSamuraiWord());
+            if (RDLoungeIntegrated.isUsingGroup(contact.getId())) {
+                contact.sendMessage(user.name + " was samuraied in " + d.toDays() + "d " + d.toHoursPart() + "h " + d.toMinutesPart() + "m " + d.toSecondsPart() + "s for " + user.getBannedReason() + ". " + getSamuraiWord());
             } else {
-                lastContact.sendMessage(user.name + "因为" + user.getBannedReason() + "被封禁至" + d.toDays() + "天" + d.toHoursPart() + "时" + d.toMinutesPart() + "分钟" + d.toSecondsPart() + "秒后。");
+                contact.sendMessage(user.name + "因为" + user.getBannedReason() + "被封禁至" + d.toDays() + "天" + d.toHoursPart() + "时" + d.toMinutesPart() + "分钟" + d.toSecondsPart() + "秒后。");
             }
             return;
         }
 
         if (!(msg.startsWith("//alias") || (RDLoungeIntegrated.isFullFunctionGroup(e.getSubject().getId()) && getSamurai() && msg.startsWith("//samurai")))) {
-            msg = Alias.INSTANCE.alias(msg, lastContact.getId());
+            msg = Alias.INSTANCE.alias(msg, contact.getId());
         }
 
         if (!(msg.startsWith("//alias") || (RDLoungeIntegrated.isFullFunctionGroup(e.getSubject().getId()) && getSamurai() && msg.startsWith("//samurai")))) {
-            miraiMsg = Alias.INSTANCE.alias(miraiMsg, lastContact.getId());
+            miraiMsg = Alias.INSTANCE.alias(miraiMsg, contact.getId());
         }
 
         try {
             if (msg.split("\\s+|\n+")[0].equals("//help")) {
-                if (samurai && RDLoungeIntegrated.isFullFunctionGroup(lastContact.getId())) {
+                if (samurai && RDLoungeIntegrated.isFullFunctionGroup(contact.getId())) {
                     saySamurai(false);
                     return;
                 }
@@ -218,8 +235,10 @@ public final class ExecuteCenter extends SimpleListenerHost {
         //Main.INSTANCE.getLogger().info("cmd: " + cmd);
         //Main.INSTANCE.getLogger().info("miraicmd: " + miraiCmd);
 
+        Contact contact = Alias.INSTANCE.alias(e.getSubject());
+
         if (!isAdminOrBot(e) && isCommand(cmd) && (Block.INSTANCE.checkBlocked(e.getSubject().getId(), e.getSender().getId(), cmd) || Block.INSTANCE.checkBlocked(e.getSubject().getId(), e.getSender().getId(), miraiCmd))) {
-            lastContact.sendMessage("你没有权限使用此指令");
+            contact.sendMessage("你没有权限使用此指令");
             return false;
         }
 
@@ -230,7 +249,7 @@ public final class ExecuteCenter extends SimpleListenerHost {
         }
 
         if (cmd.startsWith("//") && (UsingGroup.INSTANCE.getGroup().contains(e.getSubject().getId()) || e.getSender().getId() == e.getBot().getId())) {
-            lastContact.sendMessage("未知的指令，输入//help以获得帮助。");
+            contact.sendMessage("未知的指令，输入//help以获得帮助。");
         }
         return false;
     }

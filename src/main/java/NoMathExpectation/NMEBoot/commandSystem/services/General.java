@@ -8,6 +8,7 @@ import NoMathExpectation.NMEBoot.RDLounge.cardSystem.Item;
 import NoMathExpectation.NMEBoot.RDLounge.cardSystem.ItemLibrary;
 import NoMathExpectation.NMEBoot.Utils;
 import NoMathExpectation.NMEBoot.commandSystem.*;
+import NoMathExpectation.NMEBoot.utils.ChatGPT;
 import NoMathExpectation.NMEBoot.utils.MessageHistory;
 import NoMathExpectation.NMEBoot.wolframAlpha.Conversation;
 import kotlin.Pair;
@@ -58,7 +59,7 @@ public final class General implements Executable {
                     .append("//stat|stats :统计数据\n")
                     .append("//checkin :签到\n")
                     .append("//wordle|w :wordle\n")
-                    .append("//ask :有什么问题可以问问这个指令\n")
+                    .append("//chat :与另一端的？？？聊天\n")
                     //.append("//cave [留言]: 放入留言，或是查看并销毁随机一条留言\n")
                     .append("//download <url> :下载文件\n")
                     .append("//feedback <text> :给作者反馈\n\n")
@@ -556,6 +557,44 @@ public final class General implements Executable {
                     ex.printStackTrace();
                     from.sendMessage(ex.getMessage());
                 }
+                break;
+            case "chat":
+                if (cmd.length < 2) {
+                    from.sendMessage(ChatGPT.INSTANCE.getHelp());
+                    break;
+                }
+                new Thread(() -> {
+                    try {
+                        switch (cmd[1]) {
+                            case "help":
+                                from.sendMessage(ChatGPT.INSTANCE.getHelp());
+                                break;
+                            case "send":
+                                from.sendMessage(new QuoteReply(e.getSource()).plus(ChatGPT.INSTANCE.chat(from.getId(), msg.replaceFirst("//chat\\s+send\\s*", ""))));
+                                break;
+                            case "rollback":
+                                ChatGPT.INSTANCE.rollback(from.getId());
+                                from.sendMessage("已撤回上一条消息");
+                                break;
+                            case "reset":
+                                ChatGPT.INSTANCE.reset(from.getId());
+                                from.sendMessage("已重置会话");
+                                break;
+                            case "reload":
+                                if (!isAdminOrBot(e)) {
+                                    return;
+                                }
+                                ChatGPT.INSTANCE.reload();
+                                from.sendMessage("已重新加载配置");
+                                break;
+                            default:
+                                from.sendMessage("未知的参数，使用//chat help查看帮助");
+                        }
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        from.sendMessage(new QuoteReply(e.getSource()).plus(ex.getMessage()));
+                    }
+                }).start();
                 break;
             case "warn":
                 if (!isAdminOrBot(e)) {

@@ -34,7 +34,10 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
-    implementation("org.xerial:sqlite-jdbc:3.39.3.0")
+    implementation("org.xerial:sqlite-jdbc:3.40.0.0")
+
+    implementation("com.github.plexpt:chatgpt:1.1.2")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.14.0")
 }
 
 tasks.compileJava {
