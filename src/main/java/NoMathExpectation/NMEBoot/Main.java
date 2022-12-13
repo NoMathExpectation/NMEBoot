@@ -5,6 +5,7 @@ import NoMathExpectation.NMEBoot.commandSystem.ExecuteCenter;
 import NoMathExpectation.NMEBoot.commandSystem.NormalUser;
 import NoMathExpectation.NMEBoot.commandSystem.NormalUserStats;
 import NoMathExpectation.NMEBoot.commandSystem.Samurai;
+import NoMathExpectation.NMEBoot.commandSystem.services.ARG2023;
 import NoMathExpectation.NMEBoot.commandSystem.services.General;
 import NoMathExpectation.NMEBoot.commandSystem.services.RDLoungeIntegrated;
 import NoMathExpectation.NMEBoot.naptcha.CaptchaDispatcher;
@@ -30,13 +31,14 @@ public final class Main extends JavaPlugin {
     public static WordleMirai wordle = new WordleMirai(new File("config/NoMathExpectation.NMEBoot/wordle.txt"), 6, 25);
 
     private Main() {
-        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.2.11-2022121002")
+        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.2.12-2022121401")
                 .name("NMEBoot")
                 .author("NoMathExpectation")
                 .build());
         executeCenter = new ExecuteCenter()
                 .register(new General())
-                .register(new RDLoungeIntegrated());
+                .register(new RDLoungeIntegrated())
+                .register(ARG2023.INSTANCE);
         naptcha = new CaptchaDispatcher()
                 .register(new NumberSort(5, -100, 100))
                 //.register(new SumChatNumbers(5))
