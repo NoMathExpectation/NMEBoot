@@ -31,13 +31,13 @@ class Conversation private constructor() {
             }
         }
 
-        init {
-            Main.INSTANCE.reloadPluginConfig(this)
-        }
-
         private val APP_ID: String by value("")
         var queryTimes: Int by value()
             private set
+
+        init {
+            Main.INSTANCE.reloadPluginConfig(this)
+        }
 
         private val logger = Main.INSTANCE.logger
 

@@ -2,6 +2,7 @@ package NoMathExpectation.NMEBoot.commandSystem;
 
 import NoMathExpectation.NMEBoot.Main;
 import NoMathExpectation.NMEBoot.commandSystem.services.RDLoungeIntegrated;
+import NoMathExpectation.NMEBoot.utils.MessageHistory;
 import kotlin.coroutines.CoroutineContext;
 import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.contact.MemberPermission;
@@ -256,9 +257,17 @@ public final class ExecuteCenter extends SimpleListenerHost {
 
     @EventHandler
     public void nudge(@NotNull NudgeEvent e) {
+        long target = e.getFrom().getId();
         long to = e.getTarget().getId();
-        if (to == e.getBot().getId() && to != e.getFrom().getId()) {
-            e.getFrom().nudge().sendTo(e.getSubject());
+        if (to != e.getBot().getId() || to == target || target == e.getBot().getId()) {
+            return;
+        }
+
+        e.getFrom().nudge().sendTo(e.getSubject());
+
+        Contact from = Alias.INSTANCE.alias(e.getSubject());
+        if (from.getId() != RDLoungeIntegrated.RDLOUNGE) {
+            from.sendMessage(MessageHistory.INSTANCE.randomAsMessage(from.getId(), e.getBot().getId()).getSecond());
         }
     }
 
