@@ -1,5 +1,6 @@
 package NoMathExpectation.NMEBoot.inventory
 
+import NoMathExpectation.NMEBoot.RDLounge.NeoCardSystem.Card
 import NoMathExpectation.NMEBoot.utils.plugin
 import NoMathExpectation.NMEBoot.utils.sendMessage
 import kotlinx.coroutines.launch
@@ -8,9 +9,11 @@ import kotlinx.serialization.Serializable
 import kotlin.random.Random
 
 internal fun registerAllItems() {
-    Coin.register()
-    TestForLuck.register()
-    Bomb.register()
+    registerItem<Coin>()
+    registerItem<TestForLuck>()
+    registerItem<Bomb>()
+
+    registerItem<Card>()
 }
 
 @Serializable

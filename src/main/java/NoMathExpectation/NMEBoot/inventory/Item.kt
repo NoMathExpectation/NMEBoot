@@ -69,7 +69,6 @@ object ItemSerializerModuleProvider {
     }
 }
 
-@Suppress("UnusedReceiverParameter")
-inline fun <reified I : Item> I.register() {
+inline fun <reified I : Item> registerItem() {
     ItemSerializerModuleProvider += { subclass(I::class) }
 }
