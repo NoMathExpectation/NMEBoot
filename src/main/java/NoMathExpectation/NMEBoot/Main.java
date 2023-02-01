@@ -13,6 +13,7 @@ import NoMathExpectation.NMEBoot.naptcha.captchas.*;
 import NoMathExpectation.NMEBoot.utils.DatabaseConfig;
 import NoMathExpectation.NMEBoot.utils.MessageHistory;
 import NoMathExpectation.NMEBoot.utils.Repeat;
+import NoMathExpectation.NMEBoot.utils.newYear.NewYearConfig;
 import net.mamoe.mirai.console.plugin.jvm.JavaPlugin;
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescriptionBuilder;
 import net.mamoe.mirai.event.GlobalEventChannel;
@@ -31,7 +32,7 @@ public final class Main extends JavaPlugin {
     public static WordleMirai wordle = new WordleMirai(new File("config/NoMathExpectation.NMEBoot/wordle.txt"), 6, 25);
 
     private Main() {
-        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.2.13-2022121602")
+        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.2.14-2023012101")
                 .name("NMEBoot")
                 .author("NoMathExpectation")
                 .build());
@@ -134,6 +135,9 @@ public final class Main extends JavaPlugin {
         Thread t = new Thread(this::autoSave);
         t.setDaemon(true);
         t.start();
+
+        //新年快乐
+        NewYearConfig.INSTANCE.timedSend();
 
         //end
         getLogger().info("NMEBoot已加载。");
