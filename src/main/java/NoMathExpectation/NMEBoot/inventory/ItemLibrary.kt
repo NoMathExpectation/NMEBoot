@@ -1,6 +1,6 @@
 package NoMathExpectation.NMEBoot.inventory
 
-import NoMathExpectation.NMEBoot.RDLounge.NeoCardSystem.Card
+import NoMathExpectation.NMEBoot.inventory.card.Card
 import NoMathExpectation.NMEBoot.utils.plugin
 import NoMathExpectation.NMEBoot.utils.sendMessage
 import kotlinx.coroutines.launch

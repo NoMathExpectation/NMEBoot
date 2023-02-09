@@ -1,6 +1,7 @@
 package NoMathExpectation.NMEBoot.inventory
 
 import kotlinx.serialization.Serializable
+import net.mamoe.mirai.message.data.MessageChainBuilder
 
 @Serializable
 data class ItemStack<I : Item>(val item: I, var count: Int = 1) {
@@ -56,3 +57,5 @@ data class ItemStack<I : Item>(val item: I, var count: Int = 1) {
 
     fun showSimple(showId: Boolean = false) = "${count}x ${item.showSimple(showId)}"
 }
+
+fun MessageChainBuilder.add(itemStack: ItemStack<*>) = apply { +itemStack.showSimple() }

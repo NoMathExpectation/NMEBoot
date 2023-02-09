@@ -15,9 +15,9 @@ typealias PullStrategy<E> = (List<E>) -> E?
 
 @Serializable
 class Pool<E>(
-    private val content: MutableList<E>,
+    private val content: MutableList<E> = mutableListOf(),
     val exhaustible: Boolean = true,
-    @Transient val pullStrategy: PullStrategy<E> = uniformPullStrategy()
+    @Transient var pullStrategy: PullStrategy<E> = uniformPullStrategy()
 ) : MutableList<E> by content {
     override fun add(element: E): Boolean {
         if (!exhaustible && content.contains(element)) return false
@@ -62,10 +62,12 @@ class Pool<E>(
 
 fun <E> uniformPullStrategy() = { list: List<E> -> list.randomOrNull() }
 
-fun <E> weightedPullStrategy(provider: E.() -> Double) = fun(list: List<E>): E? {
-    if (list.isEmpty()) {
+fun <E> weightedPullStrategy(provider: E.() -> Double) = fun(list0: List<E>): E? {
+    if (list0.isEmpty()) {
         return null
     }
+
+    val list = list0.filter { it.provider() > 0 }
 
     val totalWeight = list.sumOf { it.provider() }
     val randomWeight = Math.random() * totalWeight
@@ -77,7 +79,7 @@ fun <E> weightedPullStrategy(provider: E.() -> Double) = fun(list: List<E>): E? 
     return list.last()
 }
 
-class PoolAsListSerializer<E>(private val listKSerializer: KSerializer<List<E>>) : KSerializer<Pool<E>> {
+open class PoolAsListSerializer<E>(private val listKSerializer: KSerializer<List<E>>) : KSerializer<Pool<E>> {
     override val descriptor: SerialDescriptor = listKSerializer.descriptor
 
     override fun serialize(encoder: Encoder, value: Pool<E>) = listKSerializer.serialize(encoder, value)

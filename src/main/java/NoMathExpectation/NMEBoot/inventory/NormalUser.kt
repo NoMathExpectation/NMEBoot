@@ -147,6 +147,10 @@ class NormalUser private constructor(
     @JvmBlockingBridge
     suspend fun useItem(item: Item, overriddenOnUse: (suspend NormalUser.() -> Boolean)? = null) =
         useItemStack(item count 1, overriddenOnUse)
+
+    fun searchItem(predicate: (Item) -> Boolean = { true }) = inventory.values.filter { predicate(it.item) }
+
+    fun getInventory() = inventory.values.toList()
 }
 
 fun User.toNormalUser() = NormalUser[this.id]
