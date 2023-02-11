@@ -8,11 +8,12 @@ import NoMathExpectation.NMEBoot.commandSystem.Samurai;
 import NoMathExpectation.NMEBoot.commandSystem.services.ARG2023;
 import NoMathExpectation.NMEBoot.commandSystem.services.General;
 import NoMathExpectation.NMEBoot.commandSystem.services.RDLoungeIntegrated;
+import NoMathExpectation.NMEBoot.commands.CommandCard;
+import NoMathExpectation.NMEBoot.inventory.ItemLibraryKt;
 import NoMathExpectation.NMEBoot.naptcha.CaptchaDispatcher;
 import NoMathExpectation.NMEBoot.naptcha.captchas.*;
-import NoMathExpectation.NMEBoot.utils.DatabaseConfig;
-import NoMathExpectation.NMEBoot.utils.MessageHistory;
-import NoMathExpectation.NMEBoot.utils.Repeat;
+import NoMathExpectation.NMEBoot.utils.*;
+import net.mamoe.mirai.console.command.CommandManager;
 import net.mamoe.mirai.console.plugin.jvm.JavaPlugin;
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescriptionBuilder;
 import net.mamoe.mirai.event.GlobalEventChannel;
@@ -31,7 +32,7 @@ public final class Main extends JavaPlugin {
     public static WordleMirai wordle = new WordleMirai(new File("config/NoMathExpectation.NMEBoot/wordle.txt"), 6, 25);
 
     private Main() {
-        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.2.13-2022121602")
+        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.3.0-beta2-2023021204")
                 .name("NMEBoot")
                 .author("NoMathExpectation")
                 .build());
@@ -134,6 +135,13 @@ public final class Main extends JavaPlugin {
         Thread t = new Thread(this::autoSave);
         t.setDaemon(true);
         t.start();
+
+        //新物品系统
+        ItemLibraryKt.registerAllItems();
+        AdminPermissionKt.registerAdminPermission();
+        CommandManager.INSTANCE.registerCommand(CommandCard.INSTANCE, false);
+
+        RecentActiveContact.INSTANCE.startListening();
 
         //end
         getLogger().info("NMEBoot已加载。");

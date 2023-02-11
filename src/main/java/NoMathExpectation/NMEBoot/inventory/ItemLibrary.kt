@@ -42,8 +42,10 @@ object TestForLuck : Item {
     override suspend fun NormalUser.onUse(): Boolean {
         if (Random.nextBoolean()) {
             this += Coin
+            sendMessage("你获得了1枚硬币")
         } else {
             this -= Coin
+            sendMessage("你失去了1枚硬币")
         }
         return true
     }
