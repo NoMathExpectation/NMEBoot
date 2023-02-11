@@ -1,12 +1,19 @@
 package NoMathExpectation.NMEBoot.inventory
 
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.modules.PolymorphicModuleBuilder
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
+import net.mamoe.mirai.console.command.CommandSender
+import net.mamoe.mirai.console.command.descriptor.CommandArgumentParserException
+import net.mamoe.mirai.console.command.descriptor.CommandValueArgumentParser
 import net.mamoe.mirai.message.data.MessageChainBuilder
 import net.mamoe.mirai.message.data.buildMessageChain
 
+@OptIn(ExperimentalSerializationApi::class)
+@JsonClassDiscriminator("item_class")
 interface Item {
     val id: String
     val name: String
@@ -45,30 +52,42 @@ fun Item?.equals(other: Item?) = this?.id == other?.id
 
 fun MessageChainBuilder.add(item: Item) = apply { +item.showSimple() }
 
-object ItemSerializerModuleProvider {
-    private var serializersModule = getModule()
 
-    @JvmName("get")
-    operator fun getValue(thisRef: Any?, property: Any?) = serializersModule
-
-    private val registerFunctions: MutableList<PolymorphicModuleBuilder<Item>.() -> Unit> = mutableListOf()
-
-    @JvmName("register")
-    operator fun plusAssign(registerFunction: PolymorphicModuleBuilder<Item>.() -> Unit) {
-        registerFunctions += registerFunction
-    }
-
-    private fun getModule() = SerializersModule {
+object ItemRegistry {
+    @JvmName("getSerializersModule")
+    operator fun getValue(thisRef: Any?, property: Any?) = SerializersModule {
         polymorphic(Item::class) {
             registerFunctions.forEach { it() }
         }
     }
 
-    fun reload() {
-        serializersModule = getModule()
+    private val itemMap: MutableMap<String, Item> = mutableMapOf()
+
+    private val registerFunctions: MutableList<PolymorphicModuleBuilder<Item>.() -> Unit> = mutableListOf()
+
+
+    operator fun plusAssign(registerFunction: PolymorphicModuleBuilder<Item>.() -> Unit) {
+        registerFunctions += registerFunction
     }
+
+    operator fun plusAssign(item: Item) {
+        itemMap[item.id] = item
+    }
+
+    operator fun get(id: String) = itemMap[id]
 }
 
-inline fun <reified I : Item> registerItem() {
-    ItemSerializerModuleProvider += { subclass(I::class) }
+inline fun <reified I : Item> registerItemClass() {
+    ItemRegistry += { subclass(I::class) }
+}
+
+inline fun <reified I : Item> registerItem(item: I) {
+    ItemRegistry += item
+    registerItemClass<I>()
+}
+
+
+object ItemCommandParser : CommandValueArgumentParser<Item> {
+    override fun parse(raw: String, sender: CommandSender) =
+        ItemRegistry[raw] ?: throw CommandArgumentParserException("找不到物品 $raw")
 }
