@@ -9,11 +9,11 @@ import kotlinx.serialization.Serializable
 import kotlin.random.Random
 
 internal fun registerAllItems() {
-    registerItem<Coin>()
-    registerItem<TestForLuck>()
-    registerItem<Bomb>()
+    registerItem(Coin)
+    registerItem(TestForLuck)
+    registerItem(Bomb)
 
-    registerItem<Card>()
+    registerItemClass<Card>()
 }
 
 @Serializable

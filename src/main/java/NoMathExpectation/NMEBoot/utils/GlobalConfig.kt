@@ -9,9 +9,6 @@ import net.mamoe.mirai.console.data.AutoSavePluginConfig
 import net.mamoe.mirai.console.data.value
 import net.mamoe.mirai.console.plugin.jvm.reloadPluginConfig
 import net.mamoe.mirai.contact.Contact
-import net.mamoe.mirai.event.EventPriority
-import net.mamoe.mirai.event.GlobalEventChannel
-import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.Message
 
 internal object GlobalConfig : AutoSavePluginConfig("globalConfig") {
@@ -39,19 +36,6 @@ internal fun getGroup(id: Long, bot: Long? = null) = bots.associateWith { it.get
 internal fun getStranger(id: Long, bot: Long? = null) = bots.associateWith { it.getStranger(id) }
     .mapKeys { it.key.id }
     .let { if (bot == null) it.values.firstOrNull() else it[bot] ?: it.values.firstOrNull() }
-
-internal object RecentActiveContact {
-    val map: MutableMap<Long, Contact> = mutableMapOf()
-
-    operator fun get(id: Long) = map[id]
-
-    operator fun get(normalUser: NormalUser) = get(normalUser.id)
-
-    internal fun startListen() =
-        GlobalEventChannel.parentScope(plugin).subscribeAlways<MessageEvent>(priority = EventPriority.HIGHEST) {
-            map[sender.id] = subject
-        }
-}
 
 internal fun Contact.launchSendMessage(s: String) = plugin.launch { sendMessage(s) }
 

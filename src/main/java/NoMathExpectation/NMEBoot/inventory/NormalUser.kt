@@ -2,13 +2,16 @@ package NoMathExpectation.NMEBoot.inventory
 
 import NoMathExpectation.NMEBoot.utils.getFriend
 import NoMathExpectation.NMEBoot.utils.logger
-import NoMathExpectation.NMEBoot.utils.plugin
+import NoMathExpectation.NMEBoot.utils.reloadAsJson
 import kotlinx.serialization.Serializable
 import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
+import net.mamoe.mirai.console.command.CommandSender
+import net.mamoe.mirai.console.command.descriptor.CommandValueArgumentParser
+import net.mamoe.mirai.console.command.descriptor.ExistingUserValueArgumentParser
 import net.mamoe.mirai.console.data.AutoSavePluginData
 import net.mamoe.mirai.console.data.value
-import net.mamoe.mirai.console.plugin.jvm.reloadPluginData
 import net.mamoe.mirai.contact.User
+import net.mamoe.mirai.message.data.MessageContent
 import kotlin.math.min
 
 @Serializable
@@ -17,12 +20,12 @@ class NormalUser private constructor(
     private val inventory: MutableMap<String, ItemStack<out Item>> = mutableMapOf() // id -> ItemStack
 ) {
     companion object : AutoSavePluginData("user") {
-        override val serializersModule by ItemSerializerModuleProvider
+        override val serializersModule by ItemRegistry
 
         private val users by value<MutableMap<Long, NormalUser>>() // key: id, value: user
 
         init {
-            plugin.reloadPluginData(this)
+            reloadAsJson()
         }
 
         @JvmStatic
@@ -117,9 +120,9 @@ class NormalUser private constructor(
     suspend fun useItemStack(
         itemStack: ItemStack<out Item>,
         overriddenOnUse: (suspend NormalUser.() -> Boolean)? = null
-    ) {
-        if (itemStack.count <= 0) {
-            return
+    ): Boolean {
+        if (itemStack.count < 1) {
+            return false
         }
 
         val item = itemStack.item
@@ -127,8 +130,12 @@ class NormalUser private constructor(
         val count =
             if (item.negativeCountable || (item.reusable && itemStackInInventory.count > 0)) itemStack.count else min(
                 itemStack.count,
-                itemStack.count
+                itemStackInInventory.count
             )
+
+        if (count < 1) {
+            return false
+        }
 
         if (!item.reusable) {
             itemStackInInventory -= count
@@ -142,6 +149,7 @@ class NormalUser private constructor(
             if (overriddenOnUse != null) overriddenOnUse()
             else with(item) { onUse() }
         }
+        return true
     }
 
     @JvmBlockingBridge
@@ -153,8 +161,16 @@ class NormalUser private constructor(
     fun getInventory() = inventory.values.toList()
 }
 
-fun User.toNormalUser() = NormalUser[this.id]
+fun User.toNormalUser() = NormalUser[id]
 
 fun NormalUser?.toString() = "User(${this?.let { "id: ${it.id}" } ?: "null"})"
 
 fun NormalUser?.toFriend() = if (this == null) null else getFriend(id)
+
+object NormalUserCommandParser : CommandValueArgumentParser<NormalUser> {
+    override fun parse(raw: String, sender: CommandSender): NormalUser =
+        ExistingUserValueArgumentParser.parse(raw, sender).toNormalUser()
+
+    override fun parse(raw: MessageContent, sender: CommandSender) =
+        ExistingUserValueArgumentParser.parse(raw, sender).toNormalUser()
+}
