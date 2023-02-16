@@ -5,6 +5,8 @@ import net.mamoe.mirai.message.data.MessageChainBuilder
 
 @Serializable
 data class ItemStack<I : Item>(val item: I, var count: Int = 1) {
+    infix fun count(count: Int) = copy(count = count)
+
     operator fun plus(other: ItemStack<I>) = ItemStack(item, count + other.count)
 
     operator fun plus(count: Int) = ItemStack(item, this.count + count)

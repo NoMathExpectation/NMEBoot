@@ -1,5 +1,6 @@
 package NoMathExpectation.NMEBoot.inventory
 
+import NoMathExpectation.NMEBoot.utils.RecentActiveContact
 import NoMathExpectation.NMEBoot.utils.getFriend
 import NoMathExpectation.NMEBoot.utils.logger
 import NoMathExpectation.NMEBoot.utils.reloadAsJson
@@ -75,8 +76,11 @@ class NormalUser private constructor(
         }
 
         val item = itemStack.item
-        val count = if (item.negativeCountable) itemStack.count else min(itemStack.count, itemStack.count)
         val itemStackInInventory = inventory.computeIfAbsent(item.id) { item count 0 }
+        val count = if (item.negativeCountable) itemStack.count else min(itemStack.count, itemStackInInventory.count)
+        if (count == 0) {
+            return
+        }
 
         itemStackInInventory -= count
         if (itemStackInInventory.count == 0) {
@@ -94,8 +98,8 @@ class NormalUser private constructor(
 
     operator fun ItemStack<out Item>.unaryMinus() = discardItemStack(this)
 
-    fun discardItem(item: Item, overriddenOnGive: (NormalUser.() -> Unit)? = null) =
-        discardItemStack(item count 1, overriddenOnGive)
+    fun discardItem(item: Item, overriddenOnDiscard: (NormalUser.() -> Unit)? = null) =
+        discardItemStack(item count 1, overriddenOnDiscard)
 
     operator fun minusAssign(item: Item) = discardItem(item)
 
@@ -158,10 +162,14 @@ class NormalUser private constructor(
 
     fun searchItem(predicate: (Item) -> Boolean = { true }) = inventory.values.filter { predicate(it.item) }
 
+    fun searchItem(raw: String) = searchItem { it.id == raw || it.name.contains(raw) }
+
     fun getInventory() = inventory.values.toList()
 }
 
 fun User.toNormalUser() = NormalUser[id]
+
+fun CommandSender.toNormalUser() = subject?.id?.let { NormalUser[it] }
 
 fun NormalUser?.toString() = "User(${this?.let { "id: ${it.id}" } ?: "null"})"
 
@@ -169,8 +177,12 @@ fun NormalUser?.toFriend() = if (this == null) null else getFriend(id)
 
 object NormalUserCommandParser : CommandValueArgumentParser<NormalUser> {
     override fun parse(raw: String, sender: CommandSender): NormalUser =
-        ExistingUserValueArgumentParser.parse(raw, sender).toNormalUser()
+        ExistingUserValueArgumentParser.parse(raw, sender).toNormalUser().also {
+            RecentActiveContact[it.id] = sender.subject
+        }
 
     override fun parse(raw: MessageContent, sender: CommandSender) =
-        ExistingUserValueArgumentParser.parse(raw, sender).toNormalUser()
+        ExistingUserValueArgumentParser.parse(raw, sender).toNormalUser().also {
+            RecentActiveContact[it.id] = sender.subject
+        }
 }

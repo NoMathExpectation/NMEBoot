@@ -1,5 +1,6 @@
 package NoMathExpectation.NMEBoot.inventory
 
+import NoMathExpectation.NMEBoot.inventory.card.Card
 import NoMathExpectation.NMEBoot.utils.plugin
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -51,6 +52,8 @@ class Pool<E>(
     }
 
     companion object : AutoSavePluginData("pool") {
+        val ground: Pool<Item> by value()
+        val box: Pool<Card> by value()
         var pullCount by value(0)
             private set
 

@@ -32,7 +32,7 @@ public final class Main extends JavaPlugin {
     public static WordleMirai wordle = new WordleMirai(new File("config/NoMathExpectation.NMEBoot/wordle.txt"), 6, 25);
 
     private Main() {
-        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.3.0-beta2-2023021204")
+        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.3.0-beta5-2023021601")
                 .name("NMEBoot")
                 .author("NoMathExpectation")
                 .build());
@@ -138,7 +138,7 @@ public final class Main extends JavaPlugin {
 
         //新物品系统
         ItemLibraryKt.registerAllItems();
-        AdminPermissionKt.registerAdminPermission();
+        PermissionsKt.registerPermissions();
         CommandManager.INSTANCE.registerCommand(CommandCard.INSTANCE, false);
 
         RecentActiveContact.INSTANCE.startListening();

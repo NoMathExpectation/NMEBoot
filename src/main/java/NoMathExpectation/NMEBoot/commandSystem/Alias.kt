@@ -6,9 +6,14 @@ import net.mamoe.mirai.console.data.AutoSavePluginConfig
 import net.mamoe.mirai.console.data.value
 import net.mamoe.mirai.console.plugin.jvm.reloadPluginConfig
 import net.mamoe.mirai.contact.Contact
-import net.mamoe.mirai.message.data.*
+import net.mamoe.mirai.message.code.CodableMessage
+import net.mamoe.mirai.message.code.MiraiCode.deserializeMiraiCode
+import net.mamoe.mirai.message.data.Message
+import net.mamoe.mirai.message.data.MessageChain
+import net.mamoe.mirai.message.data.SingleMessage
+import net.mamoe.mirai.message.data.buildMessageChain
 
-object Alias: AutoSavePluginConfig("alias") {
+object Alias : AutoSavePluginConfig("alias") {
     private val replaces: MutableMap<Long, MutableList<Triple<String, String, Boolean>>> by value()
     private val logger = Main.INSTANCE.logger
 
@@ -52,30 +57,33 @@ object Alias: AutoSavePluginConfig("alias") {
         return after
     }
 
-    fun Message.alias(group: Long): Message {
+    fun Message.alias(contact: Contact): Message {
         if (this is SingleMessage) {
-            if (this is PlainText) {
-                return PlainText(content.alias(group))
-            }
-
-            return this
+            return if (this is CodableMessage)
+                serializeToMiraiCode().alias(contact.id).deserializeMiraiCode(contact)
+            else this
         }
 
         return buildMessageChain {
+            val sb = StringBuilder()
             for (sm in this@alias as MessageChain) {
-                if (sm is PlainText) {
-                    + sm.content.alias(group)
+                if (sm is CodableMessage) {
+                    sb.append(sm.serializeToMiraiCode())
                 } else {
-                    + sm
+                    if (sb.isNotEmpty()) {
+                        +sb.toString().alias(contact.id).deserializeMiraiCode(contact)
+                        sb.clear()
+                    }
+                    +sm
                 }
             }
         }
     }
 
-    fun Contact.alias() = object: Contact by this {
+    fun Contact.alias() = object : Contact by this {
         @JvmBlockingBridge
         override suspend fun sendMessage(message: Message) =
-            this@alias.sendMessage(message.alias(id))
+            this@alias.sendMessage(message.alias(this))
 
         @JvmBlockingBridge
         override suspend fun sendMessage(message: String) =
@@ -105,7 +113,7 @@ object Alias: AutoSavePluginConfig("alias") {
     }
 
     fun protect(group: Long, pos: Int): Boolean {
-        val replaces = replaces[group]?: throw IndexOutOfBoundsException()
+        val replaces = replaces[group] ?: throw IndexOutOfBoundsException()
         val p = replaces.removeAt(pos)
         val pNew = Triple(p.first, p.second, !p.third)
         replaces.add(pos, pNew)
@@ -130,14 +138,14 @@ object Alias: AutoSavePluginConfig("alias") {
     }
 
     fun sendHelp() = buildMessageChain {
-        + "//alias ...\n"
-        + "help :显示此帮助\n"
-        + "show :显示全部别称\n"
-        + "add '<regex>' '<regex>' [pos] :添加新别称，使用\\'来逃避\n"
-        + "remove <pos> :移除一条别称\n"
-        + "move <from> <to> :将一条别称移动到新的位置\n"
-        + "protect <pos> :保护/取消保护别称\n"
-        + "clear :清除所有别称"
+        +"//alias ...\n"
+        +"help :显示此帮助\n"
+        +"show :显示全部别称\n"
+        +"add '<regex>' '<regex>' [pos] :添加新别称，使用\\'来逃避\n"
+        +"remove <pos> :移除一条别称\n"
+        +"move <from> <to> :将一条别称移动到新的位置\n"
+        +"protect <pos> :保护/取消保护别称\n"
+        +"clear :清除所有别称"
     }
 
     fun toString(group: Long) = buildString {

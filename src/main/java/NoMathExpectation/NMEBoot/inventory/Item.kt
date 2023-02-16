@@ -11,6 +11,7 @@ import net.mamoe.mirai.console.command.descriptor.CommandArgumentParserException
 import net.mamoe.mirai.console.command.descriptor.CommandValueArgumentParser
 import net.mamoe.mirai.message.data.MessageChainBuilder
 import net.mamoe.mirai.message.data.buildMessageChain
+import kotlin.reflect.KClass
 
 @OptIn(ExperimentalSerializationApi::class)
 @JsonClassDiscriminator("item_class")
@@ -63,6 +64,8 @@ object ItemRegistry {
 
     private val itemMap: MutableMap<String, Item> = mutableMapOf()
 
+    private val registeredClass: MutableSet<KClass<out Item>> = mutableSetOf()
+
     private val registerFunctions: MutableList<PolymorphicModuleBuilder<Item>.() -> Unit> = mutableListOf()
 
 
@@ -74,11 +77,16 @@ object ItemRegistry {
         itemMap[item.id] = item
     }
 
+    operator fun plusAssign(itemClass: KClass<out Item>) {
+        registeredClass += itemClass
+    }
+
     operator fun get(id: String) = itemMap[id]
 }
 
 inline fun <reified I : Item> registerItemClass() {
     ItemRegistry += { subclass(I::class) }
+    ItemRegistry += I::class
 }
 
 inline fun <reified I : Item> registerItem(item: I) {

@@ -6,12 +6,15 @@ import NoMathExpectation.NMEBoot.utils.sendMessage
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import net.mamoe.mirai.message.data.At
+import net.mamoe.mirai.message.data.buildMessageChain
 import kotlin.random.Random
 
 internal fun registerAllItems() {
     registerItem(Coin)
     registerItem(TestForLuck)
     registerItem(Bomb)
+    registerItem(Worm)
 
     registerItemClass<Card>()
 }
@@ -59,11 +62,50 @@ object Bomb : Item {
     override val description = "将此物品扔出去，捡到的人会原地爆炸，扣除1枚硬币"
 
     override fun NormalUser.onGive() {
-        plugin.launch { onUse() }
+        plugin.launch { useItem(this@Bomb) }
     }
 
     override suspend fun NormalUser.onUse(): Boolean {
         this -= Coin
+        sendMessage(buildMessageChain {
+            +At(id)
+            +" 原地爆炸了！失去了1枚硬币。"
+        })
+        return true
+    }
+}
+
+@Serializable
+@SerialName("worm")
+object Worm : Item {
+    override val id = "worm"
+    override val name = "蛀虫"
+    override val description = "将它扔出去，它会啃掉捡到的人的一个随机物品（不包括硬币）"
+
+    private fun predicate(item: Item): Boolean {
+        return item != Worm && !item.negativeCountable
+    }
+
+    override fun NormalUser.onGive() {
+        plugin.launch { useItem(this@Worm) }
+    }
+
+    override suspend fun NormalUser.onUse() = true.also {
+        val item = searchItem(this@Worm::predicate).randomOrNull()?.item ?: run {
+            sendMessage(buildMessageChain {
+                +At(id)
+                +" 什么东西也没有，蛀虫不情愿地溜走了。"
+            })
+            return@also
+        }
+        -item
+        sendMessage(buildMessageChain {
+            +"蛀虫啃掉了 "
+            +At(id)
+            +" 的一个 "
+            add(item)
+            +" ，味道好极了。"
+        })
         return true
     }
 }

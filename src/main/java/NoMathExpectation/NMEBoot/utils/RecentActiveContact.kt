@@ -7,7 +7,11 @@ import net.mamoe.mirai.event.GlobalEventChannel
 import net.mamoe.mirai.event.events.MessageEvent
 
 internal object RecentActiveContact {
-    private val map: MutableMap<Long, Contact> = mutableMapOf()
+    val map: MutableMap<Long, Contact?> = mutableMapOf()
+
+    operator fun set(id: Long, contact: Contact?) {
+        map[id] = contact
+    }
 
     operator fun get(id: Long) = map[id]
 
