@@ -34,7 +34,7 @@ internal object CommandCard : CompositeCommand(
     suspend fun CommandSender.getInventory(normalUser: NormalUser? = null) = with(asCustom()) {
         val finalNormalUser = checkAndGetNormalUser(normalUser) ?: return@with
 
-        sendFoldMessage(buildMessageChain {
+        sendMessage(buildMessageChain {
             +At(finalNormalUser.id)
             +" 的物品有：\n"
 
@@ -52,8 +52,8 @@ internal object CommandCard : CompositeCommand(
         val itemStacks = finalNormalUser.searchItem(raw)
         when (itemStacks.size) {
             0 -> sendMessage("未找到物品。")
-            1 -> sendFoldMessage(itemStacks.first().item.show())
-            else -> sendFoldMessage("找到${itemStacks.size}个物品：\n${itemStacks.joinToString("\n") { it.showSimple(true) }}")
+            1 -> sendMessage(itemStacks.first().item.show())
+            else -> sendMessage("找到${itemStacks.size}个物品：\n${itemStacks.joinToString("\n") { it.showSimple(true) }}")
         }
     }
 
@@ -87,7 +87,7 @@ internal object CommandCard : CompositeCommand(
             return@with
         }
         if (itemStacks.size > 1) {
-            sendFoldMessage(
+            sendMessage(
                 "找到${itemStacks.size}个物品，请明确你所要选择的物品：\n${
                     itemStacks.joinToString("\n") {
                         it.showSimple(
@@ -144,7 +144,9 @@ internal object CommandCard : CompositeCommand(
 
         sendMessage(buildMessageChain {
             +At(normalUser.id)
-            +" 捡到了一个 ${item.showSimple()} ！"
+            +" 捡到了一个 "
+            add(item)
+            +"！"
         })
         normalUser += item
     }

@@ -6,14 +6,13 @@ import NoMathExpectation.NMEBoot.inventory.toNormalUser
 import NoMathExpectation.NMEBoot.utils.hasAdminPermission
 import NoMathExpectation.NMEBoot.utils.plugin
 import net.mamoe.mirai.console.command.CommandSender
+import net.mamoe.mirai.console.command.SystemCommandSender
 import net.mamoe.mirai.console.data.AutoSavePluginConfig
 import net.mamoe.mirai.console.data.value
 import net.mamoe.mirai.console.plugin.jvm.reloadPluginConfig
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.message.MessageReceipt
-import net.mamoe.mirai.message.data.Message
-import net.mamoe.mirai.message.data.PlainText
-import net.mamoe.mirai.message.data.buildForwardMessage
+import net.mamoe.mirai.message.data.*
 
 internal object SendingConfig : AutoSavePluginConfig("sending") {
     val enableAlias by value(true)
@@ -27,6 +26,10 @@ internal object SendingConfig : AutoSavePluginConfig("sending") {
 }
 
 fun Message.checkFold(): Boolean {
+    if (this is ForwardMessage || (this is MessageChain && get(ForwardMessage.Key) != null)) {
+        return false
+    }
+
     val content = contentToString()
     return content.length > SendingConfig.foldLength || content.count { it == '\n' } > SendingConfig.foldLineCount
 }
@@ -34,10 +37,10 @@ fun Message.checkFold(): Boolean {
 class CustomCommandSender<T : CommandSender>(val origin: T) : CommandSender by origin {
     override suspend fun sendMessage(message: Message): MessageReceipt<Contact>? {
         val aliasMessage = if (SendingConfig.enableAlias && subject != null) message.alias(subject) else message
-        return if (aliasMessage.checkFold()) {
-            origin.sendMessage(aliasMessage)
-        } else {
+        return if (origin !is SystemCommandSender && aliasMessage.checkFold()) {
             sendFoldMessage(aliasMessage)
+        } else {
+            origin.sendMessage(aliasMessage)
         }.also {
             if (SendingConfig.recallTime > 0) {
                 it?.recallIn(SendingConfig.recallTime)
@@ -50,7 +53,7 @@ class CustomCommandSender<T : CommandSender>(val origin: T) : CommandSender by o
     suspend fun sendFoldMessage(vararg messages: Message) = if (subject != null && bot != null) {
         sendMessage(buildForwardMessage(subject) {
             messages.forEach {
-                bot says it.alias(subject)
+                bot says if (SendingConfig.enableAlias) it.alias(subject) else it
             }
         })
     } else {
@@ -63,7 +66,7 @@ class CustomCommandSender<T : CommandSender>(val origin: T) : CommandSender by o
     suspend fun sendFoldMessage(vararg messages: String) = if (subject != null && bot != null) {
         sendMessage(buildForwardMessage(subject) {
             messages.forEach {
-                bot says it.alias(subject.id)
+                bot says if (SendingConfig.enableAlias) it.alias(subject.id) else it
             }
         })
     } else {
@@ -80,9 +83,9 @@ class CustomContact<T : Contact>(val origin: T) : Contact by origin {
     override suspend fun sendMessage(message: Message): MessageReceipt<Contact> {
         val aliasMessage = if (SendingConfig.enableAlias) message.alias(origin) else message
         return if (aliasMessage.checkFold()) {
-            origin.sendMessage(aliasMessage)
-        } else {
             sendFoldMessage(aliasMessage)
+        } else {
+            origin.sendMessage(aliasMessage)
         }.also {
             if (SendingConfig.recallTime > 0) {
                 it.recallIn(SendingConfig.recallTime)
@@ -94,13 +97,13 @@ class CustomContact<T : Contact>(val origin: T) : Contact by origin {
 
     suspend fun sendFoldMessage(vararg messages: Message) = sendMessage(buildForwardMessage(origin) {
         messages.forEach {
-            bot says it.alias(origin)
+            bot says if (SendingConfig.enableAlias) it.alias(origin) else it
         }
     })
 
     suspend fun sendFoldMessage(vararg messages: String) = sendMessage(buildForwardMessage(origin) {
         messages.forEach {
-            bot says it.alias(origin.id)
+            bot says if (SendingConfig.enableAlias) it.alias(origin.id) else it
         }
     })
 }

@@ -22,46 +22,54 @@ object Alias : AutoSavePluginConfig("alias") {
     }
 
     fun String.alias(group: Long): String {
+        logger.verbose("Alias: String incoming '$this'")
+
         val replaces = replaces[group] ?: return this
         var after = this
 
         //val job = Thread {
-            //while (true) {
-                //val before = after
-                for (p in replaces) {
-                    val job = Thread {
-                        after = Regex(p.first).replace(after, p.second)
-                    }
-                    job.isDaemon = true
-                    job.start()
-                    job.join(1000)
-                    if (job.isAlive) {
-                        logger.warning("Alias: Skipped ${p.first} -> ${p.second} due to timed out.")
-                    }
-                }
-                //if (before == after) {
-                    //break
-                //}
-            //}
+        //while (true) {
+        //val before = after
+        for (p in replaces) {
+            val job = Thread {
+                after = Regex(p.first).replace(after, p.second)
+            }
+            job.isDaemon = true
+            job.start()
+            job.join(1000)
+            if (job.isAlive) {
+                logger.warning("Alias: Skipped ${p.first} -> ${p.second} due to timed out.")
+            }
+        }
+        //if (before == after) {
+        //break
+        //}
+        //}
         //}
         //job.isDaemon = true
         //job.start()
         //job.join(10000)
         //if (job.isAlive) {
-            //logger.warning("Alias: Skipped remaining aliases due to timed out.")
+        //logger.warning("Alias: Skipped remaining aliases due to timed out.")
         //}
 
         if (after != this) {
             logger.info("Alias: '$this' -> '$after'")
         }
+
+        logger.verbose("Alias: String outgoing '$after'")
         return after
     }
 
     fun Message.alias(contact: Contact): Message {
+        logger.verbose("Alias: Message incoming '${contentToString()}'")
+
         if (this is SingleMessage) {
-            return if (this is CodableMessage)
+            return (if (this is CodableMessage)
                 serializeToMiraiCode().alias(contact.id).deserializeMiraiCode(contact)
-            else this
+            else this).also {
+                logger.verbose("Alias: Message outgoing '${it.contentToString()}'")
+            }
         }
 
         return buildMessageChain {
@@ -77,7 +85,10 @@ object Alias : AutoSavePluginConfig("alias") {
                     +sm
                 }
             }
-        }
+            if (sb.isNotEmpty()) {
+                +sb.toString().alias(contact.id).deserializeMiraiCode(contact)
+            }
+        }.also { logger.verbose("Alias: Message outgoing '${it.contentToString()}'") }
     }
 
     fun Contact.alias() = object : Contact by this {
