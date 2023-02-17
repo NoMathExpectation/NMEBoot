@@ -11,6 +11,9 @@ internal lateinit var usePermission: Permission private set
 internal val adminPermissionId = plugin.permissionId("admin")
 internal lateinit var adminPermission: Permission private set
 
+internal val rdlPermissionId = plugin.permissionId("rdlounge")
+internal lateinit var rdlPermission: Permission private set
+
 internal fun registerPermissions() {
     usePermission = PermissionService.INSTANCE.register(
         usePermissionId,
@@ -23,8 +26,16 @@ internal fun registerPermissions() {
         "NMEBoot 管理员权限",
         usePermission
     )
+
+    rdlPermission = PermissionService.INSTANCE.register(
+        rdlPermissionId,
+        "NMEBoot RDLounge群权限",
+        usePermission
+    )
 }
 
 internal fun CommandSender.hasUsePermission() = hasPermission(usePermissionId)
 
 internal fun CommandSender.hasAdminPermission() = hasPermission(adminPermissionId)
+
+internal fun CommandSender.hasRDLPermission() = hasPermission(rdlPermissionId)

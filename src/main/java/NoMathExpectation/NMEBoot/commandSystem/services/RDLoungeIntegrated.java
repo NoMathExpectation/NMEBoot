@@ -64,16 +64,16 @@ public final class RDLoungeIntegrated implements Executable {
                 mcb.append("真·");
             }
             mcb.append("RDL特供:\n")
-                    .append("//chart :搜索谱面\n");
+                    .append("//chart :搜索谱面 （已转移）\n");
             if(isFullFunctionGroup(id)) {
                 mcb.append("//nurse [-h|args] :检查谱面是否有错误(credits: ud2)\n")
                         .append("//rdhelp :编辑器帮助\n")
                         .append("//convert <type> :将音视频文件转换成指定类型\n")
-                        .append("//c 或 //card ://card help\n")
+                        .append("//c 或 //card ://card help （已部分转移）\n")
                         .append("//samurai :Samurai.\n")
-                        .append("//majsoul :向听数计算，例子：//majsoul m123 p456 s789\n")
-                        .append("//brainpower\n")
-                        .append("//heyall\n\n");
+                        .append("//majsoul :向听数计算，例子：//majsoul m123 p456 s789 （将移除）\n")
+                        .append("//brainpower （将移除）\n")
+                        .append("//heyall （将移除）\n\n");
             }
         }
         return mcb;
@@ -274,7 +274,7 @@ public final class RDLoungeIntegrated implements Executable {
                         }
                         try {
                             int index = Integer.decode(cmd[2]);
-                            from.sendMessage(RhythmCafeSearchEngine.INSTANCE.getDescription(from, index)).recallIn(60000);
+                            from.sendMessage(RhythmCafeSearchEngine.INSTANCE.getDescriptionJavaWithContact(index, from)).recallIn(60000);
                         } catch (IllegalArgumentException ex) {
                             from.sendMessage("请输入一个非负整数！");
                         } catch (IndexOutOfBoundsException ex) {

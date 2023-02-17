@@ -106,7 +106,7 @@ class NormalUser private constructor(
     operator fun Item.unaryMinus() = discardItem(this)
 
     operator fun contains(itemStack: ItemStack<out Item>) =
-        (inventory[itemStack.item.id]?.count ?: 0) >= itemStack.count
+        itemStack.count <= 0 || (inventory[itemStack.item.id]?.count ?: 0) >= itemStack.count
 
     operator fun contains(item: Item) = item count 1 in this
 
@@ -162,14 +162,14 @@ class NormalUser private constructor(
 
     fun searchItem(predicate: (Item) -> Boolean = { true }) = inventory.values.filter { predicate(it.item) }
 
-    fun searchItem(raw: String) = searchItem { it.id == raw || it.name.contains(raw) }
+    fun searchItem(raw: String) = searchItem { it.id == raw || it.name.lowercase().contains(raw.lowercase()) }
 
     fun getInventory() = inventory.values.toList()
 }
 
 fun User.toNormalUser() = NormalUser[id]
 
-fun CommandSender.toNormalUser() = subject?.id?.let { NormalUser[it] }
+fun CommandSender.toNormalUser() = user?.id?.let { NormalUser[it] }
 
 fun NormalUser?.toString() = "User(${this?.let { "id: ${it.id}" } ?: "null"})"
 

@@ -12,9 +12,13 @@ import io.ktor.utils.io.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonTransformingSerializer
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.message.data.Image
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
@@ -28,11 +32,18 @@ data class Card(
     override val description: String,
     val chance: Double,
     val smell: String? = null,
-    val embed: String? = null,
+    @Serializable(EmbedSerializer::class) val embed: String? = null,
     @Transient var repository: CardRepository? = null
 ) : Item {
     override val id get() = "rdcard:$filename"
     override val reusable get() = true
+
+    override suspend fun show(contact: Contact?) = super.show(contact).run {
+        if (contact != null) {
+            return@run plus("\n").plus(getImage(contact))
+        }
+        this
+    }
 
     override suspend fun NormalUser.onUse(): Boolean {
         if (smell == null) return false
@@ -94,7 +105,7 @@ private data class CardSurrogate(
     val description: String,
     val chance: Double,
     val smell: String? = null,
-    val embed: String? = null
+    @Serializable(EmbedSerializer::class) val embed: String? = null
 ) {
     val id get() = "rdcard:$filename"
 
@@ -112,8 +123,17 @@ private object CardSerializer : KSerializer<Card> {
     override fun deserialize(decoder: Decoder): Card {
         val surrogate = decoder.decodeSerializableValue(CardSurrogate.serializer())
         return CardRepository[surrogate.id] ?: run {
-            logger.warning("rd卡牌库：读取数据时发现未知卡牌：$surrogate ，将使用来自此卡牌的数据")
+            logger.debug("卡牌库：读取数据时发现未知卡牌：$surrogate ，将使用来自此卡牌的数据")
             surrogate.toReal()
         }
+    }
+}
+
+private object EmbedSerializer : JsonTransformingSerializer<String>(String.serializer()) {
+    override fun transformDeserialize(element: JsonElement): JsonElement {
+        if (element is JsonArray) {
+            return element.last()
+        }
+        return element
     }
 }

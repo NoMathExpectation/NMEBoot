@@ -2,10 +2,11 @@ package NoMathExpectation.NMEBoot.inventory.card
 
 import NoMathExpectation.NMEBoot.inventory.Pool
 import NoMathExpectation.NMEBoot.inventory.card.rdTradingCards.CardGroup
+import NoMathExpectation.NMEBoot.inventory.registerItem
 import NoMathExpectation.NMEBoot.utils.logger
 import NoMathExpectation.NMEBoot.utils.plugin
+import NoMathExpectation.NMEBoot.utils.reloadAsJson
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Required
@@ -13,13 +14,15 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
+import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
 import net.mamoe.mirai.console.data.AutoSavePluginConfig
+import net.mamoe.mirai.console.data.PluginDataExtensions.withEmptyDefault
 import net.mamoe.mirai.console.data.value
 import java.io.File
 import java.util.*
 
 @Serializable
-class CardRepository(
+class CardRepository private constructor(
     val gitRepository: String,
     @Required val id: String = UUID.randomUUID().toString(),
     @Required val storePath: String = "$defaultStorePath/$id",
@@ -38,7 +41,49 @@ class CardRepository(
     companion object CardLibrary : AutoSavePluginConfig("cardLibrary") {
         val defaultStorePath by value("${plugin.dataFolder.absolutePath}/cardRepositories")
 
-        private val library: MutableMap<String, Card> = mutableMapOf()
+        private val library: MutableMap<String, Card> = mutableMapOf() // id -> Card
+
+        private val repos: MutableMap<String, CardRepository> by value() // id -> CardRepository
+
+        @JvmStatic
+        @JvmBlockingBridge
+        suspend fun reloadRepositories() {
+            repos.values.forEach {
+                it.sync()
+                it.reload()
+            }
+        }
+
+        suspend fun addRepository(gitRepository: String, group: Long? = null) =
+            (repos.values.firstOrNull { it.gitRepository == gitRepository }
+                ?: CardRepository(gitRepository)).apply {
+                sync()
+                reload()
+                repos[id] = this
+                if (group != null) groupRepos[group].add(id)
+            }
+
+        fun removeRepository(id: String, group: Long? = null) {
+            if (group == null) {
+                groupRepos.values.forEach { it -= id }
+                repos -= id
+            } else {
+                groupRepos[group] -= id
+                if (groupRepos.values.none { id in it }) {
+                    repos -= id
+                }
+            }
+        }
+
+        fun getRepositories(group: Long) = groupRepos[group].mapNotNull { repos[it] }
+
+        fun getPool(group: Long) = groupRepos[group].mapNotNull { repos[it]?.cardGroups }.run {
+            val result = Pool<CardGroup>()
+            forEach { result.addAll(it) }
+            result
+        }
+
+        private val groupRepos by value<MutableMap<Long, MutableSet<String>>>().withEmptyDefault() // group -> repos.id
 
         operator fun get(id: String) = library[id]
 
@@ -46,6 +91,10 @@ class CardRepository(
             isLenient = true
             ignoreUnknownKeys = true
             prettyPrint = true
+        }
+
+        init {
+            reloadAsJson()
         }
     }
 
@@ -57,14 +106,22 @@ class CardRepository(
                 val git = ProcessBuilder("git", "pull").directory(path).start()
                 git.waitFor()
 
-                val error = git.errorStream.bufferedReader().readText()
-                check(error.isBlank()) { "卡牌库同步：拉取 $gitRepository 的时候产生了一个错误：\n$error" }
+                check(git.exitValue() == 0) {
+                    "卡牌库同步：拉取 $gitRepository 的时候产生了一个错误：\n${
+                        git.errorStream.bufferedReader().readText()
+                    }"
+                }
+                logger.verbose(git.inputStream.bufferedReader().readText())
             } else {
                 val git = Runtime.getRuntime().exec(arrayOf("git", "clone", gitRepository, storePath))
                 git.waitFor()
 
-                val error = git.errorStream.bufferedReader().readText()
-                check(error.isBlank()) { "卡牌库同步：克隆 $gitRepository 的时候产生了一个错误：\n$error" }
+                check(git.exitValue() == 0) {
+                    "卡牌库同步：克隆 $gitRepository 的时候产生了一个错误：\n${
+                        git.errorStream.bufferedReader().readText()
+                    }"
+                }
+                logger.verbose(git.inputStream.bufferedReader().readText())
             }
         }
 
@@ -73,9 +130,9 @@ class CardRepository(
 
     @OptIn(ExperimentalSerializationApi::class)
     suspend fun reload() {
-        logger.debug("卡牌库同步：开始重载 $gitRepository")
+        logger.debug("卡牌库：开始重载 $gitRepository")
         val dataPath = File(storePath)
-        check(dataPath.isDirectory) { "卡牌库同步：无法找到卡牌数据文件夹" }
+        check(dataPath.isDirectory) { "卡牌库：无法找到卡牌数据文件夹" }
 
         cardGroups.flatMap { it.cards }.forEach { library.remove(it.id) }
         cardGroups.clear()
@@ -85,37 +142,29 @@ class CardRepository(
             setting = try {
                 File("$storePath/setting.json").inputStream().use { json.decodeFromStream(it) }
             } catch (exception: Exception) {
-                logger.warning("卡牌库同步：无法读取 $gitRepository 的配置文件，将使用默认配置")
+                logger.warning("卡牌库：无法读取 $gitRepository 的配置文件，将使用默认配置")
                 logger.debug(exception)
                 CardRepositorySetting()
             }
 
             //read cards
-            File("$storePath/${setting.dataPath}").listFiles { dir, name -> dir.isFile && name.endsWith(".json") }
-                ?.forEach {
-                    val cardGroup = it.inputStream().use { stream ->
-                        json.decodeFromStream<CardGroup>(stream)
-                    }
-                    cardGroup.setRepository(this@CardRepository)
-                    cardGroup.cards.associateBy { card -> card.id }.let { map -> library.putAll(map) }
-                    cardGroups.add(cardGroup)
+            File("$storePath/${setting.dataPath}").walkTopDown().filter { it.name.endsWith(".json") }.forEach { file ->
+                val cardGroup = file.inputStream().use { stream ->
+                    json.decodeFromStream<CardGroup>(stream)
                 }
+                cardGroup.setRepository(this@CardRepository)
+                cardGroup.cards.forEach { registerItem(it) }
+                cardGroup.cards.associateBy { card -> card.id }.let { map -> library.putAll(map) }
+                cardGroups.add(cardGroup)
+            }
 
             //read assets
             filenameToFileMap = File("$storePath/${setting.assetPath}")
-                .listFiles { dir, name -> dir.isFile }
-                ?.associateBy { it.nameWithoutExtension }
-                ?: emptyMap()
+                .walkTopDown()
+                .associateBy { it.nameWithoutExtension }
         }
 
-        logger.debug("卡牌库同步：重载 $gitRepository 完成，共加载了 ${cardGroups.size} 个卡组，${cardGroups.sumOf { it.cards.size }} 个卡牌")
-    }
-
-    init {
-        plugin.launch {
-            sync()
-            reload()
-        }
+        logger.debug("卡牌库：重载 $gitRepository 完成，共加载了 ${cardGroups.size} 个卡组，${cardGroups.sumOf { it.cards.size }} 个卡牌")
     }
 
     override fun equals(other: Any?) = gitRepository == (other as? CardRepository)?.gitRepository

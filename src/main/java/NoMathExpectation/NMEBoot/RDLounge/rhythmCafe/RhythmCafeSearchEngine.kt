@@ -9,11 +9,13 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.resources.*
 import io.ktor.client.request.*
 import io.ktor.serialization.kotlinx.json.*
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.contact.Group
+import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.data.buildMessageChain
 
 object RhythmCafeSearchEngine {
@@ -88,14 +90,20 @@ object RhythmCafeSearchEngine {
         }
     }
 
+    @JvmName("getDescriptionJavaWithContact") // why @JvmBlockingBridge doesn't work here?
+    fun getDescription(index: Int, from: Contact): MessageChain =
+        runBlocking { RhythmCafeSearchEngine.getDescription(index, from) }
+
     @JvmBlockingBridge
-    suspend fun getDescription(contact: Contact, index: Int) = buildMessageChain {
+    suspend fun getDescription(index: Int, contact: Contact? = null) = buildMessageChain {
         val level = currentSearch.hits[index - 1].document
 
-        FileUtils.getDownloadStream(level.image).use {
-            +contact.uploadImage(it)
+        contact?.let {
+            FileUtils.getDownloadStream(level.image).use {
+                +contact.uploadImage(it)
+            }
+            +"\n"
         }
-        +"\n"
 
         +"歌曲名: ${level.song}\n"
 

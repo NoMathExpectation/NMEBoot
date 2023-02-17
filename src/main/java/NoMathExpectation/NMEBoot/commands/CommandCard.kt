@@ -4,6 +4,7 @@ import NoMathExpectation.NMEBoot.inventory.*
 import NoMathExpectation.NMEBoot.inventory.Pool.Companion.box
 import NoMathExpectation.NMEBoot.inventory.Pool.Companion.ground
 import NoMathExpectation.NMEBoot.inventory.card.Card
+import NoMathExpectation.NMEBoot.inventory.card.CardRepository
 import NoMathExpectation.NMEBoot.sending.asCustom
 import NoMathExpectation.NMEBoot.sending.checkAndGetNormalUser
 import NoMathExpectation.NMEBoot.utils.hasAdminPermission
@@ -13,9 +14,12 @@ import NoMathExpectation.NMEBoot.utils.usePermission
 import net.mamoe.mirai.console.command.AbstractUserCommandSender
 import net.mamoe.mirai.console.command.CommandSender
 import net.mamoe.mirai.console.command.CompositeCommand
+import net.mamoe.mirai.console.command.MemberCommandSender
 import net.mamoe.mirai.console.command.descriptor.buildCommandArgumentContext
 import net.mamoe.mirai.console.util.safeCast
+import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.message.data.At
+import net.mamoe.mirai.message.data.at
 import net.mamoe.mirai.message.data.buildMessageChain
 
 internal object CommandCard : CompositeCommand(
@@ -52,7 +56,7 @@ internal object CommandCard : CompositeCommand(
         val itemStacks = finalNormalUser.searchItem(raw)
         when (itemStacks.size) {
             0 -> sendMessage("未找到物品。")
-            1 -> sendMessage(itemStacks.first().item.show())
+            1 -> sendMessage(itemStacks.first().item.show(origin.subject))
             else -> sendMessage("找到${itemStacks.size}个物品：\n${itemStacks.joinToString("\n") { it.showSimple(true) }}")
         }
     }
@@ -124,11 +128,23 @@ internal object CommandCard : CompositeCommand(
             return@with
         }
 
-        normalUser -= itemStack
+        if (!normalUser.tryAndDiscardItemStack(itemStack)) {
+            sendMessage("未找到物品。")
+            return@with
+        }
         ground += itemStack.item
         sendMessage(buildMessageChain {
             +At(normalUser.id)
             +" 扔出了一个物品！"
+        })
+    }
+
+    //@SubCommand("throw") //subcommand conflict
+    @Description("扔出群成员")
+    suspend fun MemberCommandSender.throwMember(member: Member) = with(asCustom()) {
+        sendMessage(buildMessageChain {
+            +member.at()
+            +" 被扔出了这个群！"
         })
     }
 
@@ -155,33 +171,121 @@ internal object CommandCard : CompositeCommand(
 
     @SubCommand("box", "b")
     @Description("从盒子里取出或放入卡片，放入会获得一枚硬币，取出需消耗两枚硬币，同时执行不耗费硬币")
-    suspend fun AbstractUserCommandSender.box(op: BoxOperation = BoxOperation.BOTH) = with(asCustom()) {
+    suspend fun AbstractUserCommandSender.box(operation: BoxOperation = BoxOperation.BOTH) = with(asCustom()) {
         val normalUser = toNormalUser() ?: return
 
-        if (!normalUser.tryAndDiscardItemStack(Coin count op.cost)) {
+        if (!normalUser.tryAndDiscardItemStack(Coin count operation.cost)) {
             sendMessage("你没有足够的硬币。")
             return
         }
 
-        if (op == BoxOperation.IN || op == BoxOperation.BOTH) {
-            val card = normalUser.searchItem { it is Card }.randomOrNull().safeCast<Card>() ?: run {
+        if (operation == BoxOperation.IN || operation == BoxOperation.BOTH) {
+            val card = normalUser.searchItem { it is Card }
+                .randomOrNull()
+                ?.item
+                .safeCast<Card>() ?: run {
                 sendMessage("你没有任何卡片。")
-                normalUser += Coin count op.cost
+                normalUser += Coin count operation.cost
                 return
             }
 
             normalUser -= card
             box += card
+            sendMessage("你将一张 ${card.showSimple()} 放入了盒子。")
         }
 
-        if (op == BoxOperation.OUT || op == BoxOperation.BOTH) {
+        if (operation == BoxOperation.OUT || operation == BoxOperation.BOTH) {
             val card = box.pull() ?: run {
                 sendMessage("盒子里空空如也......")
-                normalUser += Coin count op.cost
+                normalUser += Coin count operation.cost
                 return
             }
 
             normalUser += card
+            sendMessage(buildMessageChain {
+                +"你从盒子里获得了一张 "
+                add(card)
+                +"！\n"
+                +card.getImage(origin.subject)
+            })
+        }
+    }
+
+    @SubCommand("pull", "p")
+    @Description("抽卡")
+    suspend fun MemberCommandSender.pullCard(): Unit = with(asCustom()) {
+        val normalUser = toNormalUser() ?: return
+
+        val groupPool = CardRepository.getPool(group.id)
+        val cardGroup = groupPool.pull() ?: run {
+            sendMessage("池子里什么都没有呢......")
+            return
+        }
+        val card = cardGroup.pull() ?: run {
+            sendMessage("什么都没有抽到呢......")
+            return
+        }
+
+        normalUser += card
+        sendMessage(buildMessageChain {
+            +At(normalUser.id)
+            +" 抽到了一张 "
+            add(card)
+            +"！\n"
+            +card.getImage(group)
+        })
+    }
+
+    enum class RepoOperation { HELP, ADD, REMOVE, LIST }
+
+    @SubCommand("repository", "repo")
+    @Description("管理卡池")
+    suspend fun MemberCommandSender.repository(
+        operation: RepoOperation? = RepoOperation.HELP,
+        arg: String? = null
+    ): Unit = with(asCustom()) {
+        if (!hasAdminPermission()) {
+            sendMessage("你没有权限使用此指令。")
+            return
+        }
+
+        when (operation) {
+            RepoOperation.ADD -> {
+                if (arg == null) {
+                    sendMessage("请输入卡池链接。")
+                    return
+                }
+
+                sendMessage("添加卡池中，请稍候......")
+                val repo = CardRepository.addRepository(arg, group.id)
+                sendMessage("已添加卡池 ${repo.id}。")
+            }
+
+            RepoOperation.REMOVE -> {
+                if (arg == null) {
+                    sendMessage("请输入卡池ID。")
+                    return
+                }
+
+                CardRepository.removeRepository(arg, group.id)
+                sendMessage("已移除卡池 $arg。")
+            }
+
+            RepoOperation.LIST -> {
+                sendMessage("当前使用的卡池：\n${
+                    CardRepository.getRepositories(group.id)
+                        .joinToString("\n") { "${it.id}: ${it.gitRepository}" }
+                }"
+                )
+            }
+
+            else -> sendMessage(buildMessageChain {
+                +"c repo ...\n"
+                +"help : 显示帮助\n"
+                +"add <gitRepoLink> : 添加卡池\n"
+                +"remove <id> : 移除卡池\n"
+                +"list : 列出当前使用的卡池\n"
+            })
         }
     }
 }

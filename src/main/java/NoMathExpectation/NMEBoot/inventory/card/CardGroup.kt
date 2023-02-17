@@ -6,6 +6,7 @@ import NoMathExpectation.NMEBoot.inventory.PullStrategy
 import NoMathExpectation.NMEBoot.inventory.card.Card
 import NoMathExpectation.NMEBoot.inventory.card.CardRepository
 import NoMathExpectation.NMEBoot.inventory.weightedPullStrategy
+import NoMathExpectation.NMEBoot.utils.logger
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
@@ -26,5 +27,10 @@ data class CardGroup(
 
 class CardGroupPoolSerializer : PoolAsListSerializer<Card>(ListSerializer(Card.serializer())) {
     override fun deserialize(decoder: Decoder) =
-        super.deserialize(decoder).apply { pullStrategy = weightedPullStrategy { chance } }
+        super.deserialize(decoder).apply {
+            pullStrategy = weightedPullStrategy { chance }
+
+            logger.verbose("Deserialized CardGroup:")
+            forEach { logger.verbose(it.showSimple(true)) }
+        }
 }

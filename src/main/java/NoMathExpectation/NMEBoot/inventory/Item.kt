@@ -9,6 +9,7 @@ import kotlinx.serialization.modules.subclass
 import net.mamoe.mirai.console.command.CommandSender
 import net.mamoe.mirai.console.command.descriptor.CommandArgumentParserException
 import net.mamoe.mirai.console.command.descriptor.CommandValueArgumentParser
+import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.message.data.MessageChainBuilder
 import net.mamoe.mirai.message.data.buildMessageChain
 import kotlin.reflect.KClass
@@ -32,10 +33,10 @@ interface Item {
 
     suspend fun NormalUser.onUse() = false
 
-    fun show() = buildMessageChain {
+    suspend fun show(contact: Contact? = null) = buildMessageChain {
         appendLine("名称： $name")
         appendLine("id： $id")
-        appendLine("描述：")
+        appendLine("描述：\n")
         appendLine(description)
     }
 
@@ -81,12 +82,18 @@ object ItemRegistry {
         registeredClass += itemClass
     }
 
+    operator fun contains(kClass: KClass<out Item>) = kClass in registeredClass
+
     operator fun get(id: String) = itemMap[id]
+
+    operator fun contains(id: String) = id in itemMap
 }
 
 inline fun <reified I : Item> registerItemClass() {
-    ItemRegistry += { subclass(I::class) }
-    ItemRegistry += I::class
+    if (I::class !in ItemRegistry) {
+        ItemRegistry += { subclass(I::class) }
+        ItemRegistry += I::class
+    }
 }
 
 inline fun <reified I : Item> registerItem(item: I) {

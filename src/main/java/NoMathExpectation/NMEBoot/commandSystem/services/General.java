@@ -50,9 +50,9 @@ public final class General implements Executable {
 
         if (e.getSubject().getId() != RDLoungeIntegrated.RDLOUNGE) {
             mcb
-                    .append("//hello :发送 \"Hello, world!\"\n")
-                    .append("//repeat <text> :复读机\n")
-                    .append("//history :随机一条历史消息\n")
+                    .append("//hello :发送 \"Hello, world!\" （已转移）\n")
+                    .append("//repeat <text> :复读机 （已转移）\n")
+                    .append("//history :随机一条历史消息 （已转移）\n")
                     .append("//luck :测测你今天的运气\n")
                     .append("//faq :常见问题\n")
                     .append("//alias :别称\n")
@@ -63,8 +63,8 @@ public final class General implements Executable {
                     //.append("//cave [留言]: 放入留言，或是查看并销毁随机一条留言\n")
                     .append("//download <url> :下载文件\n")
                     .append("//feedback <text> :给作者反馈\n\n")
-                    .append("//114514 [count]\n")
-                    .append("//1919810 [count]\n");
+                    .append("//114514 [count] （已转移）\n")
+                    .append("//1919810 [count] （已转移）\n");
                     //.append("//moral <text>:AI预测是否道德（仅供参考，不作为任何依据）\n")
         }
 

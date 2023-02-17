@@ -8,8 +8,9 @@ import NoMathExpectation.NMEBoot.commandSystem.Samurai;
 import NoMathExpectation.NMEBoot.commandSystem.services.ARG2023;
 import NoMathExpectation.NMEBoot.commandSystem.services.General;
 import NoMathExpectation.NMEBoot.commandSystem.services.RDLoungeIntegrated;
-import NoMathExpectation.NMEBoot.commands.CommandCard;
+import NoMathExpectation.NMEBoot.commands.*;
 import NoMathExpectation.NMEBoot.inventory.ItemLibraryKt;
+import NoMathExpectation.NMEBoot.inventory.card.CardRepository;
 import NoMathExpectation.NMEBoot.naptcha.CaptchaDispatcher;
 import NoMathExpectation.NMEBoot.naptcha.captchas.*;
 import NoMathExpectation.NMEBoot.utils.*;
@@ -32,7 +33,7 @@ public final class Main extends JavaPlugin {
     public static WordleMirai wordle = new WordleMirai(new File("config/NoMathExpectation.NMEBoot/wordle.txt"), 6, 25);
 
     private Main() {
-        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.3.0-beta5-2023021605")
+        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.3.0-beta8-2023021805")
                 .name("NMEBoot")
                 .author("NoMathExpectation")
                 .build());
@@ -138,8 +139,17 @@ public final class Main extends JavaPlugin {
 
         //新物品系统
         ItemLibraryKt.registerAllItems();
+
+        CardRepository.reloadRepositories();
+
         PermissionsKt.registerPermissions();
+
+        CommandManager.INSTANCE.registerCommand(CommandHello.INSTANCE, false);
         CommandManager.INSTANCE.registerCommand(CommandCard.INSTANCE, false);
+        CommandManager.INSTANCE.registerCommand(CommandRepeat.INSTANCE, false);
+        CommandManager.INSTANCE.registerCommand(Command114514.INSTANCE, false);
+        CommandManager.INSTANCE.registerCommand(CommandHistory.INSTANCE, false);
+        CommandManager.INSTANCE.registerCommand(CommandChart.INSTANCE, false);
 
         RecentActiveContact.INSTANCE.startListening();
 
@@ -159,9 +169,9 @@ public final class Main extends JavaPlugin {
             Thread.sleep(120000);
         } catch (InterruptedException ignored) {}
 
-        getLogger().info("自动保存开始");
+        getLogger().verbose("自动保存开始");
         save();
-        getLogger().info("自动保存结束");
+        getLogger().verbose("自动保存结束");
 
         Thread t = new Thread(this::autoSave);
         t.setDaemon(true);

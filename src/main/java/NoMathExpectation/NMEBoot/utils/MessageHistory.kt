@@ -71,11 +71,11 @@ object MessageHistory {
         bot?.let {
             query = query.andWhere { MessageHistoryTable.sender neq it }
         }
-        query.orderBy(Random()).limit(1).first()
+        query.orderBy(Random()).limit(1).firstOrNull()
     }
 
-    fun randomAsMessage(group: Long? = null, bot: Long? = null): Pair<MessageChain, MessageChain> {
-        val message = random(group, bot)
+    fun randomAsMessage(group: Long? = null, bot: Long? = null): Pair<MessageChain, MessageChain>? {
+        val message = random(group, bot) ?: return null
         val msg1 = buildMessageChain {
             +"${message[MessageHistoryTable.name]} 曾经说过："
         }
