@@ -7,6 +7,7 @@ import NoMathExpectation.NMEBoot.utils.MessageHistory
 import NoMathExpectation.NMEBoot.utils.adminPermission
 import NoMathExpectation.NMEBoot.utils.plugin
 import NoMathExpectation.NMEBoot.utils.usePermission
+import net.mamoe.mirai.console.command.AbstractUserCommandSender
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
 import net.mamoe.mirai.console.command.CommandSender
 import net.mamoe.mirai.console.command.MemberCommandSender
@@ -94,7 +95,7 @@ object CommandLuck : SimpleCommand(
     parentPermission = usePermission
 ) {
     @Handler
-    suspend fun MemberCommandSender.handle() = with(asCustom()) {
+    suspend fun AbstractUserCommandSender.handle() = with(asCustom()) {
         val luck = Luck[origin.user.id].luck
 
         sendMessage("你今天的运气是： $luck")
