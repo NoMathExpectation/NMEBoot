@@ -170,7 +170,7 @@ internal object CommandCard : CompositeCommand(
     enum class BoxOperation(val cost: Int) { IN(-1), OUT(2), BOTH(0) }
 
     @SubCommand("box", "b")
-    @Description("从盒子里取出或放入卡片，放入会获得一枚硬币，取出需消耗两枚硬币，同时执行不耗费硬币")
+    @Description("从盒子里取出或放入卡片\n放入会获得一枚硬币\n取出需消耗两枚硬币\n同时执行不耗费硬币")
     suspend fun AbstractUserCommandSender.box(operation: BoxOperation = BoxOperation.BOTH) = with(asCustom()) {
         val normalUser = toNormalUser() ?: return
 

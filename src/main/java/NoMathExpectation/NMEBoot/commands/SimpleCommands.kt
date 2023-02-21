@@ -1,13 +1,27 @@
 package NoMathExpectation.NMEBoot.commands
 
+import NoMathExpectation.NMEBoot.inventory.modules.Luck
 import NoMathExpectation.NMEBoot.sending.asCustom
 import NoMathExpectation.NMEBoot.utils.MessageHistory
 import NoMathExpectation.NMEBoot.utils.plugin
 import NoMathExpectation.NMEBoot.utils.usePermission
+import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
 import net.mamoe.mirai.console.command.CommandSender
 import net.mamoe.mirai.console.command.MemberCommandSender
 import net.mamoe.mirai.console.command.SimpleCommand
 import kotlin.random.Random
+
+internal fun registerCommands() {
+    //composite commands
+    CommandCard.register()
+
+    //simple commands
+    CommandHello.register()
+    CommandRepeat.register()
+    Command114514.register()
+    CommandHistory.register()
+    CommandLuck.register()
+}
 
 object CommandHello : SimpleCommand(
     plugin,
@@ -66,5 +80,19 @@ object CommandHistory : SimpleCommand(
 
         sendMessage(history.first)
         sendMessage(history.second)
+    }
+}
+
+object CommandLuck : SimpleCommand(
+    plugin,
+    "luck",
+    description = "测测你今天的运气",
+    parentPermission = usePermission
+) {
+    @Handler
+    suspend fun MemberCommandSender.handle() = with(asCustom()) {
+        val luck = Luck[origin.user.id].luck
+
+        sendMessage("你今天的运气是： $luck")
     }
 }
