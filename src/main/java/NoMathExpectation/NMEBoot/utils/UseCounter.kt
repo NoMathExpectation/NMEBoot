@@ -1,7 +1,6 @@
 package NoMathExpectation.NMEBoot.utils
 
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
+import kotlinx.datetime.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.time.Duration
@@ -36,7 +35,7 @@ class LimitedTimeUseCounter(override val useCount: Int) : UseCounter()
 class FixedDelayUseCounter(
     override val useCount: Int,
     val delay: SerializableDuration,
-    var nextRefresh: Instant = Instant.DISTANT_PAST
+    var nextRefresh: LocalDateTime = Instant.DISTANT_PAST.toLocalDateTime()
 ) : UseCounter() {
     override fun use() = canUse().also {
         if (it) remain--
@@ -44,8 +43,8 @@ class FixedDelayUseCounter(
 
     override fun canUse(): Boolean {
         val now = Clock.System.now()
-        if (now >= nextRefresh) {
-            nextRefresh = now + delay
+        if (now >= nextRefresh.toInstant()) {
+            nextRefresh = (now + delay).toLocalDateTime()
             reset()
         }
         return super.canUse()
@@ -57,17 +56,17 @@ class FixedDelayUseCounter(
 class FixedRateUseCounter constructor(
     override val useCount: Int,
     val rate: SerializableDuration,
-    var nextRefresh: Instant = Clock.System.now()
+    var nextRefresh: LocalDateTime = Clock.System.now().toLocalDateTime()
 ) : UseCounter() {
     override fun use() = canUse().also {
         if (it) remain--
     }
 
     override fun canUse(): Boolean {
-        val now = Clock.System.now()
+        val now = Clock.System.now().toLocalDateTime()
         if (now >= nextRefresh) {
-            while (nextRefresh < now) {
-                nextRefresh += rate
+            while (nextRefresh <= now) {
+                nextRefresh = (nextRefresh.toInstant() + rate).toLocalDateTime()
             }
             reset()
         }
@@ -76,8 +75,16 @@ class FixedRateUseCounter constructor(
 
     companion object {
         fun ofDay(useCount: Int): FixedRateUseCounter {
-            val now = Clock.System.now().epochSeconds
-            return FixedRateUseCounter(useCount, Duration.parse("1d"), Instant.fromEpochSeconds(now - now % 86400L))
+            val now = Clock.System.now().toLocalDateTime()
+            return FixedRateUseCounter(
+                useCount,
+                Duration.parse("1d"),
+                LocalDateTime(now.year, now.month, now.dayOfMonth, 0, 0, 0, 0)
+            )
         }
     }
 }
+
+internal fun Instant.toLocalDateTime() = toLocalDateTime(TimeZone.currentSystemDefault())
+
+internal fun LocalDateTime.toInstant() = toInstant(TimeZone.currentSystemDefault())
