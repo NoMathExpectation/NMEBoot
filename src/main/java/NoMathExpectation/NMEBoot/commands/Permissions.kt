@@ -15,22 +15,22 @@ internal val rdlPermissionId = plugin.permissionId("rdlounge")
 internal lateinit var rdlPermission: Permission private set
 
 internal fun registerPermissions() {
-    usePermission = PermissionService.INSTANCE.register(
-        usePermissionId,
-        "NMEBoot 使用权限",
-        plugin.parentPermission
-    )
-
     adminPermission = PermissionService.INSTANCE.register(
         adminPermissionId,
         "NMEBoot 管理员权限",
-        usePermission
+        plugin.parentPermission
     )
 
     rdlPermission = PermissionService.INSTANCE.register(
         rdlPermissionId,
         "NMEBoot RDLounge群权限",
-        usePermission
+        adminPermission
+    )
+
+    usePermission = PermissionService.INSTANCE.register(
+        usePermissionId,
+        "NMEBoot 使用权限",
+        rdlPermission
     )
 }
 
