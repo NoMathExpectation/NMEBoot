@@ -1,10 +1,12 @@
 package NoMathExpectation.NMEBoot;
 
-import NoMathExpectation.NMEBoot.RDLounge.cardSystem.*;
+import NoMathExpectation.NMEBoot.RDLounge.cardSystem.CardPool;
+import NoMathExpectation.NMEBoot.RDLounge.cardSystem.CardSystemData;
+import NoMathExpectation.NMEBoot.RDLounge.cardSystem.CardUser;
+import NoMathExpectation.NMEBoot.RDLounge.cardSystem.ItemPool;
 import NoMathExpectation.NMEBoot.commandSystem.ExecuteCenter;
 import NoMathExpectation.NMEBoot.commandSystem.NormalUser;
 import NoMathExpectation.NMEBoot.commandSystem.NormalUserStats;
-import NoMathExpectation.NMEBoot.commandSystem.Samurai;
 import NoMathExpectation.NMEBoot.commandSystem.services.ARG2023;
 import NoMathExpectation.NMEBoot.commandSystem.services.General;
 import NoMathExpectation.NMEBoot.commandSystem.services.RDLoungeIntegrated;
@@ -32,7 +34,7 @@ public final class Main extends JavaPlugin {
     public static WordleMirai wordle = new WordleMirai(new File("config/NoMathExpectation.NMEBoot/wordle.txt"), 6, 25);
 
     private Main() {
-        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.3.0-beta9-2023022101")
+        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.3.0-beta10-2023022102")
                 .name("NMEBoot")
                 .author("NoMathExpectation")
                 .build());
@@ -49,10 +51,6 @@ public final class Main extends JavaPlugin {
                 .register(new CheckinTimes())
                 .register(new CardClass())
                 .register(new TwoOneFunction(-10, 10));
-        reloadPluginData(Samurai.INSTANCE);
-        reloadPluginData(NormalUserStats.INSTANCE);
-        reloadPluginData(CardSystemData.INSTANCE);
-        reloadPluginData(StatsData.INSTANCE);
     }
 
     @Override

@@ -1,8 +1,10 @@
 package NoMathExpectation.NMEBoot.commands
 
 import NoMathExpectation.NMEBoot.inventory.modules.Luck
+import NoMathExpectation.NMEBoot.inventory.modules.Reloading
 import NoMathExpectation.NMEBoot.sending.asCustom
 import NoMathExpectation.NMEBoot.utils.MessageHistory
+import NoMathExpectation.NMEBoot.utils.adminPermission
 import NoMathExpectation.NMEBoot.utils.plugin
 import NoMathExpectation.NMEBoot.utils.usePermission
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
@@ -14,6 +16,7 @@ import kotlin.random.Random
 internal fun registerCommands() {
     //composite commands
     CommandCard.register()
+    CommandChart.register()
 
     //simple commands
     CommandHello.register()
@@ -21,6 +24,7 @@ internal fun registerCommands() {
     Command114514.register()
     CommandHistory.register()
     CommandLuck.register()
+    CommandReload.register()
 }
 
 object CommandHello : SimpleCommand(
@@ -94,5 +98,21 @@ object CommandLuck : SimpleCommand(
         val luck = Luck[origin.user.id].luck
 
         sendMessage("你今天的运气是： $luck")
+    }
+}
+
+object CommandReload : SimpleCommand(
+    plugin,
+    "reload",
+    description = "重载数据",
+    parentPermission = adminPermission
+) {
+    @Handler
+    suspend fun CommandSender.handle(name: String) = with(asCustom()) {
+        if (Reloading.reload(name)) {
+            sendMessage("重载成功")
+        } else {
+            sendMessage("重载失败")
+        }
     }
 }

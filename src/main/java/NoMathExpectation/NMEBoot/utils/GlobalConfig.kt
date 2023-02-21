@@ -2,6 +2,7 @@ package NoMathExpectation.NMEBoot.utils
 
 import NoMathExpectation.NMEBoot.Main
 import NoMathExpectation.NMEBoot.inventory.NormalUser
+import NoMathExpectation.NMEBoot.inventory.modules.reload
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import net.mamoe.mirai.Bot
@@ -15,7 +16,9 @@ internal object GlobalConfig : AutoSavePluginConfig("globalConfig") {
     val bots: List<Long> by value()
 
     init {
-        plugin.reloadPluginConfig(this)
+        reload {
+            plugin.reloadPluginConfig(this)
+        }
     }
 }
 

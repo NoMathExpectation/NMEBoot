@@ -38,7 +38,9 @@ class Luck(var counter: UseCounter = FixedRateUseCounter.ofDay(1)) : Comparable<
         operator fun get(id: Long) = lucks[id]
 
         init {
-            plugin.reloadPluginData(this)
+            reload {
+                plugin.reloadPluginData(this)
+            }
         }
     }
 }

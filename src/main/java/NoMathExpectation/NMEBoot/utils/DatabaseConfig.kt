@@ -1,6 +1,6 @@
 package NoMathExpectation.NMEBoot.utils
 
-import NoMathExpectation.NMEBoot.Main
+import NoMathExpectation.NMEBoot.inventory.modules.reload
 import net.mamoe.mirai.console.data.AutoSavePluginConfig
 import net.mamoe.mirai.console.data.value
 import net.mamoe.mirai.console.plugin.jvm.reloadPluginConfig
@@ -12,7 +12,9 @@ object DatabaseConfig : AutoSavePluginConfig("database") {
     private val path by value("data/NoMathExpectation.NMEBoot/sqlite.db")
 
     init {
-        Main.INSTANCE.reloadPluginConfig(this)
+        reload {
+            plugin.reloadPluginConfig(this)
+        }
     }
 
     fun load() {

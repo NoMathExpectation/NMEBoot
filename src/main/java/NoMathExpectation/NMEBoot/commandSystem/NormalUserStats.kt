@@ -1,9 +1,12 @@
 package NoMathExpectation.NMEBoot.commandSystem
 
+import NoMathExpectation.NMEBoot.inventory.modules.reload
+import NoMathExpectation.NMEBoot.utils.plugin
 import NoMathExpectation.NMEBoot.wolframAlpha.Conversation
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.console.data.AutoSavePluginData
 import net.mamoe.mirai.console.data.value
+import net.mamoe.mirai.console.plugin.jvm.reloadPluginData
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.message.data.buildForwardMessage
 import net.mamoe.mirai.message.data.buildMessageChain
@@ -17,13 +20,19 @@ object NormalUserStats : AutoSavePluginData("normalUser") {
     var messageCountDate: String by value(LocalDate.MIN.format(DateTimeFormatter.ISO_LOCAL_DATE))
     var user: Set<ByteArray> by value()
 
+    init {
+        reload {
+            plugin.reloadPluginData(this)
+        }
+    }
+
     fun getStatList() = buildMessageChain {
-        + ".//stat|stats ...\n"
-        + "general : 通用\n"
-        + "checkin : 签到时间排行榜\n"
-        + "streak : 连续签到排行榜\n"
-        + "chat|message : 聊天排行榜\n"
-        + "chatDaily|messageDaily : 日聊天排行榜\n"
+        +".//stat|stats ...\n"
+        +"general : 通用\n"
+        +"checkin : 签到时间排行榜\n"
+        +"streak : 连续签到排行榜\n"
+        +"chat|message : 聊天排行榜\n"
+        +"chatDaily|messageDaily : 日聊天排行榜\n"
     }
 
     fun getStat(name: String, group: Long) = when (name.lowercase()) {

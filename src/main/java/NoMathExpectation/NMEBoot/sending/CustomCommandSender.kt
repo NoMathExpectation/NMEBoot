@@ -2,6 +2,7 @@ package NoMathExpectation.NMEBoot.sending
 
 import NoMathExpectation.NMEBoot.commandSystem.Alias.alias
 import NoMathExpectation.NMEBoot.inventory.NormalUser
+import NoMathExpectation.NMEBoot.inventory.modules.reload
 import NoMathExpectation.NMEBoot.inventory.toNormalUser
 import NoMathExpectation.NMEBoot.utils.hasAdminPermission
 import NoMathExpectation.NMEBoot.utils.plugin
@@ -21,7 +22,9 @@ internal object SendingConfig : AutoSavePluginConfig("sending") {
     val recallTime by value(-1L)
 
     init {
-        plugin.reloadPluginConfig(this)
+        reload {
+            plugin.reloadPluginConfig(this)
+        }
     }
 }
 

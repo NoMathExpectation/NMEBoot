@@ -1,6 +1,8 @@
 package NoMathExpectation.NMEBoot
 
 import NoMathExpectation.NMEBoot.commandSystem.UsingGroup
+import NoMathExpectation.NMEBoot.inventory.modules.reload
+import NoMathExpectation.NMEBoot.utils.plugin
 import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
 import net.mamoe.mirai.console.data.AutoSavePluginConfig
 import net.mamoe.mirai.console.data.value
@@ -23,9 +25,24 @@ object FAQ : AutoSavePluginConfig("faq") {
     private val recordingContent: MutableMap<Long, MutableList<MessageChain>> = HashMap()
 
     init {
-        Main.INSTANCE.reloadPluginConfig(this)
-        GlobalEventChannel.subscribeAlways<GroupMessageEvent>(priority = EventPriority.MONITOR) { e -> record(e.subject.id, e.sender.id, e.message) }
-        GlobalEventChannel.subscribeAlways<GroupMessageSyncEvent>(priority = EventPriority.MONITOR) { e -> record(e.subject.id, e.bot.id, e.message) }
+        reload {
+            plugin.reloadPluginConfig(this)
+        }
+
+        GlobalEventChannel.subscribeAlways<GroupMessageEvent>(priority = EventPriority.MONITOR) { e ->
+            record(
+                e.subject.id,
+                e.sender.id,
+                e.message
+            )
+        }
+        GlobalEventChannel.subscribeAlways<GroupMessageSyncEvent>(priority = EventPriority.MONITOR) { e ->
+            record(
+                e.subject.id,
+                e.bot.id,
+                e.message
+            )
+        }
     }
 
     private fun record(group: Long, id: Long, message: MessageChain) {

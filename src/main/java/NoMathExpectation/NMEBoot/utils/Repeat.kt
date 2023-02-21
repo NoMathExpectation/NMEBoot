@@ -1,6 +1,7 @@
 package NoMathExpectation.NMEBoot.utils
 
 import NoMathExpectation.NMEBoot.Main
+import NoMathExpectation.NMEBoot.inventory.modules.reload
 import net.mamoe.mirai.console.data.AutoSavePluginConfig
 import net.mamoe.mirai.console.data.value
 import net.mamoe.mirai.console.plugin.jvm.reloadPluginConfig
@@ -62,7 +63,9 @@ internal object Repeat : AutoSavePluginConfig("repeat") {
     }
 
     init {
-        Main.INSTANCE.reloadPluginConfig(this)
-        check(repeatCount > 1) { "repeatCount must be greater than 1, but found $repeatCount." }
+        reload {
+            plugin.reloadPluginConfig(this)
+            check(repeatCount > 1) { "repeatCount must be greater than 1, but found $repeatCount." }
+        }
     }
 }

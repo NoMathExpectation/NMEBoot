@@ -1,5 +1,7 @@
 package NoMathExpectation.NMEBoot
 
+import NoMathExpectation.NMEBoot.inventory.modules.reload
+import NoMathExpectation.NMEBoot.utils.plugin
 import net.mamoe.mirai.console.data.AutoSavePluginData
 import net.mamoe.mirai.console.data.value
 import net.mamoe.mirai.console.plugin.jvm.reloadPluginData
@@ -10,7 +12,9 @@ object Cave: AutoSavePluginData("cave") {
     private val messages: MutableList<MessageChain> by value()
 
     init {
-        Main.INSTANCE.reloadPluginData(this)
+        reload {
+            plugin.reloadPluginData(this)
+        }
     }
 
     fun add(message: MessageChain) = messages.add(message)

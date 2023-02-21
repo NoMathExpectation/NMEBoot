@@ -1,6 +1,8 @@
 package NoMathExpectation.NMEBoot.wolframAlpha
 
 import NoMathExpectation.NMEBoot.Main
+import NoMathExpectation.NMEBoot.inventory.modules.reload
+import NoMathExpectation.NMEBoot.utils.plugin
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
@@ -36,7 +38,9 @@ class Conversation private constructor() {
             private set
 
         init {
-            Main.INSTANCE.reloadPluginConfig(this)
+            reload {
+                plugin.reloadPluginConfig(this)
+            }
         }
 
         private val logger = Main.INSTANCE.logger

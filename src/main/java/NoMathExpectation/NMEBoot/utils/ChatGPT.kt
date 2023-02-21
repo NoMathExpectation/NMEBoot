@@ -1,22 +1,27 @@
 package NoMathExpectation.NMEBoot.utils
 
-import NoMathExpectation.NMEBoot.Main
+import NoMathExpectation.NMEBoot.inventory.modules.Reloading
+import NoMathExpectation.NMEBoot.inventory.modules.reload
 import com.alibaba.fastjson2.JSONException
 import com.github.plexpt.chatgpt.Chatbot
 import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
 import net.mamoe.mirai.console.data.AutoSavePluginConfig
 import net.mamoe.mirai.console.data.value
 import net.mamoe.mirai.console.plugin.jvm.reloadPluginConfig
+import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 
 object ChatGPT : AutoSavePluginConfig("ChatGPT") {
     private val token: String by value("Insert your token here.")
     private val cfClear: String by value("Insert your cf_clearance here.")
     private val userAgent: String by value("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36")
     private val instances: MutableMap<Long, Chatbot> = mutableMapOf()
-    private val logger = Main.INSTANCE.logger
 
     init {
-        Main.INSTANCE.reloadPluginConfig(this)
+        reload {
+            plugin.reloadPluginConfig(this)
+            instances.clear()
+            logger.info("ChatGPT: Reloaded config.")
+        }
     }
 
     operator fun get(id: Long) = instances.getOrPut(id) { Chatbot(token, cfClear, userAgent) }
@@ -48,11 +53,9 @@ object ChatGPT : AutoSavePluginConfig("ChatGPT") {
         logger.info("ChatGPT: Reset session for group $id.")
     }
 
-    fun reload() {
-        Main.INSTANCE.reloadPluginConfig(this)
-        instances.clear()
-        logger.info("ChatGPT: Reloaded config.")
-    }
+    @Suppress("UnnecessaryOptInAnnotation")
+    @OptIn(ConsoleExperimentalApi::class)
+    fun reload() = Reloading.reload(saveName)
 
     fun getHelp() = buildString {
         appendLine("//chat ...")
