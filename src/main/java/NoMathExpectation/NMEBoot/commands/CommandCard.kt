@@ -5,7 +5,6 @@ import NoMathExpectation.NMEBoot.inventory.Pool.Companion.box
 import NoMathExpectation.NMEBoot.inventory.Pool.Companion.ground
 import NoMathExpectation.NMEBoot.inventory.card.Card
 import NoMathExpectation.NMEBoot.inventory.card.CardRepository
-import NoMathExpectation.NMEBoot.sending.asCustom
 import NoMathExpectation.NMEBoot.sending.checkAndGetNormalUser
 import NoMathExpectation.NMEBoot.utils.*
 import net.mamoe.mirai.console.command.AbstractUserCommandSender
@@ -32,8 +31,8 @@ internal object CommandCard : CompositeCommand(
 ) {
     @SubCommand("inventory", "inv")
     @Description("查看物品栏")
-    suspend fun CommandSender.getInventory(normalUser: NormalUser? = null) = with(asCustom()) {
-        val finalNormalUser = checkAndGetNormalUser(normalUser) ?: return@with
+    suspend fun CommandSender.getInventory(normalUser: NormalUser? = null) {
+        val finalNormalUser = checkAndGetNormalUser(normalUser) ?: return
 
         sendMessage(buildMessageChain {
             +At(finalNormalUser.id)
@@ -48,22 +47,22 @@ internal object CommandCard : CompositeCommand(
 
     @SubCommand("show")
     @Description("搜索并查看物品")
-    suspend fun CommandSender.showItem(raw: String, normalUser: NormalUser? = null) = with(asCustom()) {
-        val finalNormalUser = checkAndGetNormalUser(normalUser) ?: return@with
+    suspend fun CommandSender.showItem(raw: String, normalUser: NormalUser? = null) {
+        val finalNormalUser = checkAndGetNormalUser(normalUser) ?: return
         val itemStacks = finalNormalUser.searchItem(raw)
         when (itemStacks.size) {
             0 -> sendMessage("未找到物品。")
-            1 -> sendMessage(itemStacks.first().item.show(origin.subject))
+            1 -> sendMessage(itemStacks.first().item.show(subject))
             else -> sendMessage("找到${itemStacks.size}个物品：\n${itemStacks.joinToString("\n") { it.showSimple(true) }}")
         }
     }
 
     @SubCommand("give")
     @Description("给予物品")
-    suspend fun CommandSender.giveItemStack(normalUser: NormalUser, item: Item, amount: Int = 1) = with(asCustom()) {
+    suspend fun CommandSender.giveItemStack(normalUser: NormalUser, item: Item, amount: Int = 1) {
         if (!hasAdminPermission()) {
             sendMessage("你没有权限使用此指令。")
-            return@with
+            return
         }
 
 
@@ -79,13 +78,13 @@ internal object CommandCard : CompositeCommand(
 
     @SubCommand("use")
     @Description("使用物品")
-    suspend fun AbstractUserCommandSender.useItem(raw: String) = with(asCustom()) {
-        val normalUser = toNormalUser() ?: return@with
+    suspend fun AbstractUserCommandSender.useItem(raw: String) {
+        val normalUser = toNormalUser() ?: return
 
         val itemStacks = normalUser.searchItem { it.id.contains(raw) }
         if (itemStacks.isEmpty()) {
             sendMessage("未找到物品。")
-            return@with
+            return
         }
         if (itemStacks.size > 1) {
             sendMessage(
@@ -97,7 +96,7 @@ internal object CommandCard : CompositeCommand(
                     }
                 }"
             )
-            return@with
+            return
         }
 
         val item = itemStacks.first().item
@@ -116,18 +115,18 @@ internal object CommandCard : CompositeCommand(
 
     @SubCommand("throw")
     @Description("扔出物品")
-    suspend fun AbstractUserCommandSender.throwItem(raw: String) = with(asCustom()) {
-        val normalUser = toNormalUser() ?: return@with
+    suspend fun AbstractUserCommandSender.throwItem(raw: String) {
+        val normalUser = toNormalUser() ?: return
 
         val itemStacks = normalUser.searchItem(raw)
         val itemStack = itemStacks.randomOrNull()?.count(1) ?: run {
             sendMessage("未找到物品。")
-            return@with
+            return
         }
 
         if (!normalUser.tryAndDiscardItemStack(itemStack)) {
             sendMessage("未找到物品。")
-            return@with
+            return
         }
         ground += itemStack.item
         sendMessage(buildMessageChain {
@@ -138,7 +137,7 @@ internal object CommandCard : CompositeCommand(
 
     //@SubCommand("throw") //subcommand conflict
     @Description("扔出群成员")
-    suspend fun MemberCommandSender.throwMember(member: Member) = with(asCustom()) {
+    suspend fun MemberCommandSender.throwMember(member: Member) {
         sendMessage(buildMessageChain {
             +member.at()
             +" 被扔出了这个群！"
@@ -147,7 +146,7 @@ internal object CommandCard : CompositeCommand(
 
     @SubCommand("catch")
     @Description("捡起物品")
-    suspend fun AbstractUserCommandSender.catchItem() = with(asCustom()) {
+    suspend fun AbstractUserCommandSender.catchItem() {
         val normalUser = toNormalUser() ?: return
 
         val item = ground.pull() ?: run {
@@ -168,7 +167,7 @@ internal object CommandCard : CompositeCommand(
 
     @SubCommand("box", "b")
     @Description("从盒子里取出或放入卡片\n放入会获得一枚硬币\n取出需消耗两枚硬币\n同时执行不耗费硬币")
-    suspend fun AbstractUserCommandSender.box(operation: BoxOperation = BoxOperation.BOTH) = with(asCustom()) {
+    suspend fun AbstractUserCommandSender.box(operation: BoxOperation = BoxOperation.BOTH) {
         val normalUser = toNormalUser() ?: return
 
         if (!normalUser.tryAndDiscardItemStack(Coin count operation.cost)) {
@@ -203,14 +202,14 @@ internal object CommandCard : CompositeCommand(
                 +"你从盒子里获得了一张 "
                 add(card)
                 +"！\n"
-                +card.getImage(origin.subject)
+                +card.getImage(subject)
             })
         }
     }
 
     @SubCommand("pull", "p")
     @Description("抽卡")
-    suspend fun MemberCommandSender.pullCard(): Unit = with(asCustom()) {
+    suspend fun MemberCommandSender.pullCard() {
         val normalUser = toNormalUser() ?: return
 
         val counter = normalUser.getPullCounter()
@@ -220,7 +219,7 @@ internal object CommandCard : CompositeCommand(
             } else {
                 sendMessage("你的抽卡次数已经用完了。")
             }
-            return@with
+            return
         }
 
         val groupPool = CardRepository.getPool(group.id)
@@ -251,7 +250,7 @@ internal object CommandCard : CompositeCommand(
     suspend fun MemberCommandSender.repository(
         operation: RepoOperation? = RepoOperation.HELP,
         arg: String? = null
-    ): Unit = with(asCustom()) {
+    ) {
         if (!hasAdminPermission()) {
             sendMessage("你没有权限使用此指令。")
             return

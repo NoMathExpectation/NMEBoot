@@ -2,7 +2,6 @@ package NoMathExpectation.NMEBoot.commands
 
 import NoMathExpectation.NMEBoot.inventory.modules.Luck
 import NoMathExpectation.NMEBoot.inventory.modules.Reloading
-import NoMathExpectation.NMEBoot.sending.asCustom
 import NoMathExpectation.NMEBoot.utils.MessageHistory
 import NoMathExpectation.NMEBoot.utils.adminPermission
 import NoMathExpectation.NMEBoot.utils.plugin
@@ -35,7 +34,7 @@ object CommandHello : SimpleCommand(
     parentPermission = usePermission
 ) {
     @Handler
-    suspend fun CommandSender.handle() = with(asCustom()) {
+    suspend fun CommandSender.handle() {
         sendMessage("Hello, world!")
     }
 }
@@ -47,7 +46,7 @@ object CommandRepeat : SimpleCommand(
     parentPermission = usePermission
 ) {
     @Handler
-    suspend fun CommandSender.handle(message: String) = with(asCustom()) {
+    suspend fun CommandSender.handle(message: String) {
         sendMessage(message)
     }
 }
@@ -60,7 +59,7 @@ object Command114514 : SimpleCommand(
     parentPermission = usePermission
 ) {
     @Handler
-    suspend fun CommandSender.handle(count: Long = Random.nextLong(1, 51)) = with(asCustom()) {
+    suspend fun CommandSender.handle(count: Long = Random.nextLong(1, 51)) {
         when {
             count < 0L -> sendMessage("earthOL.physics.ThermalException:沼气自发地回到了化粪池")
             count == 0L -> sendMessage("什么也没有发生")
@@ -77,10 +76,10 @@ object CommandHistory : SimpleCommand(
     parentPermission = usePermission
 ) {
     @Handler
-    suspend fun MemberCommandSender.handle() = with(asCustom()) {
-        val history = MessageHistory.randomAsMessage(group.id, origin.bot.id) ?: run {
+    suspend fun MemberCommandSender.handle() {
+        val history = MessageHistory.randomAsMessage(group.id, bot.id) ?: run {
             sendMessage("找不到历史消息。")
-            return@with
+            return
         }
 
         sendMessage(history.first)
@@ -95,8 +94,8 @@ object CommandLuck : SimpleCommand(
     parentPermission = usePermission
 ) {
     @Handler
-    suspend fun AbstractUserCommandSender.handle() = with(asCustom()) {
-        val luck = Luck[origin.user.id].luck
+    suspend fun AbstractUserCommandSender.handle() {
+        val luck = Luck[user.id].luck
 
         sendMessage("你今天的运气是： $luck")
     }
@@ -109,7 +108,7 @@ object CommandReload : SimpleCommand(
     parentPermission = adminPermission
 ) {
     @Handler
-    suspend fun CommandSender.handle(name: String) = with(asCustom()) {
+    suspend fun CommandSender.handle(name: String) {
         if (Reloading.reload(name)) {
             sendMessage("重载成功")
         } else {

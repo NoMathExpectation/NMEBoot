@@ -10,10 +10,7 @@ import net.mamoe.mirai.console.plugin.jvm.reloadPluginConfig
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.message.code.CodableMessage
 import net.mamoe.mirai.message.code.MiraiCode.deserializeMiraiCode
-import net.mamoe.mirai.message.data.Message
-import net.mamoe.mirai.message.data.MessageChain
-import net.mamoe.mirai.message.data.SingleMessage
-import net.mamoe.mirai.message.data.buildMessageChain
+import net.mamoe.mirai.message.data.*
 
 object Alias : AutoSavePluginConfig("alias") {
     private val replaces: MutableMap<Long, MutableList<Triple<String, String, Boolean>>> by value()
@@ -69,11 +66,29 @@ object Alias : AutoSavePluginConfig("alias") {
         logger.verbose("Alias: Message incoming '${contentToString()}'")
 
         if (this is SingleMessage) {
-            return (if (this is CodableMessage)
-                serializeToMiraiCode().alias(contact.id).deserializeMiraiCode(contact)
-            else this).also {
+            return when (this) {
+                is ForwardMessage -> copy(nodeList = nodeList.map {
+                    it.copy(
+                        messageChain = it.messageChain.alias(contact).toMessageChain()
+                    )
+                })
+
+                is CodableMessage -> serializeToMiraiCode().alias(contact.id).deserializeMiraiCode(contact)
+
+                else -> this
+            }.also {
                 logger.verbose("Alias: Message outgoing '${it.contentToString()}'")
             }
+        }
+
+        if (this is MessageChain && this[ForwardMessage.Key] != null) {
+            return with(this[ForwardMessage]!!) {
+                copy(nodeList = nodeList.map {
+                    it.copy(
+                        messageChain = it.messageChain.alias(contact).toMessageChain()
+                    )
+                })
+            }.also { logger.verbose("Alias: Message outgoing '${it.contentToString()}'") }
         }
 
         return buildMessageChain {

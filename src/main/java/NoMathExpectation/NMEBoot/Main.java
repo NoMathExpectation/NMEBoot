@@ -15,11 +15,11 @@ import NoMathExpectation.NMEBoot.inventory.ItemLibraryKt;
 import NoMathExpectation.NMEBoot.inventory.card.CardRepository;
 import NoMathExpectation.NMEBoot.naptcha.CaptchaDispatcher;
 import NoMathExpectation.NMEBoot.naptcha.captchas.*;
+import NoMathExpectation.NMEBoot.sending.InspectingSendEventsKt;
 import NoMathExpectation.NMEBoot.utils.*;
 import net.mamoe.mirai.console.plugin.jvm.JavaPlugin;
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescriptionBuilder;
 import net.mamoe.mirai.event.GlobalEventChannel;
-import net.mamoe.mirai.event.events.MessagePreSendEvent;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,7 +34,7 @@ public final class Main extends JavaPlugin {
     public static WordleMirai wordle = new WordleMirai(new File("config/NoMathExpectation.NMEBoot/wordle.txt"), 6, 25);
 
     private Main() {
-        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.3.0-beta12-2023022204")
+        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.3.0-beta13-2023022206")
                 .name("NMEBoot")
                 .author("NoMathExpectation")
                 .build());
@@ -113,27 +113,6 @@ public final class Main extends JavaPlugin {
             }
         }
 
-        //注册监听
-        DatabaseConfig.INSTANCE.load();
-
-        GlobalEventChannel.INSTANCE.parentScope(this).registerListenerHost(executeCenter);
-
-        GlobalEventChannel.INSTANCE.parentScope(this).subscribeAlways(MessagePreSendEvent.class, e -> {
-            try {
-                Thread.sleep(RANDOM.nextInt(3000));
-            } catch (InterruptedException ignored) {
-
-            }
-        });
-
-        MessageHistory.INSTANCE.recordStart();
-        Repeat.INSTANCE.startMonitor();
-
-        //自动保存
-        Thread t = new Thread(this::autoSave);
-        t.setDaemon(true);
-        t.start();
-
         //新物品系统
         ItemLibraryKt.registerAllItems();
 
@@ -144,6 +123,21 @@ public final class Main extends JavaPlugin {
         SimpleCommandsKt.registerCommands();
 
         RecentActiveContact.INSTANCE.startListening();
+
+        //注册监听
+        InspectingSendEventsKt.inspectSendEvents();
+
+        DatabaseConfig.INSTANCE.load();
+
+        GlobalEventChannel.INSTANCE.parentScope(this).registerListenerHost(executeCenter);
+
+        MessageHistory.INSTANCE.recordStart();
+        Repeat.INSTANCE.startMonitor();
+
+        //自动保存
+        Thread t = new Thread(this::autoSave);
+        t.setDaemon(true);
+        t.start();
 
         //end
         getLogger().info("NMEBoot已加载。");

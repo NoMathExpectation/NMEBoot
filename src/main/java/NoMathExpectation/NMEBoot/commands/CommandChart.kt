@@ -1,7 +1,6 @@
 package NoMathExpectation.NMEBoot.commands
 
 import NoMathExpectation.NMEBoot.RDLounge.rhythmCafe.RhythmCafeSearchEngine
-import NoMathExpectation.NMEBoot.sending.asCustom
 import NoMathExpectation.NMEBoot.utils.plugin
 import NoMathExpectation.NMEBoot.utils.rdlPermission
 import net.mamoe.mirai.console.command.CommandSender
@@ -14,90 +13,90 @@ object CommandChart : CompositeCommand(
     description = "搜索谱面",
     parentPermission = rdlPermission
 ) {
-    @SubCommand()
+    @SubCommand
     @Description("帮助")
-    suspend fun CommandSender.help() = with(asCustom()) {
+    suspend fun CommandSender.help() {
         sendMessage(RhythmCafeSearchEngine.sendHelp())
     }
 
-    @SubCommand()
+    @SubCommand
     @Description("搜索谱面")
-    suspend fun CommandSender.search(keyword: String) = with(asCustom()) {
+    suspend fun CommandSender.search(keyword: String) {
         sendMessage(RhythmCafeSearchEngine.search(keyword))
     }
 
-    @SubCommand()
+    @SubCommand
     @Description("翻页")
-    suspend fun CommandSender.page(page: Int) = with(asCustom()) {
+    suspend fun CommandSender.page(page: Int) {
         if (!RhythmCafeSearchEngine.isSearched()) {
             sendMessage("请先进行一次搜索。")
-            return@with
+            return
         }
         if (page < 1) {
             sendMessage("页码不能小于1。")
-            return@with
+            return
         }
 
         sendMessage(RhythmCafeSearchEngine.pageTo(page))
     }
 
-    @SubCommand()
+    @SubCommand
     @Description("获取谱面介绍")
-    suspend fun CommandSender.info(index: Int) = with(asCustom()) {
+    suspend fun CommandSender.info(index: Int) {
         if (!RhythmCafeSearchEngine.isSearched()) {
             sendMessage("请先进行一次搜索。")
-            return@with
+            return
         }
         if (index !in 1..5) {
             sendMessage("索引超出范围。")
-            return@with
+            return
         }
 
         sendMessage(RhythmCafeSearchEngine.getDescription(index, subject))
     }
 
-    @SubCommand()
+    @SubCommand
     @Description("获取谱面下载链接")
-    suspend fun CommandSender.link(index: Int) = with(asCustom()) {
+    suspend fun CommandSender.link(index: Int) {
         if (!RhythmCafeSearchEngine.isSearched()) {
             sendMessage("请先进行一次搜索。")
-            return@with
+            return
         }
         if (index !in 1..5) {
             sendMessage("索引超出范围。")
-            return@with
+            return
         }
 
         sendMessage(RhythmCafeSearchEngine.getLink(index))
     }
 
-    @SubCommand()
+    @SubCommand
     @Description("获取谱面镜像下载链接")
-    suspend fun CommandSender.link2(index: Int) = with(asCustom()) {
+    suspend fun CommandSender.link2(index: Int) {
         if (!RhythmCafeSearchEngine.isSearched()) {
             sendMessage("请先进行一次搜索。")
-            return@with
+            return
         }
         if (index !in 1..5) {
             sendMessage("索引超出范围。")
-            return@with
+            return
         }
 
         sendMessage(RhythmCafeSearchEngine.getLink2(index))
     }
 
-    @SubCommand()
+    @SubCommand
     @Description("下载并上传谱面至群文件")
-    suspend fun MemberCommandSender.download(index: Int) = with(asCustom()) {
+    suspend fun MemberCommandSender.download(index: Int) {
         if (!RhythmCafeSearchEngine.isSearched()) {
             sendMessage("请先进行一次搜索。")
-            return@with
+            return
         }
         if (index !in 1..5) {
             sendMessage("索引超出范围。")
-            return@with
+            return
         }
 
-        RhythmCafeSearchEngine.downloadAndUpload(origin.subject, index)
+        RhythmCafeSearchEngine.downloadAndUpload(subject, index)
     }
 }
