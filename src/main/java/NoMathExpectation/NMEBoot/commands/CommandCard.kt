@@ -7,10 +7,7 @@ import NoMathExpectation.NMEBoot.inventory.card.Card
 import NoMathExpectation.NMEBoot.inventory.card.CardRepository
 import NoMathExpectation.NMEBoot.sending.asCustom
 import NoMathExpectation.NMEBoot.sending.checkAndGetNormalUser
-import NoMathExpectation.NMEBoot.utils.hasAdminPermission
-import NoMathExpectation.NMEBoot.utils.logger
-import NoMathExpectation.NMEBoot.utils.plugin
-import NoMathExpectation.NMEBoot.utils.usePermission
+import NoMathExpectation.NMEBoot.utils.*
 import net.mamoe.mirai.console.command.AbstractUserCommandSender
 import net.mamoe.mirai.console.command.CommandSender
 import net.mamoe.mirai.console.command.CompositeCommand
@@ -216,9 +213,20 @@ internal object CommandCard : CompositeCommand(
     suspend fun MemberCommandSender.pullCard(): Unit = with(asCustom()) {
         val normalUser = toNormalUser() ?: return
 
+        val counter = normalUser.getPullCounter()
+        if (!counter.use()) {
+            if (counter is TimeRefreshable) {
+                sendMessage("请再等待 ${counter.timeUntilRefresh}")
+            } else {
+                sendMessage("你的抽卡次数已经用完了。")
+            }
+            return@with
+        }
+
         val groupPool = CardRepository.getPool(group.id)
         val cardGroup = groupPool.pull() ?: run {
             sendMessage("池子里什么都没有呢......")
+            counter.remain++
             return
         }
         val card = cardGroup.pull() ?: run {
