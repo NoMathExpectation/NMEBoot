@@ -30,11 +30,10 @@ public final class Main extends JavaPlugin {
     public static final Main INSTANCE = new Main();
     public static ExecuteCenter executeCenter;
     public static CaptchaDispatcher naptcha;
-    public static final Random RANDOM = new Random();
     public static WordleMirai wordle = new WordleMirai(new File("config/NoMathExpectation.NMEBoot/wordle.txt"), 6, 25);
 
     private Main() {
-        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.3.0-beta13-2023022206")
+        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.3.0-beta14-2023022301")
                 .name("NMEBoot")
                 .author("NoMathExpectation")
                 .build());

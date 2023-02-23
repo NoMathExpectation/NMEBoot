@@ -114,7 +114,14 @@ private data class CardSurrogate(
 
 private fun Card.toSurrogate() = CardSurrogate(filename, name, type, description, chance, smell, embed)
 
-private object CardSerializer : KSerializer<Card> {
+object CardSerializer : KSerializer<Card> {
+    var loaded = false
+        private set
+
+    internal fun markAsLoaded() {
+        loaded = true
+    }
+
     override val descriptor: SerialDescriptor = CardSurrogate.serializer().descriptor
 
     override fun serialize(encoder: Encoder, value: Card) =
@@ -123,7 +130,9 @@ private object CardSerializer : KSerializer<Card> {
     override fun deserialize(decoder: Decoder): Card {
         val surrogate = decoder.decodeSerializableValue(CardSurrogate.serializer())
         return CardRepository[surrogate.id] ?: run {
-            logger.debug("卡牌库：读取数据时发现未知卡牌：$surrogate ，将使用来自此卡牌的数据")
+            if (loaded) {
+                logger.warning("卡牌库：读取数据时发现未知卡牌：$surrogate ，将使用来自此卡牌的数据")
+            }
             surrogate.toReal()
         }
     }

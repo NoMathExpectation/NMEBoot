@@ -1,6 +1,7 @@
 package NoMathExpectation.NMEBoot.utils
 
 import NoMathExpectation.NMEBoot.inventory.NormalUser
+import net.mamoe.mirai.console.command.CommandSender.Companion.toCommandSender
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.event.EventPriority
 import net.mamoe.mirai.event.GlobalEventChannel
@@ -20,6 +21,8 @@ internal object RecentActiveContact {
     @JvmName("startListening")
     internal fun startListening() =
         GlobalEventChannel.parentScope(plugin).subscribeAlways<MessageEvent>(priority = EventPriority.HIGHEST) {
-            map[sender.id] = subject
+            if (toCommandSender().hasUsePermission()) {
+                map[sender.id] = subject
+            }
         }
 }

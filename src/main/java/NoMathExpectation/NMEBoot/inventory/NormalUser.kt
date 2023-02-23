@@ -1,5 +1,7 @@
 package NoMathExpectation.NMEBoot.inventory
 
+import NoMathExpectation.NMEBoot.inventory.card.CardSerializer
+import NoMathExpectation.NMEBoot.inventory.modules.reload
 import NoMathExpectation.NMEBoot.utils.RecentActiveContact
 import NoMathExpectation.NMEBoot.utils.getFriend
 import NoMathExpectation.NMEBoot.utils.logger
@@ -26,7 +28,10 @@ class NormalUser private constructor(
         private val users by value<MutableMap<Long, NormalUser>>() // key: id, value: user
 
         init {
-            reloadAsJson()
+            CardSerializer.markAsLoaded()
+            reload {
+                reloadAsJson()
+            }
         }
 
         @JvmStatic

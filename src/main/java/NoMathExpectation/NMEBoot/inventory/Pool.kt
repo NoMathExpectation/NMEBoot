@@ -1,6 +1,7 @@
 package NoMathExpectation.NMEBoot.inventory
 
 import NoMathExpectation.NMEBoot.inventory.card.Card
+import NoMathExpectation.NMEBoot.inventory.modules.reload
 import NoMathExpectation.NMEBoot.utils.logger
 import NoMathExpectation.NMEBoot.utils.reloadAsJson
 import kotlinx.serialization.KSerializer
@@ -61,7 +62,9 @@ class Pool<E>(
             private set
 
         init {
-            reloadAsJson()
+            reload {
+                reloadAsJson()
+            }
         }
     }
 }

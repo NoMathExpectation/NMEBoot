@@ -2,6 +2,7 @@ package NoMathExpectation.NMEBoot.inventory.card
 
 import NoMathExpectation.NMEBoot.inventory.Pool
 import NoMathExpectation.NMEBoot.inventory.card.rdTradingCards.CardGroup
+import NoMathExpectation.NMEBoot.inventory.modules.reload
 import NoMathExpectation.NMEBoot.inventory.registerItem
 import NoMathExpectation.NMEBoot.utils.logger
 import NoMathExpectation.NMEBoot.utils.plugin
@@ -94,7 +95,9 @@ class CardRepository private constructor(
         }
 
         init {
-            reloadAsJson()
+            reload {
+                reloadAsJson()
+            }
         }
     }
 
