@@ -6,11 +6,10 @@ import NoMathExpectation.NMEBoot.utils.MessageHistory
 import NoMathExpectation.NMEBoot.utils.adminPermission
 import NoMathExpectation.NMEBoot.utils.plugin
 import NoMathExpectation.NMEBoot.utils.usePermission
-import net.mamoe.mirai.console.command.AbstractUserCommandSender
+import net.mamoe.mirai.console.command.*
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
-import net.mamoe.mirai.console.command.CommandSender
-import net.mamoe.mirai.console.command.MemberCommandSender
-import net.mamoe.mirai.console.command.SimpleCommand
+import net.mamoe.mirai.message.code.MiraiCode.deserializeMiraiCode
+import net.mamoe.mirai.message.data.MessageChain
 import kotlin.random.Random
 
 internal fun registerCommands() {
@@ -39,15 +38,19 @@ object CommandHello : SimpleCommand(
     }
 }
 
-object CommandRepeat : SimpleCommand(
+object CommandRepeat : RawCommand(
     plugin,
     "repeat",
+    usage = "//repeat <message>",
     description = "复读机",
     parentPermission = usePermission
 ) {
-    @Handler
-    suspend fun CommandSender.handle(message: String) {
-        sendMessage(message)
+    private val regex = "${CommandManager.commandPrefix}$primaryName[\\s\\h\\v]*".toRegex()
+
+    override suspend fun CommandContext.onCommand(args: MessageChain) {
+        sender.sendMessage(
+            originalMessage.serializeToMiraiCode().replaceFirst(regex, "").deserializeMiraiCode(sender.subject)
+        )
     }
 }
 

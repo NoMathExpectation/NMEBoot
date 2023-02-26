@@ -53,7 +53,7 @@ public final class General implements Executable {
                     .append("//hello :发送 \"Hello, world!\" （已转移）\n")
                     .append("//repeat <text> :复读机 （已转移）\n")
                     .append("//history :随机一条历史消息 （已转移）\n")
-                    .append("//luck :测测你今天的运气\n")
+                    .append("//luck :测测你今天的运气 （已转移）\n")
                     .append("//faq :常见问题\n")
                     .append("//alias :别称\n")
                     .append("//stat|stats :统计数据\n")

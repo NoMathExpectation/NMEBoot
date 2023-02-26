@@ -8,6 +8,7 @@ import kotlinx.coroutines.delay
 import net.mamoe.mirai.console.data.AutoSavePluginConfig
 import net.mamoe.mirai.console.data.value
 import net.mamoe.mirai.console.plugin.jvm.reloadPluginConfig
+import net.mamoe.mirai.event.EventPriority
 import net.mamoe.mirai.event.events.MessagePostSendEvent
 import net.mamoe.mirai.event.events.MessagePreSendEvent
 import net.mamoe.mirai.event.events.isSuccess
@@ -73,6 +74,6 @@ private fun MessagePostSendEvent<*>.inspect() {
 }
 
 fun inspectSendEvents() {
-    botEventChannel.subscribeAlways<MessagePreSendEvent> { inspect() }
-    botEventChannel.subscribeAlways<MessagePostSendEvent<*>> { inspect() }
+    botEventChannel.subscribeAlways<MessagePreSendEvent>(priority = EventPriority.MONITOR) { inspect() }
+    botEventChannel.subscribeAlways<MessagePostSendEvent<*>>(priority = EventPriority.MONITOR) { inspect() }
 }

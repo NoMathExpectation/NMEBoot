@@ -4,6 +4,7 @@ import NoMathExpectation.NMEBoot.Main
 import kotlinx.datetime.Clock
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.nameCardOrNick
+import net.mamoe.mirai.event.EventPriority
 import net.mamoe.mirai.event.GlobalEventChannel
 import net.mamoe.mirai.event.events.*
 import net.mamoe.mirai.message.code.MiraiCode.deserializeMiraiCode
@@ -54,10 +55,10 @@ object MessageHistory {
 
     fun recordStart() {
         val channel = GlobalEventChannel.parentScope(Main.INSTANCE)
-        channel.subscribeAlways<MessageEvent> {
+        channel.subscribeAlways<MessageEvent>(priority = EventPriority.MONITOR) {
             record(it)
         }
-        channel.subscribeAlways<MessagePostSendEvent<out Contact>> {
+        channel.subscribeAlways<MessagePostSendEvent<out Contact>>(priority = EventPriority.MONITOR) {
             record(it)
         }
     }

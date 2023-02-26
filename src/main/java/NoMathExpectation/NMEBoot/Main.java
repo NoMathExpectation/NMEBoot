@@ -10,6 +10,7 @@ import NoMathExpectation.NMEBoot.commandSystem.NormalUserStats;
 import NoMathExpectation.NMEBoot.commandSystem.services.ARG2023;
 import NoMathExpectation.NMEBoot.commandSystem.services.General;
 import NoMathExpectation.NMEBoot.commandSystem.services.RDLoungeIntegrated;
+import NoMathExpectation.NMEBoot.commands.InterceptingCommandCall;
 import NoMathExpectation.NMEBoot.commands.SimpleCommandsKt;
 import NoMathExpectation.NMEBoot.inventory.ItemLibraryKt;
 import NoMathExpectation.NMEBoot.inventory.card.CardRepository;
@@ -17,9 +18,11 @@ import NoMathExpectation.NMEBoot.naptcha.CaptchaDispatcher;
 import NoMathExpectation.NMEBoot.naptcha.captchas.*;
 import NoMathExpectation.NMEBoot.sending.InspectingSendEventsKt;
 import NoMathExpectation.NMEBoot.utils.*;
+import net.mamoe.mirai.console.extension.PluginComponentStorage;
 import net.mamoe.mirai.console.plugin.jvm.JavaPlugin;
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescriptionBuilder;
 import net.mamoe.mirai.event.GlobalEventChannel;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,7 +36,7 @@ public final class Main extends JavaPlugin {
     public static WordleMirai wordle = new WordleMirai(new File("config/NoMathExpectation.NMEBoot/wordle.txt"), 6, 25);
 
     private Main() {
-        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.3.0-beta14-2023022301")
+        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.3.0-beta15-2023022405")
                 .name("NMEBoot")
                 .author("NoMathExpectation")
                 .build());
@@ -50,6 +53,11 @@ public final class Main extends JavaPlugin {
                 .register(new CheckinTimes())
                 .register(new CardClass())
                 .register(new TwoOneFunction(-10, 10));
+    }
+
+    @Override
+    public void onLoad(@NotNull PluginComponentStorage pcs) {
+        pcs.contributeCommandCallInterceptorProvider(InterceptingCommandCall.INSTANCE);
     }
 
     @Override
@@ -145,6 +153,7 @@ public final class Main extends JavaPlugin {
     @Override
     public void onDisable() {
         RDLoungeIntegrated.AUCTION_CENTER.stop();
+        KtorClientKt.getKtorClient().close();
         save();
         getLogger().info("NMEBoot已停用。");
     }
