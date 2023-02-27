@@ -14,10 +14,12 @@ import NoMathExpectation.NMEBoot.commands.InterceptingCommandCall;
 import NoMathExpectation.NMEBoot.commands.SimpleCommandsKt;
 import NoMathExpectation.NMEBoot.inventory.ItemLibraryKt;
 import NoMathExpectation.NMEBoot.inventory.card.CardRepository;
+import NoMathExpectation.NMEBoot.inventory.temporal.DataTransfer;
 import NoMathExpectation.NMEBoot.naptcha.CaptchaDispatcher;
 import NoMathExpectation.NMEBoot.naptcha.captchas.*;
 import NoMathExpectation.NMEBoot.sending.InspectingSendEventsKt;
 import NoMathExpectation.NMEBoot.utils.*;
+import net.mamoe.mirai.console.command.CommandManager;
 import net.mamoe.mirai.console.extension.PluginComponentStorage;
 import net.mamoe.mirai.console.plugin.jvm.JavaPlugin;
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescriptionBuilder;
@@ -36,7 +38,7 @@ public final class Main extends JavaPlugin {
     public static WordleMirai wordle = new WordleMirai(new File("config/NoMathExpectation.NMEBoot/wordle.txt"), 6, 25);
 
     private Main() {
-        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.3.0-beta15-2023022405")
+        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.3.0-beta16-2023022701")
                 .name("NMEBoot")
                 .author("NoMathExpectation")
                 .build());
@@ -128,6 +130,7 @@ public final class Main extends JavaPlugin {
         PermissionsKt.registerPermissions();
 
         SimpleCommandsKt.registerCommands();
+        CommandManager.INSTANCE.registerCommand(DataTransfer.INSTANCE, false); //temporal
 
         RecentActiveContact.INSTANCE.startListening();
 

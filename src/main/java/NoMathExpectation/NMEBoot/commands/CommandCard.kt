@@ -7,10 +7,7 @@ import NoMathExpectation.NMEBoot.inventory.card.Card
 import NoMathExpectation.NMEBoot.inventory.card.CardRepository
 import NoMathExpectation.NMEBoot.sending.checkAndGetNormalUser
 import NoMathExpectation.NMEBoot.utils.*
-import net.mamoe.mirai.console.command.AbstractUserCommandSender
-import net.mamoe.mirai.console.command.CommandSender
-import net.mamoe.mirai.console.command.CompositeCommand
-import net.mamoe.mirai.console.command.MemberCommandSender
+import net.mamoe.mirai.console.command.*
 import net.mamoe.mirai.console.command.descriptor.buildCommandArgumentContext
 import net.mamoe.mirai.console.util.safeCast
 import net.mamoe.mirai.contact.Member
@@ -29,6 +26,30 @@ internal object CommandCard : CompositeCommand(
         Item::class with ItemCommandParser
     }
 ) {
+    @SubCommand("help")
+    @Description("查看帮助")
+    suspend fun CommandSender.getHelp() {
+        sendMessage(
+            buildMessageChain {
+                +"抽卡帮助：\n"
+                +"${CommandManager.commandPrefix}c|card...\n"
+                +"help : 显示此帮助\n"
+                //+"stat/stats : 统计数据\n"
+                +"p/pull : 常驻抽卡\n"
+                //+"level : 关卡抽卡池（-2硬币）\n"
+                //+"pray/claim : 领取工资\n"
+                +"inv/inventory : 查看物品栏\n"
+                +"show <name/id> : 搜索或展示物品\n"
+                +"use <name/id> : 使用物品\n"
+                //+"auc/auction : 拍卖物品\n"
+                +"throw <name/id> : 扔出物品，若匹配多个则随机扔出一个\n"
+                +"catch : 接住物品\n"
+                +"b/box [in/out] : 往盒子里随机放进（+1硬币）/抽出（-2硬币）一张卡，同时执行免费\n"
+            }
+        )
+    }
+
+
     @SubCommand("inventory", "inv")
     @Description("查看物品栏")
     suspend fun CommandSender.getInventory(normalUser: NormalUser? = null) {

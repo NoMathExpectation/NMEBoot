@@ -412,6 +412,11 @@ public final class RDLoungeIntegrated implements Executable {
 
             case "c":
             case "card":
+                from.sendMessage("搬迁中，请使用/card代替本指令");
+                if (true) {
+                    break;
+                }
+
                 if (testNotFullFunctionGroup(from)) {
                     break;
                 }

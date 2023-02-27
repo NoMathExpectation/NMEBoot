@@ -38,6 +38,10 @@ class NormalUser private constructor(
         operator fun get(id: Long) = users.getOrPut(id) { NormalUser(id) }
     }
 
+    internal fun clearInventory() {
+        inventory.clear()
+    }
+
     fun giveItemStack(itemStack: ItemStack<out Item>, overriddenOnGive: (NormalUser.() -> Unit)? = null) {
         if (itemStack.count == 0) {
             return
