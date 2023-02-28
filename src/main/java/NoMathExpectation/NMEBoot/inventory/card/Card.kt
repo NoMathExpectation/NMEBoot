@@ -21,6 +21,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonTransformingSerializer
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.message.data.Image
+import net.mamoe.mirai.message.data.ImageType
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 
 @Serializable(CardSerializer::class)
@@ -81,7 +82,7 @@ data class Card(
         logger.warning("卡牌库：无法获取 ${repository?.gitRepository ?: "不在"} 库中的卡片 $name ($id) 的图片，请检查文件")
 
         // default error png in jar
-        javaClass.getResourceAsStream("item/card/error.png")
+        javaClass.getResourceAsStream("/item/card/error.png")
             ?.let { res ->
                 try {
                     return res.toExternalResource()
@@ -92,7 +93,13 @@ data class Card(
             }
 
         // default image on server, in case of png in jar is missing
-        return Image("3008D1A5-1017-50DD-F60B-B21A620ADCB9")
+        return Image("{4C277F77-68E3-93A5-BF52-8D9A4A5E6151}.png") {
+            width = 200
+            height = 200
+            size = 1062
+            type = ImageType.APNG
+            isEmoji = false
+        }
     }
 }
 
