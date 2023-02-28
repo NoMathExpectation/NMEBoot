@@ -1,9 +1,11 @@
 package NoMathExpectation.NMEBoot.utils
 
 import net.mamoe.mirai.console.command.CommandSender
+import net.mamoe.mirai.console.command.MemberCommandSender
 import net.mamoe.mirai.console.permission.Permission
 import net.mamoe.mirai.console.permission.PermissionService
 import net.mamoe.mirai.console.permission.PermissionService.Companion.hasPermission
+import net.mamoe.mirai.contact.isOperator
 
 internal val usePermissionId = plugin.permissionId("use")
 internal lateinit var usePermission: Permission private set
@@ -39,3 +41,5 @@ internal fun CommandSender.hasUsePermission() = hasPermission(usePermissionId)
 internal fun CommandSender.hasAdminPermission() = hasPermission(adminPermissionId)
 
 internal fun CommandSender.hasRDLPermission() = hasPermission(rdlPermissionId)
+
+internal fun CommandSender.isGroupAdmin() = this is MemberCommandSender && user.isOperator()
