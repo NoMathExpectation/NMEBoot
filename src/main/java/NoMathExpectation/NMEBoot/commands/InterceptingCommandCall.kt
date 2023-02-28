@@ -17,7 +17,7 @@ internal object InterceptingCommandCall : CommandCallInterceptorProvider {
         override fun interceptBeforeCall(message: Message, caller: CommandSender): InterceptResult<Message>? {
             val contact = caller.subject ?: return null
 
-            if (message.contentToString().startsWith("${CommandManager.commandPrefix}alias")) {
+            if (message.contentToString().startsWith("${CommandManager.commandPrefix}${CommandAlias.primaryName}")) {
                 return null
             }
 
