@@ -16,6 +16,7 @@ internal fun registerCommands() {
     //composite commands
     CommandCard.register()
     CommandChart.register()
+    CommandAlias.register()
 
     //simple commands
     CommandHello.register()
@@ -50,7 +51,9 @@ object CommandRepeat : RawCommand(
 
     override suspend fun CommandContext.onCommand(args: MessageChain) {
         sender.sendMessage(
-            originalMessage.serializeToMiraiCode().replaceFirst(regex, "").deserializeMiraiCode(sender.subject)
+            originalMessage.serializeToMiraiCode()
+                .replaceFirst(regex, "")
+                .deserializeMiraiCode(sender.subject)
         )
     }
 }
