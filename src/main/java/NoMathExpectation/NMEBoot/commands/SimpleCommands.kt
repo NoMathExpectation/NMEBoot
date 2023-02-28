@@ -8,8 +8,10 @@ import NoMathExpectation.NMEBoot.utils.plugin
 import NoMathExpectation.NMEBoot.utils.usePermission
 import net.mamoe.mirai.console.command.*
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
+import net.mamoe.mirai.console.util.safeCast
 import net.mamoe.mirai.message.code.MiraiCode.deserializeMiraiCode
 import net.mamoe.mirai.message.data.MessageChain
+import net.mamoe.mirai.message.data.MessageSource.Key.quote
 import kotlin.random.Random
 
 internal fun registerCommands() {
@@ -51,7 +53,8 @@ object CommandRepeat : RawCommand(
 
     override suspend fun CommandContext.onCommand(args: MessageChain) {
         sender.sendMessage(
-            originalMessage.serializeToMiraiCode()
+            originalMessage.quote()
+                    + originalMessage.serializeToMiraiCode()
                 .replaceFirst(regex, "")
                 .deserializeMiraiCode(sender.subject)
         )
@@ -101,10 +104,14 @@ object CommandLuck : SimpleCommand(
     parentPermission = usePermission
 ) {
     @Handler
-    suspend fun AbstractUserCommandSender.handle() {
-        val luck = Luck[user.id].luck
+    suspend fun handle(context: CommandContext) {
+        val sender = context.sender.safeCast<AbstractUserCommandSender>() ?: run {
+            context.sender.sendMessage("只有用户才能使用这个指令")
+            return
+        }
+        val luck = Luck[sender.user.id].luck
 
-        sendMessage("你今天的运气是： $luck")
+        sender.sendMessage(context.originalMessage.quote() + "你今天的运气是: $luck")
     }
 }
 
