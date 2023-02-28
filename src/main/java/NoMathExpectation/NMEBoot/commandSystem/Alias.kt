@@ -63,7 +63,7 @@ object Alias : AutoSavePluginConfig("alias") {
     }
 
     fun Message.alias(contact: Contact): Message {
-        logger.verbose("Alias: Message incoming '${contentToString()}'")
+        logger.verbose("Alias: Message incoming '$this'")
 
         if (this is SingleMessage) {
             return when (this) {
@@ -77,12 +77,12 @@ object Alias : AutoSavePluginConfig("alias") {
 
                 else -> this
             }.also {
-                logger.verbose("Alias: Message outgoing '${it.contentToString()}'")
+                logger.verbose("Alias: Message outgoing '$it'")
             }
         }
 
         if (this is MessageChain && this[AliasIgnore.Key] != null) {
-            return this
+            return this.also { logger.verbose("Alias: Message ignored outgoing '$it'") }
         }
 
         if (this is MessageChain && this[ForwardMessage.Key] != null) {
@@ -92,7 +92,7 @@ object Alias : AutoSavePluginConfig("alias") {
                         messageChain = it.messageChain.alias(contact).toMessageChain()
                     )
                 })
-            }.also { logger.verbose("Alias: Message outgoing '${it.contentToString()}'") }
+            }.also { logger.verbose("Alias: Message outgoing '$it'") }
         }
 
         return buildMessageChain {
@@ -111,7 +111,7 @@ object Alias : AutoSavePluginConfig("alias") {
             if (sb.isNotEmpty()) {
                 +sb.toString().alias(contact.id).deserializeMiraiCode(contact)
             }
-        }.also { logger.verbose("Alias: Message outgoing '${it.contentToString()}'") }
+        }.also { logger.verbose("Alias: Message outgoing '$it'") }
     }
 
     fun Contact.alias() = object : Contact by this {
