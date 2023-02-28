@@ -1,7 +1,7 @@
 package NoMathExpectation.NMEBoot.commandSystem
 
-import NoMathExpectation.NMEBoot.Main
 import NoMathExpectation.NMEBoot.inventory.modules.reload
+import NoMathExpectation.NMEBoot.utils.logger
 import NoMathExpectation.NMEBoot.utils.plugin
 import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
 import net.mamoe.mirai.console.data.AutoSavePluginConfig
@@ -14,7 +14,6 @@ import net.mamoe.mirai.message.data.*
 
 object Alias : AutoSavePluginConfig("alias") {
     private val replaces: MutableMap<Long, MutableList<Triple<String, String, Boolean>>> by value()
-    private val logger = Main.INSTANCE.logger
 
     init {
         reload {
@@ -171,7 +170,7 @@ object Alias : AutoSavePluginConfig("alias") {
         +"//alias ...\n"
         +"help :显示此帮助\n"
         +"show :显示全部别称\n"
-        +"add '<regex>' '<regex>' [pos] :添加新别称，使用\\'来逃避\n"
+        +"add \"<regex>\" \"<regex>\" [pos] :添加新别称，使用\\\"来逃避\n"
         +"remove <pos> :移除一条别称\n"
         +"move <from> <to> :将一条别称移动到新的位置\n"
         +"protect <pos> :保护/取消保护别称\n"
