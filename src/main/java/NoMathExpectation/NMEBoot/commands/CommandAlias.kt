@@ -1,6 +1,7 @@
 package NoMathExpectation.NMEBoot.commands
 
 import NoMathExpectation.NMEBoot.commandSystem.Alias
+import NoMathExpectation.NMEBoot.sending.AliasIgnore
 import NoMathExpectation.NMEBoot.utils.hasAdminPermission
 import NoMathExpectation.NMEBoot.utils.isGroupAdmin
 import NoMathExpectation.NMEBoot.utils.plugin
@@ -22,7 +23,14 @@ object CommandAlias : CompositeCommand(
 
     @SubCommand
     @Description("显示全部别称")
-    suspend fun MemberCommandSender.show() = sendMessage(Alias.toString(group.id).ifBlank { "没有正在使用的别称" })
+    suspend fun MemberCommandSender.show() {
+        val text = Alias.toString(group.id)
+        if (text.isBlank()) {
+            sendMessage("没有正在使用的别称")
+        } else {
+            sendMessage(AliasIgnore + text)
+        }
+    }
 
     @SubCommand
     @Description("添加新别称，使用\\\"来逃避")
@@ -45,7 +53,7 @@ object CommandAlias : CompositeCommand(
             }
         }
 
-        sendMessage("已保存: $fromRegex -> $to")
+        sendMessage(AliasIgnore + "已保存: $fromRegex -> $to")
     }
 
     @SubCommand
@@ -53,7 +61,7 @@ object CommandAlias : CompositeCommand(
     suspend fun MemberCommandSender.remove(pos: Int) {
         try {
             val p = Alias.remove(group.id, pos, isGroupAdmin())
-            sendMessage("已移除: ${p.first} -> ${p.second}")
+            sendMessage(AliasIgnore + "已移除: ${p.first} -> ${p.second}")
         } catch (e: IndexOutOfBoundsException) {
             sendMessage("未找到对应别称")
         } catch (e: IllegalStateException) {

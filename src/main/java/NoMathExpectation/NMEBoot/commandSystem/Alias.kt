@@ -1,6 +1,7 @@
 package NoMathExpectation.NMEBoot.commandSystem
 
 import NoMathExpectation.NMEBoot.inventory.modules.reload
+import NoMathExpectation.NMEBoot.sending.AliasIgnore
 import NoMathExpectation.NMEBoot.utils.logger
 import NoMathExpectation.NMEBoot.utils.plugin
 import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
@@ -78,6 +79,10 @@ object Alias : AutoSavePluginConfig("alias") {
             }.also {
                 logger.verbose("Alias: Message outgoing '${it.contentToString()}'")
             }
+        }
+
+        if (this is MessageChain && this[AliasIgnore.Key] != null) {
+            return this
         }
 
         if (this is MessageChain && this[ForwardMessage.Key] != null) {
