@@ -24,6 +24,7 @@ internal fun registerCommands() {
     CommandHistory.register()
     CommandLuck.register()
     CommandReload.register()
+    CommandStats.register()
 }
 
 object CommandHello : SimpleCommand(
