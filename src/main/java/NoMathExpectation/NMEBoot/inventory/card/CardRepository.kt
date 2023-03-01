@@ -152,13 +152,18 @@ class CardRepository private constructor(
 
             //read cards
             File("$storePath/${setting.dataPath}").walkTopDown().filter { it.name.endsWith(".json") }.forEach { file ->
-                val cardGroup = file.inputStream().use { stream ->
-                    json.decodeFromStream<CardGroup>(stream)
+                try {
+                    val cardGroup = file.inputStream().use { stream ->
+                        json.decodeFromStream<CardGroup>(stream)
+                    }
+                    cardGroup.setRepository(this@CardRepository)
+                    cardGroup.cards.forEach { registerItem(it) }
+                    cardGroup.cards.associateBy { card -> card.id }.let { map -> library.putAll(map) }
+                    cardGroups.add(cardGroup)
+                } catch (e: Exception) {
+                    logger.warning("卡牌库：在解析 ${file.name} 的时候出现了一个错误：")
+                    logger.warning(e)
                 }
-                cardGroup.setRepository(this@CardRepository)
-                cardGroup.cards.forEach { registerItem(it) }
-                cardGroup.cards.associateBy { card -> card.id }.let { map -> library.putAll(map) }
-                cardGroups.add(cardGroup)
             }
 
             //read assets
