@@ -73,7 +73,7 @@ private fun MessagePostSendEvent<*>.inspect() {
     }
 }
 
-fun inspectSendEvents() {
+internal fun inspectSendEvents() {
     botEventChannel.subscribeAlways<MessagePreSendEvent>(priority = EventPriority.MONITOR) { inspect() }
     botEventChannel.subscribeAlways<MessagePostSendEvent<*>>(priority = EventPriority.MONITOR) { inspect() }
 }
