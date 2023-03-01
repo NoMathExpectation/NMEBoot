@@ -1,5 +1,6 @@
 package NoMathExpectation.NMEBoot.commands
 
+import NoMathExpectation.NMEBoot.Main
 import NoMathExpectation.NMEBoot.inventory.modules.Luck
 import NoMathExpectation.NMEBoot.inventory.modules.Reloading
 import NoMathExpectation.NMEBoot.utils.MessageHistory
@@ -10,6 +11,7 @@ import net.mamoe.mirai.console.command.*
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
 import net.mamoe.mirai.console.util.safeCast
 import net.mamoe.mirai.message.code.MiraiCode.deserializeMiraiCode
+import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.data.MessageSource.Key.quote
 import kotlin.random.Random
@@ -28,6 +30,7 @@ internal fun registerCommands() {
     CommandLuck.register()
     CommandReload.register()
     CommandStats.register()
+    CommandWordle.register()
 }
 
 object CommandHello : SimpleCommand(
@@ -127,6 +130,42 @@ object CommandReload : SimpleCommand(
             sendMessage("重载成功")
         } else {
             sendMessage("重载失败")
+        }
+    }
+}
+
+object CommandWordle : RawCommand(
+    plugin,
+    "wordle",
+    "w",
+    description = "wordle",
+    parentPermission = usePermission
+) {
+    val wordle by lazy { Main.wordle }
+
+    override suspend fun CommandSender.onCommand(args: MessageChain) {
+        if (this !is AbstractUserCommandSender) {
+            sendMessage("只有用户才能使用这个指令")
+            return
+        }
+
+        val argsText = args.map(Message::contentToString)
+            .filter(String::isNotBlank)
+            .toTypedArray()
+        if (argsText.isEmpty()) {
+            wordle.sendHelp(subject)
+            return
+        }
+
+        try {
+            when (argsText[0]) {
+                "help" -> wordle.sendHelp(subject)
+                "new" -> sendMessage(wordle.parseAndNewWordle(subject.id, argsText))
+                "show" -> sendMessage(wordle.getWordleMessage(subject.id, false))
+                else -> sendMessage(wordle.validateAnswer(subject.id, argsText[0]))
+            }
+        } catch (e: Exception) {
+            sendMessage(e.message ?: "发生了一个错误")
         }
     }
 }
