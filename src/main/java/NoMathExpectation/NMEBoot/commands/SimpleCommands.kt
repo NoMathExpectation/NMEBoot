@@ -3,13 +3,11 @@ package NoMathExpectation.NMEBoot.commands
 import NoMathExpectation.NMEBoot.Main
 import NoMathExpectation.NMEBoot.inventory.modules.Luck
 import NoMathExpectation.NMEBoot.inventory.modules.Reloading
-import NoMathExpectation.NMEBoot.utils.MessageHistory
-import NoMathExpectation.NMEBoot.utils.adminPermission
-import NoMathExpectation.NMEBoot.utils.plugin
-import NoMathExpectation.NMEBoot.utils.usePermission
+import NoMathExpectation.NMEBoot.utils.*
 import net.mamoe.mirai.console.command.*
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
 import net.mamoe.mirai.console.util.safeCast
+import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.message.code.MiraiCode.deserializeMiraiCode
 import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.MessageChain
@@ -31,6 +29,7 @@ internal fun registerCommands() {
     CommandReload.register()
     CommandStats.register()
     CommandWordle.register()
+    CommandFeedback.register()
 }
 
 object CommandHello : SimpleCommand(
@@ -48,7 +47,7 @@ object CommandHello : SimpleCommand(
 object CommandRepeat : RawCommand(
     plugin,
     "repeat",
-    usage = "//repeat <message>",
+    usage = "${CommandManager.commandPrefix}repeat <message>",
     description = "复读机",
     parentPermission = usePermission
 ) {
@@ -167,5 +166,32 @@ object CommandWordle : RawCommand(
         } catch (e: Exception) {
             sendMessage(e.message ?: "发生了一个错误")
         }
+    }
+}
+
+object CommandFeedback : RawCommand(
+    plugin,
+    "feedback",
+    usage = "${CommandManager.commandPrefix}feedback <text>",
+    description = "给作者反馈",
+    parentPermission = usePermission
+) {
+    private val regex = "${CommandManager.commandPrefix}$primaryName[\\s\\h\\v]*".toRegex()
+
+    override suspend fun CommandContext.onCommand(args: MessageChain) {
+        if (sender !is AbstractUserCommandSender) {
+            sender.sendMessage("只有用户才能使用这个指令")
+            return
+        }
+
+        logger.warning(buildString {
+            append("来自用户 ${sender.name} (id: ${sender.user?.id}) ")
+            sender.subject.safeCast<Group>()?.let {
+                append("，群 ${it.name} (id: ${it.id}) ")
+            }
+            append("的反馈：")
+            append(originalMessage.serializeToMiraiCode().replaceFirst(regex, ""))
+        })
+        sender.sendMessage("反馈已发送。")
     }
 }

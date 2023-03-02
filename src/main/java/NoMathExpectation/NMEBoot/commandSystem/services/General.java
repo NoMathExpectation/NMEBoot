@@ -58,11 +58,11 @@ public final class General implements Executable {
                     .append("//alias :别称 （已转移）\n")
                     .append("//stat|stats :统计数据 （已转移）\n")
                     .append("//checkin :签到\n")
-                    .append("//wordle|w :wordle\n")
+                    .append("//wordle|w :wordle （已转移）\n")
                     .append("//chat :与另一端的？？？聊天\n")
                     //.append("//cave [留言]: 放入留言，或是查看并销毁随机一条留言\n")
                     .append("//download <url> :下载文件 （将移除）\n")
-                    .append("//feedback <text> :给作者反馈\n\n")
+                    .append("//feedback <text> :给作者反馈 （已转移）\n")
                     .append("//114514 [count] （已转移）\n")
                     .append("//1919810 [count] （已转移）\n");
                     //.append("//moral <text>:AI预测是否道德（仅供参考，不作为任何依据）\n")
