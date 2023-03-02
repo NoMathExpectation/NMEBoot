@@ -1,6 +1,8 @@
 package NoMathExpectation.NMEBoot.utils
 
 import NoMathExpectation.NMEBoot.Main
+import NoMathExpectation.NMEBoot.commandSystem.services.RDLoungeIntegrated
+import NoMathExpectation.NMEBoot.utils.MessageHistory.randomAsMessage
 import kotlinx.datetime.Clock
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.nameCardOrNick
@@ -91,4 +93,19 @@ object MessageHistoryTable : LongIdTable() {
     val name = varchar("name", 127)
     val message = text("message")
     val time = long("time")
+}
+
+internal fun nudgeForRandomMessage() {
+    botEventChannel.subscribeAlways<NudgeEvent> { e ->
+        val target = e.from.id
+        val to = e.target.id
+        if (to != e.bot.id || to == target || target == e.bot.id) {
+            return@subscribeAlways
+        }
+
+        val from = e.subject
+        if (from.id != RDLoungeIntegrated.RDLOUNGE) {
+            randomAsMessage(from.id, e.bot.id)?.second?.let { from.sendMessage(it) }
+        }
+    }
 }
