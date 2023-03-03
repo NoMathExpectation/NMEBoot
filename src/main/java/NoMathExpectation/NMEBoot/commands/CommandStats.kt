@@ -5,10 +5,11 @@ import NoMathExpectation.NMEBoot.utils.usePermission
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.CommandSender
 import net.mamoe.mirai.console.command.SimpleCommand
+import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.message.data.MessageChainBuilder
 import net.mamoe.mirai.message.data.buildMessageChain
 
-typealias MessageChainBuildFunction = suspend MessageChainBuilder.() -> Unit
+typealias MessageChainBuildFunction = suspend MessageChainBuilder.(Contact?) -> Unit
 
 data class Stats(val page: String, val description: String = "", var content: MessageChainBuildFunction = {})
 
@@ -35,23 +36,23 @@ object CommandStats : SimpleCommand(
     fun appendStats(page: String = defaultPage, description: String = "", content: MessageChainBuildFunction) {
         val stats = statPages.getOrPut(page) { Stats(page, description) }
         stats.content = {
-            stats.content(this)
-            content(this)
+            stats.content(this, it)
+            content(this, it)
             appendLine()
         }
     }
 
-    suspend fun getStats(page: String = defaultPage) = buildMessageChain {
+    suspend fun getStats(contact: Contact?, page: String = defaultPage) = buildMessageChain {
         val stats = statPages[page] ?: run {
             +"未找到数据。"
             return@buildMessageChain
         }
 
-        stats.content(this)
+        stats.content(this, contact)
     }
 
     @Handler
     suspend fun CommandSender.handle(page: String = "list") {
-        sendMessage(getStats(page))
+        sendMessage(getStats(subject, page))
     }
 }
