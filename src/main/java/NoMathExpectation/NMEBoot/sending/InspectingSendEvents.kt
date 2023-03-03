@@ -1,6 +1,6 @@
 package NoMathExpectation.NMEBoot.sending
 
-import NoMathExpectation.NMEBoot.commandSystem.Alias.alias
+import NoMathExpectation.NMEBoot.commandSystem.Alias.aliasOut
 import NoMathExpectation.NMEBoot.inventory.modules.reload
 import NoMathExpectation.NMEBoot.utils.botEventChannel
 import NoMathExpectation.NMEBoot.utils.plugin
@@ -52,7 +52,7 @@ private suspend fun MessagePreSendEvent.inspect() {
     }
 
     if (SendingConfig.enableAlias) {
-        message = message.alias(target)
+        message = message.aliasOut(target)
     }
 
     if (message.checkFold()) {

@@ -2,7 +2,7 @@
 
 package NoMathExpectation.NMEBoot.commands
 
-import NoMathExpectation.NMEBoot.commandSystem.Alias.alias
+import NoMathExpectation.NMEBoot.commandSystem.Alias.aliasIn
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.CommandSender
 import net.mamoe.mirai.console.command.descriptor.ExperimentalCommandDescriptors
@@ -17,11 +17,13 @@ internal object InterceptingCommandCall : CommandCallInterceptorProvider {
         override fun interceptBeforeCall(message: Message, caller: CommandSender): InterceptResult<Message>? {
             val contact = caller.subject ?: return null
 
-            if (message.contentToString().startsWith("${CommandManager.commandPrefix}${CommandAlias.primaryName}")) {
+            if (message.contentToString().trim()
+                    .startsWith("${CommandManager.commandPrefix}${CommandAlias.primaryName}")
+            ) {
                 return null
             }
 
-            return InterceptResult(message.alias(contact))
+            return InterceptResult(message.aliasIn(contact))
         }
     }
 }

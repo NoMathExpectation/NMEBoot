@@ -12,7 +12,6 @@ import NoMathExpectation.NMEBoot.utils.ChatGPT;
 import NoMathExpectation.NMEBoot.utils.MessageHistory;
 import NoMathExpectation.NMEBoot.wolframAlpha.Conversation;
 import kotlin.Pair;
-import kotlin.Triple;
 import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
@@ -275,16 +274,16 @@ public final class General implements Executable {
 
                         Matcher posMatcher = (Pattern.compile("\\d+").matcher(msg));
                         if (posMatcher.find(pos.get(3))) {
-                            Alias.INSTANCE.add(from.getId(), new Triple<>(patternFrom, patternTo, false), Integer.parseInt(msg.substring(posMatcher.start(), posMatcher.end())));
+                            Alias.INSTANCE.add(from.getId(), new AliasItem(patternFrom, patternTo, true, true, false), Integer.parseInt(msg.substring(posMatcher.start(), posMatcher.end())));
                         } else {
-                        Alias.INSTANCE.add(from.getId(), new Triple<>(patternFrom, patternTo, false));
+                            Alias.INSTANCE.add(from.getId(), new AliasItem(patternFrom, patternTo, true, true, false));
                         }
                         e.getSubject().sendMessage("已保存: " + patternFrom + " -> " + patternTo);
                         break;
                     case "remove":
                         try {
-                            Triple<String, String, Boolean> pair = Alias.INSTANCE.remove(from.getId(), Integer.decode(cmd[2]), isAdminOrBot(e));
-                            e.getSubject().sendMessage("已移除: " + pair.getFirst() + " -> " + pair.getSecond());
+                            AliasItem aliasItem = Alias.INSTANCE.remove(from.getId(), Integer.decode(cmd[2]), isAdminOrBot(e));
+                            e.getSubject().sendMessage("已移除: " + aliasItem.getFrom() + " -> " + aliasItem.getTo());
                         } catch (NumberFormatException ex) {
                             from.sendMessage("请输入一个非负整数!");
                         } catch (IndexOutOfBoundsException ex) {

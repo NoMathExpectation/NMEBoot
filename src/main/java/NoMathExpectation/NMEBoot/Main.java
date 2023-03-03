@@ -23,7 +23,6 @@ import net.mamoe.mirai.console.command.CommandManager;
 import net.mamoe.mirai.console.extension.PluginComponentStorage;
 import net.mamoe.mirai.console.plugin.jvm.JavaPlugin;
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescriptionBuilder;
-import net.mamoe.mirai.event.GlobalEventChannel;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -38,7 +37,7 @@ public final class Main extends JavaPlugin {
     public static WordleMirai wordle = new WordleMirai(new File("config/NoMathExpectation.NMEBoot/wordle.txt"), 6, 25);
 
     private Main() {
-        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.3.0-beta23-2023030204")
+        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.3.0-beta24-2023030301")
                 .name("NMEBoot")
                 .author("NoMathExpectation")
                 .build());
@@ -139,7 +138,7 @@ public final class Main extends JavaPlugin {
 
         DatabaseConfig.INSTANCE.load();
 
-        GlobalEventChannel.INSTANCE.parentScope(this).registerListenerHost(executeCenter);
+        //GlobalEventChannel.INSTANCE.parentScope(this).registerListenerHost(executeCenter);
 
         MessageHistory.INSTANCE.recordStart();
         MessageHistoryKt.nudgeForRandomMessage();

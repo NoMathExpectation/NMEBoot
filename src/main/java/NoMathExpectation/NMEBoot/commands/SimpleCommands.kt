@@ -47,11 +47,12 @@ object CommandHello : SimpleCommand(
 object CommandRepeat : RawCommand(
     plugin,
     "repeat",
+    "repeat!",
     usage = "${CommandManager.commandPrefix}repeat <message>",
     description = "复读机",
     parentPermission = usePermission
 ) {
-    private val regex = "${CommandManager.commandPrefix}$primaryName[\\s\\h\\v]*".toRegex()
+    private val regex = "${CommandManager.commandPrefix}$primaryName!?[\\s\\h\\v]*".toRegex()
 
     override suspend fun CommandContext.onCommand(args: MessageChain) {
         sender.sendMessage(
