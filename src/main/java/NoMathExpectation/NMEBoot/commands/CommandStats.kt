@@ -35,8 +35,9 @@ object CommandStats : SimpleCommand(
 
     fun appendStats(page: String = defaultPage, description: String = "", content: MessageChainBuildFunction) {
         val stats = statPages.getOrPut(page) { Stats(page, description) }
+        val oldContent = stats.content
         stats.content = {
-            stats.content(this, it)
+            oldContent(this, it)
             content(this, it)
             appendLine()
         }

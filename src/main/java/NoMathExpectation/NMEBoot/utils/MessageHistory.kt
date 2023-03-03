@@ -2,9 +2,11 @@ package NoMathExpectation.NMEBoot.utils
 
 import NoMathExpectation.NMEBoot.Main
 import NoMathExpectation.NMEBoot.commandSystem.services.RDLoungeIntegrated
+import NoMathExpectation.NMEBoot.commands.CommandStats
 import NoMathExpectation.NMEBoot.utils.MessageHistory.randomAsMessage
 import kotlinx.datetime.Clock
 import net.mamoe.mirai.contact.Contact
+import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.nameCardOrNick
 import net.mamoe.mirai.event.EventPriority
 import net.mamoe.mirai.event.GlobalEventChannel
@@ -84,6 +86,67 @@ object MessageHistory {
         }
         val msg2 = message[MessageHistoryTable.message].deserializeMiraiCode()
         return msg1 to msg2
+    }
+
+    init {
+        transaction {
+            """
+            create view if not exists DailyMessageSend as
+            select "group", sender, date(time / 1000, 'unixepoch', 'localtime') as date, count(*) as count
+            from MessageHistory
+            group by "group", sender, date(time / 1000, 'unixepoch', 'localtime');
+            """.trimIndent().execAndMap { }
+
+            """
+            create view if not exists MostMessageSend as
+            select "group", sender, count(*) as count
+            from MessageHistory
+            group by "group", sender;
+            """.trimIndent().execAndMap { }
+        }
+
+        CommandStats.appendStats("chat_daily", "群日消息排名") {
+            transaction {
+                if (it !is Group) {
+                    return@transaction
+                }
+
+                +"群日消息排名：\n"
+
+                """
+                select sender, count
+                from DailyMessageSend
+                where "group" = ${it.id}
+                  and date = date()
+                order by count desc;
+                """.trimIndent().execAndMap { rs ->
+                    rs.getLong("sender").let { sender -> it[sender]?.nameCardOrNick ?: "$sender" } to rs.getInt("count")
+                }.forEachIndexed { index, (first, second) ->
+                    +"${index + 1}. $first $second 条消息\n"
+                }
+            }
+        }
+
+        CommandStats.appendStats("chat", "群总消息排名") {
+            transaction {
+                if (it !is Group) {
+                    return@transaction
+                }
+
+                +"群总消息排名：\n"
+
+                """
+                select sender, count
+                from MostMessageSend
+                where "group" = ${it.id}
+                order by count desc;
+                """.trimIndent().execAndMap { rs ->
+                    rs.getLong("sender").let { sender -> it[sender]?.nameCardOrNick ?: "$sender" } to rs.getInt("count")
+                }.forEachIndexed { index, (first, second) ->
+                    +"${index + 1}. $first $second 条消息\n"
+                }
+            }
+        }
     }
 }
 
