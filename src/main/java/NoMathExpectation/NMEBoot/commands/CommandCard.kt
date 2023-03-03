@@ -272,7 +272,7 @@ internal object CommandCard : CompositeCommand(
         operation: RepoOperation? = RepoOperation.HELP,
         arg: String? = null
     ) {
-        if (!isGroupAdmin()) {
+        if (!hasAdminPermission() && !isGroupAdmin()) {
             sendMessage("你没有权限使用此指令。")
             return
         }
