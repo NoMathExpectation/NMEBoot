@@ -31,6 +31,7 @@ object CommandStats : SimpleCommand(
                 appendLine("$page: ${stats.description}")
             }
         }
+        statPages[defaultPage] = Stats(defaultPage, "通用数据") { +"\u200b" }
     }
 
     fun appendStats(page: String = defaultPage, description: String = "", content: MessageChainBuildFunction) {

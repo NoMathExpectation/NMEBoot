@@ -105,9 +105,46 @@ object MessageHistory {
             """.trimIndent().execAndMap { }
         }
 
+        CommandStats.appendStats {
+            transaction {
+                (it as? Group)?.let {
+                    +"群日消息总数："
+                    """
+                    select sum(count) as sum
+                    from DailyMessageSend
+                    where "group" = ${it.id}
+                    and date = date('now', 'localtime');
+                    """.trimIndent()
+                        .execAndMap { it.getLong("sum") }
+                        .firstOrNull()
+                        ?.let { +it.toString() } ?: +"N/A"
+                    +"\n"
+
+                    +"群消息总数："
+                    +MessageHistoryTable.select { MessageHistoryTable.group eq it.id }.count().toString()
+                    +"\n"
+                }
+
+                +"日消息总数："
+                """
+                select sum(count) as sum
+                from DailyMessageSend
+                where date = date('now', 'localtime');
+                """.trimIndent()
+                    .execAndMap { it.getLong("sum") }
+                    .firstOrNull()
+                    ?.let { +it.toString() } ?: +"N/A"
+                +"\n"
+
+                +"消息总数："
+                +MessageHistoryTable.selectAll().count().toString()
+            }
+        }
+
         CommandStats.appendStats("chat_daily", "群日消息排名") {
             transaction {
                 if (it !is Group) {
+                    +"只有群聊才可以使用此数据"
                     return@transaction
                 }
 
@@ -117,7 +154,7 @@ object MessageHistory {
                 select sender, count
                 from DailyMessageSend
                 where "group" = ${it.id}
-                  and date = date()
+                  and date = date('now', 'localtime')
                 order by count desc;
                 """.trimIndent().execAndMap { rs ->
                     rs.getLong("sender").let { sender -> it[sender]?.nameCardOrNick ?: "$sender" } to rs.getInt("count")
@@ -130,6 +167,7 @@ object MessageHistory {
         CommandStats.appendStats("chat", "群总消息排名") {
             transaction {
                 if (it !is Group) {
+                    +"只有群聊才可以使用此数据"
                     return@transaction
                 }
 
