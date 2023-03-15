@@ -158,7 +158,7 @@ object Alias : AutoSavePluginConfig("alias") {
     }
 
     fun remove(group: Long, pos: Int, forced: Boolean = false): AliasItem {
-        val replaces = replaces.computeIfAbsent(group) { ArrayList() }
+        val replaces = replaces[group]
         if (!forced && replaces[pos].protected) {
             throw IllegalStateException("被保护的别称")
         }
@@ -189,7 +189,7 @@ object Alias : AutoSavePluginConfig("alias") {
     }
 
     fun move(group: Long, from: Int, to: Int) {
-        val replaces = replaces.computeIfAbsent(group) { ArrayList() }
+        val replaces = replaces[group]
         val tmp = replaces.removeAt(from)
         replaces.add(to, tmp)
         logger.info("Alias: Moved '${tmp.from}' -> '${tmp.to}' from position $from to position $to")
@@ -199,11 +199,11 @@ object Alias : AutoSavePluginConfig("alias") {
         +"//alias ...\n"
         +"help :显示此帮助\n"
         +"show :显示全部别称\n"
-        +"add \"<regex>\" \"<regex>\" [pos] :添加新别称\n"
+        +"add \"<regex>\" \"<regex>\" [applyIn] [applyOut] [pos] :添加新别称\n"
         +"remove <pos> :移除一条别称\n"
         +"move <from> <to> :将一条别称移动到新的位置\n"
         +"protect <pos> :保护/取消保护别称\n"
-        +"set <pos> <applyIn> <applyOut> <protected> :设置别称属性\n"
+        +"set <pos> [applyIn] [applyOut] [protected] :设置别称属性\n"
         +"clear :清除所有别称"
     }
 
