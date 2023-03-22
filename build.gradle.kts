@@ -19,9 +19,9 @@ repositories {
     gradlePluginPortal()
 }
 dependencies {
-    testImplementation("org.junit.jupiter:junit-jupiter:5.9.0")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
 
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.7.10")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
 
@@ -38,6 +38,8 @@ dependencies {
 
     implementation("com.github.plexpt:chatgpt:1.1.2")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.14.0")
+
+    implementation(fileTree("locallib") { include("*.jar") })
 }
 
 tasks.compileJava {

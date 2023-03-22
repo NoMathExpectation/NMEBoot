@@ -45,6 +45,7 @@ internal object CommandCard : CompositeCommand(
                 +"throw <name/id> : 扔出物品，若匹配多个则随机扔出一个\n"
                 +"catch : 接住物品\n"
                 +"b/box [in/out] : 往盒子里随机放进（+1硬币）/抽出（-2硬币）一张卡，同时执行免费\n"
+                +"repo : 查看卡池仓库\n"
             }
         )
     }
