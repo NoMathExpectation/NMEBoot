@@ -26,21 +26,39 @@ object CommandEat : SimpleCommand(
     parentPermission = usePermission
 ) {
     @Handler
-    suspend fun CommandSender.handle() = if (subject !is Group || EatConfig.isEmpty(subject!!.id)) transaction {
-        var foodMessageSelect =
-            MessageHistoryTable.select { (MessageHistoryTable.message like "%吃%") or (MessageHistoryTable.message like "%炫%") }
-        bot?.let { foodMessageSelect = foodMessageSelect.andWhere { MessageHistoryTable.sender neq it.id } }
+    suspend fun CommandSender.handle(pronoun: String = "我") {
+        val person = when (pronoun.trim().lowercase()) {
+            "我", "俺" -> "你"
+            "我们", "俺们" -> "你们"
+            "吾" -> "您"
+            "me", "i", "we" -> "you"
+            "my", "our" -> "your"
+            "你", "您", "你们", "您们" -> {
+                sendMessage("高性能机器人不需要吃饭捏\uD83D\uDE0E")
+                return
+            }
 
-        val foodMessageString = foodMessageSelect.orderBy(SQLRandom())
-            .limit(1)
-            .first()[MessageHistoryTable.message]
+            else -> pronoun
+        }
 
-        "我建议你${"[吃炫](.*)".toRegex().find(foodMessageString)!!.value}".deserializeMiraiCode(subject)
-    }.let { sendMessage(it) } else {
-        sendMessage(buildMessageChain {
-            +"我建议你吃"
-            +EatConfig.random(subject!!.id).deserializeMiraiCode(subject)
-        })
+        if (subject !is Group || EatConfig.isEmpty(subject!!.id)) transaction {
+            var foodMessageSelect =
+                MessageHistoryTable.select { (MessageHistoryTable.message like "%吃%") or (MessageHistoryTable.message like "%炫%") }
+            bot?.let { foodMessageSelect = foodMessageSelect.andWhere { MessageHistoryTable.sender neq it.id } }
+
+            val foodMessageString = foodMessageSelect.orderBy(SQLRandom())
+                .limit(1)
+                .first()[MessageHistoryTable.message]
+
+            "我建议$person${"[吃炫](.*)".toRegex().find(foodMessageString)!!.value}".deserializeMiraiCode(subject)
+        }.let { sendMessage(it) } else {
+            sendMessage(buildMessageChain {
+                +"我建议"
+                +person
+                +"吃"
+                +EatConfig.random(subject!!.id).deserializeMiraiCode(subject)
+            })
+        }
     }
 }
 
