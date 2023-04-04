@@ -19,6 +19,7 @@ internal fun registerCommands() {
     CommandCard.register()
     CommandChart.register()
     CommandAlias.register()
+    CommandEatComposite.register()
 
     //simple commands
     CommandHello.register()
@@ -30,6 +31,7 @@ internal fun registerCommands() {
     CommandStats.register()
     CommandWordle.register()
     CommandFeedback.register()
+    CommandEat.register()
 }
 
 object CommandHello : SimpleCommand(
@@ -138,6 +140,7 @@ object CommandWordle : RawCommand(
     plugin,
     "wordle",
     "w",
+    usage = "${CommandManager.commandPrefix}wordle help",
     description = "wordle",
     parentPermission = usePermission
 ) {
@@ -196,3 +199,4 @@ object CommandFeedback : RawCommand(
         sender.sendMessage("反馈已发送。")
     }
 }
+

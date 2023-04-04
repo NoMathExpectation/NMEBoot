@@ -5,6 +5,7 @@ import net.mamoe.mirai.console.data.AutoSavePluginConfig
 import net.mamoe.mirai.console.data.value
 import net.mamoe.mirai.console.plugin.jvm.reloadPluginConfig
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.Random
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -36,3 +37,5 @@ internal fun <T : Any> String.execAndMap(transform: (ResultSet) -> T): List<T> {
     }
     return result
 }
+
+internal typealias SQLRandom = Random

@@ -76,7 +76,7 @@ object MessageHistory {
         bot?.let {
             query = query.andWhere { MessageHistoryTable.sender neq it }
         }
-        query.orderBy(Random()).limit(1).firstOrNull()
+        query.orderBy(SQLRandom()).limit(1).firstOrNull()
     }
 
     fun randomAsMessage(group: Long? = null, bot: Long? = null): Pair<MessageChain, MessageChain>? {
