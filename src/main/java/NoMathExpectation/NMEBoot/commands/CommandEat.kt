@@ -33,7 +33,7 @@ object CommandEat : SimpleCommand(
             "吾" -> "您"
             "me", "i", "we" -> "you"
             "my", "our" -> "your"
-            "你", "您", "你们", "您们" -> {
+            "你", "您", "你们", "您们", "机器人", "高性能机器人", "bot", "robot", "nmeboot", "atri", "亚托莉", "萝卜子", "萝卜" -> {
                 sendMessage("高性能机器人不需要吃饭捏\uD83D\uDE0E")
                 return
             }
