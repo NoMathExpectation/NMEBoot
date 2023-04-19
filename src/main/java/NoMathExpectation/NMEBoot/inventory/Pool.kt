@@ -85,7 +85,7 @@ fun <E> weightedPullStrategy(provider: E.() -> Double) = fun(list0: List<E>): E?
         currentWeight += item.provider()
         if (currentWeight >= randomWeight) return item
     }
-    return list.last()
+    return list.lastOrNull()
 }
 
 open class PoolAsListSerializer<E>(private val listKSerializer: KSerializer<List<E>>) : KSerializer<Pool<E>> {
