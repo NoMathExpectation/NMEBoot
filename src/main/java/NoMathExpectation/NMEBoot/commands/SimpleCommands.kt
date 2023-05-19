@@ -12,6 +12,7 @@ import net.mamoe.mirai.message.code.MiraiCode.deserializeMiraiCode
 import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.data.MessageSource.Key.quote
+import net.mamoe.mirai.message.data.buildMessageChain
 import kotlin.random.Random
 
 internal fun registerCommands() {
@@ -116,7 +117,18 @@ object CommandLuck : SimpleCommand(
         }
         val luck = Luck[sender.user.id].luck
 
-        sender.sendMessage(context.originalMessage.quote() + "你今天的运气是: $luck")
+        sender.sendMessage(buildMessageChain {
+            +context.originalMessage.quote()
+            +"你今天的运气是: $luck"
+            if (luck >= 100) {
+                +"！\n"
+                +"这运气也太好了吧！"
+            }
+            if (luck <= 0) {
+                +"！\n"
+                +"这运气也太差了吧......"
+            }
+        })
     }
 }
 

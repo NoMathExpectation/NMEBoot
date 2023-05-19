@@ -23,6 +23,16 @@ class Luck(var counter: UseCounter = FixedRateUseCounter.ofDay(1)) : Comparable<
 
     fun refreshLuck() {
         luck = Random.nextInt(101)
+        if (luck == 100) {
+            while (Random.nextBoolean()) {
+                luck++
+            }
+        }
+        if (luck == 0) {
+            while (Random.nextBoolean()) {
+                luck--
+            }
+        }
     }
 
     override fun equals(other: Any?) = other is Luck && luck == other.luck
