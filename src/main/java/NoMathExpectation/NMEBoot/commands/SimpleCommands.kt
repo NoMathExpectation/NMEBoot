@@ -4,15 +4,16 @@ import NoMathExpectation.NMEBoot.Main
 import NoMathExpectation.NMEBoot.inventory.modules.Luck
 import NoMathExpectation.NMEBoot.inventory.modules.Reloading
 import NoMathExpectation.NMEBoot.utils.*
+import NoMathExpectation.NMEBoot.wolframAlpha.Conversation
 import net.mamoe.mirai.console.command.*
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
 import net.mamoe.mirai.console.util.safeCast
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.message.code.MiraiCode.deserializeMiraiCode
-import net.mamoe.mirai.message.data.Message
-import net.mamoe.mirai.message.data.MessageChain
+import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.message.data.MessageSource.Key.quote
-import net.mamoe.mirai.message.data.buildMessageChain
+import java.util.*
+import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 
 internal fun registerCommands() {
@@ -21,6 +22,7 @@ internal fun registerCommands() {
     CommandChart.register()
     CommandAlias.register()
     CommandEatComposite.register()
+    CommandExport.register()
 
     //simple commands
     CommandHello.register()
@@ -33,6 +35,8 @@ internal fun registerCommands() {
     CommandWordle.register()
     CommandFeedback.register()
     CommandEat.register()
+    CommandAsk.register()
+    CommandEval.register()
 }
 
 object CommandHello : SimpleCommand(
@@ -212,3 +216,60 @@ object CommandFeedback : RawCommand(
     }
 }
 
+object CommandAsk : SingleStringCommand(
+    plugin,
+    "ask",
+    usage = "${CommandManager.commandPrefix}ask <text>",
+    description = "Ask wolfram.",
+    parentPermission = usePermission
+) {
+    override suspend fun CommandContext.handle(text: String) {
+        var message = kotlin.runCatching { Conversation[sender.subject?.id ?: -1].query(text) }
+            .getOrElse {
+                it.printStackTrace()
+                it.message ?: "发生了一个错误"
+            }
+            .toPlainText()
+            .toMessageChain()
+        kotlin.runCatching { originalMessage.quote() }
+            .getOrNull()
+            ?.let {
+                message = it + message
+            }
+        sender.sendMessage(message)
+    }
+}
+
+object CommandEval : SingleStringCommand(
+    plugin,
+    "eval",
+    usage = "${CommandManager.commandPrefix}eval <expr>",
+    description = "Eval kotlin.",
+    parentPermission = usePermission
+) {
+    override suspend fun CommandContext.handle(text: String) {
+        val name = "mirai-eval-${UUID.randomUUID()}"
+        val timeout = 30L
+        val memory = (256L * 1024 * 1024).toString()
+
+        var tle = false
+        val process = Runtime.getRuntime()
+            .exec(arrayOf("docker", "run", "--rm", "-m", memory, "--name", name, "-i", "kscripting/kscript", "-"))
+        process.outputStream.use {
+            it.write(text.toByteArray())
+        }
+        if (!process.waitFor(timeout, TimeUnit.SECONDS)) {
+            tle = true
+            Runtime.getRuntime().exec("docker stop $name")
+        }
+
+        val err = process.errorStream.bufferedReader().use { it.readText() }
+        val out = process.inputStream.bufferedReader().use { it.readText() }
+
+        val output = arrayOf(out, err, if (tle) "Time limit exceeded." else null)
+            .filterNotNull()
+            .filter(String::isNotBlank)
+            .joinToString("\n")
+        sender.sendMessage(output)
+    }
+}

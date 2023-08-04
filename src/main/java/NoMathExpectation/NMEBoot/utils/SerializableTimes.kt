@@ -9,6 +9,7 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlin.time.Duration
 
+@Deprecated("There is already a official serializer for Duration.")
 object DurationSerializer : KSerializer<Duration> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("duration", PrimitiveKind.STRING)
 
@@ -21,4 +22,6 @@ object DurationSerializer : KSerializer<Duration> {
     }
 }
 
+@Deprecated("There is already a official serializer for Duration.")
+@Suppress("DEPRECATION")
 typealias SerializableDuration = @Serializable(with = DurationSerializer::class) Duration

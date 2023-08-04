@@ -82,6 +82,10 @@ object Alias : AutoSavePluginConfig("alias") {
     private fun Message.alias(contact: Contact, filter: (AliasItem) -> Boolean): Message {
         logger.verbose("Alias: Message incoming '$this'")
 
+        if (this is AliasIgnore || this is MessageChain && this[AliasIgnore.Key] != null) {
+            return also { logger.verbose("Alias: Message ignored outgoing '$it'") }
+        }
+
         if (this is SingleMessage) {
             return when (this) {
                 is ForwardMessage -> copy(nodeList = nodeList.map {
@@ -96,10 +100,6 @@ object Alias : AutoSavePluginConfig("alias") {
             }.also {
                 logger.verbose("Alias: Message outgoing '$it'")
             }
-        }
-
-        if (this is MessageChain && this[AliasIgnore.Key] != null) {
-            return also { logger.verbose("Alias: Message ignored outgoing '$it'") }
         }
 
         if (this is MessageChain && this[ForwardMessage.Key] != null) {

@@ -36,7 +36,11 @@ internal object SendingConfig : AutoSavePluginConfig("sending") {
 }
 
 fun Message.checkFold(): Boolean {
-    if (this is ForwardMessage || (this is MessageChain && get(ForwardMessage) != null)) {
+    if (this is FoldIgnore || this is MessageChain && this[FoldIgnore.Key] != null) {
+        return false
+    }
+
+    if (this is ForwardMessage || (this is MessageChain && this[ForwardMessage] != null)) {
         return false
     }
 

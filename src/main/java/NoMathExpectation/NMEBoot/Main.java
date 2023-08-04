@@ -24,7 +24,6 @@ import net.mamoe.mirai.console.extension.PluginComponentStorage;
 import net.mamoe.mirai.console.plugin.jvm.JavaPlugin;
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescriptionBuilder;
 import org.jetbrains.annotations.NotNull;
-import xyz.cssxsh.mirai.tool.FixProtocolVersion;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,7 +37,7 @@ public final class Main extends JavaPlugin {
     public static WordleMirai wordle = new WordleMirai(new File("config/NoMathExpectation.NMEBoot/wordle.txt"), 6, 25);
 
     private Main() {
-        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.3.3-2023052001")
+        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.3.7-2023080401")
                 .name("NMEBoot")
                 .author("NoMathExpectation")
                 .build());
@@ -151,7 +150,7 @@ public final class Main extends JavaPlugin {
         t.start();
 
         //修复协议
-        FixProtocolVersion.update();
+        //FixProtocolVersion.update();
 
         //end
         getLogger().info("NMEBoot已加载。");

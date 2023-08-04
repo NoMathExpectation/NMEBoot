@@ -50,7 +50,11 @@ class CardRepository private constructor(
         @JvmBlockingBridge
         suspend fun reloadRepositories() {
             repos.values.forEach {
-                it.sync()
+                try {
+                    it.sync()
+                } catch (e: Exception) {
+                    logger.error(e)
+                }
                 it.reload()
             }
         }

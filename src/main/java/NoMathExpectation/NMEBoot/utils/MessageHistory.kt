@@ -1,13 +1,12 @@
 package NoMathExpectation.NMEBoot.utils
 
 import NoMathExpectation.NMEBoot.Main
-import NoMathExpectation.NMEBoot.commandSystem.services.RDLoungeIntegrated
 import NoMathExpectation.NMEBoot.commands.CommandStats
+import NoMathExpectation.NMEBoot.sending.FoldIgnore
 import NoMathExpectation.NMEBoot.utils.MessageHistory.randomAsMessage
 import kotlinx.datetime.Clock
-import net.mamoe.mirai.contact.Contact
-import net.mamoe.mirai.contact.Group
-import net.mamoe.mirai.contact.nameCardOrNick
+import net.mamoe.mirai.console.command.CommandSender.Companion.asCommandSender
+import net.mamoe.mirai.contact.*
 import net.mamoe.mirai.event.EventPriority
 import net.mamoe.mirai.event.GlobalEventChannel
 import net.mamoe.mirai.event.events.*
@@ -84,7 +83,7 @@ object MessageHistory {
         val msg1 = buildMessageChain {
             +"${message[MessageHistoryTable.name]} 曾经说过："
         }
-        val msg2 = message[MessageHistoryTable.message].deserializeMiraiCode()
+        val msg2 = FoldIgnore + message[MessageHistoryTable.message].deserializeMiraiCode()
         return msg1 to msg2
     }
 
@@ -164,6 +163,29 @@ object MessageHistory {
             }
         }
 
+        CommandStats.appendStats("chat_yesterday", "群昨日消息排名") {
+            transaction {
+                if (it !is Group) {
+                    +"只有群聊才可以使用此数据"
+                    return@transaction
+                }
+
+                +"群昨日消息排名：\n"
+
+                """
+                select sender, count
+                from DailyMessageSend
+                where "group" = ${it.id}
+                  and date = date('now', 'localtime', '-1 day')
+                order by count desc;
+                """.trimIndent().execAndMap { rs ->
+                    rs.getLong("sender").let { sender -> it[sender]?.nameCardOrNick ?: "$sender" } to rs.getInt("count")
+                }.forEachIndexed { index, (first, second) ->
+                    +"${index + 1}. $first $second 条消息\n"
+                }
+            }
+        }
+
         CommandStats.appendStats("chat", "群总消息排名") {
             transaction {
                 if (it !is Group) {
@@ -205,8 +227,15 @@ internal fun nudgeForRandomMessage() {
         }
 
         val from = e.subject
-        if (from.id != RDLoungeIntegrated.RDLOUNGE) {
-            randomAsMessage(from.id, e.bot.id)?.second?.let { from.sendMessage(it) }
+        val commandSender = when (e.from) {
+            is Friend -> (e.from as Friend).asCommandSender()
+            is Member -> (e.from as Member).asCommandSender(false)
+            else -> null
         }
+        if (commandSender?.hasUsePermission() != true) {
+            return@subscribeAlways
+        }
+
+        randomAsMessage(from.id, e.bot.id)?.second?.let { from.sendMessage(it) }
     }
 }

@@ -41,7 +41,7 @@ class LimitedTimeUseCounter(override val useCount: Int) : UseCounter()
 @SerialName("fixed-delay-use-counter")
 class FixedDelayUseCounter(
     override val useCount: Int,
-    val delay: SerializableDuration,
+    val delay: Duration,
     override var nextRefresh: LocalDateTime = Instant.DISTANT_PAST.toLocalDateTime()
 ) : UseCounter(), TimeRefreshable {
     override fun use() = canUse().also {
@@ -62,7 +62,7 @@ class FixedDelayUseCounter(
 @SerialName("fixed-rate-use-counter")
 class FixedRateUseCounter constructor(
     override val useCount: Int,
-    val rate: SerializableDuration,
+    val rate: Duration,
     override var nextRefresh: LocalDateTime = Clock.System.now().toLocalDateTime()
 ) : UseCounter(), TimeRefreshable {
     override fun use() = canUse().also {
