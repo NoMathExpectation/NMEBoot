@@ -227,7 +227,7 @@ object CommandAsk : SingleStringCommand(
         var message = kotlin.runCatching { Conversation[sender.subject?.id ?: -1].query(text) }
             .getOrElse {
                 it.printStackTrace()
-                it.message ?: "发生了一个错误"
+                "An error occurred."
             }
             .toPlainText()
             .toMessageChain()
@@ -270,6 +270,14 @@ object CommandEval : SingleStringCommand(
             .filterNotNull()
             .filter(String::isNotBlank)
             .joinToString("\n")
-        sender.sendMessage(output)
+            .takeIf(String::isNotEmpty) ?: "No output."
+
+        var message = output.toPlainText().toMessageChain()
+        kotlin.runCatching { originalMessage.quote() }
+            .getOrNull()
+            ?.let {
+                message = it + message
+            }
+        sender.sendMessage(message)
     }
 }

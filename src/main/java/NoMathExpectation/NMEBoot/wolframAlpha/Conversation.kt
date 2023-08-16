@@ -12,6 +12,8 @@ import io.ktor.client.plugins.resources.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.serialization.kotlinx.json.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
 import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
 import net.mamoe.mirai.console.data.AutoSavePluginConfig
@@ -53,26 +55,31 @@ class Conversation private constructor() {
 
     private var lastResult: Result? = null
 
-    private suspend fun query(query: Query): Result {
-        val response = if (lastResult == null) {
+    private val mutex = Mutex()
+
+    private suspend fun query(query: Query) = mutex.withLock(query) {
+        queryTimes++
+
+        val response = if (lastResult == null || lastResult?.host == null) {
             HTTP_CLIENT.get(query)
         } else {
             HTTP_CLIENT.get(query) {
-                url("https://${lastResult!!.host}/api")
+                url("https://${lastResult!!.host}/api/v1/conversation.jsp")
             }
         }
 
-        return try {
+        lastResult = try {
             response.body()
         } catch (e: NoTransformationFoundException) {
             Result(error = response.bodyAsText())
         }
+
+        lastResult!!
     }
 
     @JvmBlockingBridge
     suspend fun query(question: String): String {
         logger.info("开始请求wolfram api，问题：$question")
-        queryTimes++
         val result = query(Query(APP_ID, question, conversationid = lastResult?.conversationID, s = lastResult?.s))
         return if (result.error != null) {
             logger.warning("请求错误：${result.error}")
