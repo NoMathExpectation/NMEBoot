@@ -7,6 +7,7 @@ import NoMathExpectation.NMEBoot.utils.MessageHistory.randomAsMessage
 import kotlinx.datetime.Clock
 import net.mamoe.mirai.console.command.CommandSender.Companion.asCommandSender
 import net.mamoe.mirai.contact.*
+import net.mamoe.mirai.event.Event
 import net.mamoe.mirai.event.EventPriority
 import net.mamoe.mirai.event.GlobalEventChannel
 import net.mamoe.mirai.event.events.*
@@ -56,12 +57,24 @@ object MessageHistory {
         }
     }
 
+    private fun record(event: Event) = transaction {
+        EventHistoryTable.insert {
+            it[type] = event::class.qualifiedName ?: "<anonymous class>"
+            it[detail] = event.toString()
+            it[time] = Clock.System.now().toEpochMilliseconds()
+        }
+    }
+
     fun recordStart() {
         val channel = GlobalEventChannel.parentScope(Main.INSTANCE)
         channel.subscribeAlways<MessageEvent>(priority = EventPriority.MONITOR) {
             record(it)
         }
         channel.subscribeAlways<MessagePostSendEvent<out Contact>>(priority = EventPriority.MONITOR) {
+            record(it)
+        }
+
+        channel.subscribeAlways<Event>(priority = EventPriority.MONITOR) {
             record(it)
         }
     }
@@ -215,6 +228,12 @@ object MessageHistoryTable : LongIdTable() {
     val group = long("group").nullable()
     val name = varchar("name", 127)
     val message = text("message")
+    val time = long("time")
+}
+
+object EventHistoryTable : LongIdTable() {
+    val type = text("type")
+    val detail = text("detail")
     val time = long("time")
 }
 
