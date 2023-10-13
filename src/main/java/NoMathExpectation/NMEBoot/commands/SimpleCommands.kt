@@ -22,7 +22,7 @@ internal fun registerCommands() {
     CommandChart.register()
     CommandAlias.register()
     CommandEatComposite.register()
-    CommandExport.register()
+    //CommandExport.register()
 
     //simple commands
     CommandHello.register()
@@ -37,6 +37,8 @@ internal fun registerCommands() {
     CommandEat.register()
     CommandAsk.register()
     CommandEval.register()
+    CommandBrainFuck.register()
+    CommandBefunge.register()
 }
 
 object CommandHello : SimpleCommand(
@@ -281,3 +283,4 @@ object CommandEval : SingleStringCommand(
         sender.sendMessage(message)
     }
 }
+
