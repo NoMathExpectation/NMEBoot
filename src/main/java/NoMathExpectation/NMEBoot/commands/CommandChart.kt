@@ -21,7 +21,7 @@ object CommandChart : CompositeCommand(
 
     @SubCommand
     @Description("搜索谱面")
-    suspend fun CommandSender.search(keyword: String, itemPerPage: Int = 5) {
+    suspend fun CommandSender.search(keyword: String, itemPerPage: Int = 10) {
         sendMessage(RhythmCafeSearchEngine.search(keyword, itemPerPage))
     }
 
@@ -47,7 +47,7 @@ object CommandChart : CompositeCommand(
             sendMessage("请先进行一次搜索。")
             return
         }
-        if (index !in 1..5) {
+        if (index !in 1..RhythmCafeSearchEngine.itemPerPage) {
             sendMessage("索引超出范围。")
             return
         }
@@ -62,7 +62,7 @@ object CommandChart : CompositeCommand(
             sendMessage("请先进行一次搜索。")
             return
         }
-        if (index !in 1..5) {
+        if (index !in 1..RhythmCafeSearchEngine.itemPerPage) {
             sendMessage("索引超出范围。")
             return
         }
@@ -77,7 +77,7 @@ object CommandChart : CompositeCommand(
             sendMessage("请先进行一次搜索。")
             return
         }
-        if (index !in 1..5) {
+        if (index !in 1..RhythmCafeSearchEngine.itemPerPage) {
             sendMessage("索引超出范围。")
             return
         }
@@ -92,11 +92,15 @@ object CommandChart : CompositeCommand(
             sendMessage("请先进行一次搜索。")
             return
         }
-        if (index !in 1..5) {
+        if (index !in 1..RhythmCafeSearchEngine.itemPerPage) {
             sendMessage("索引超出范围。")
             return
         }
 
-        RhythmCafeSearchEngine.downloadAndUpload(subject, index)
+        try {
+            RhythmCafeSearchEngine.downloadAndUpload(subject, index)
+        } catch (e: Exception) {
+            sendMessage("传输失败")
+        }
     }
 }

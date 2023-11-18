@@ -69,10 +69,16 @@ object RhythmCafeSearchEngine {
     fun getLink2(index: Int) = currentSearch.hits[index - 1].document.url2
 
     @JvmBlockingBridge
-    suspend fun downloadAndUpload(group: Group, index: Int) =
+    suspend fun downloadAndUpload(group: Group, index: Int) = try {
+        FileUtils.uploadFile(group, FileUtils.download(getLink2(index)))
+    } catch (e: Exception) {
         FileUtils.uploadFile(group, FileUtils.download(getLink(index)))
+    }
+
 
     fun isSearched() = ::currentSearch.isInitialized
+
+    val itemPerPage get() = currentSearch.request_params.per_page
 
     override fun toString() = buildString {
         append("搜索结果:\n")

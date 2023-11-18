@@ -3,6 +3,7 @@ package NoMathExpectation.NMEBoot.commands
 import NoMathExpectation.NMEBoot.Main
 import NoMathExpectation.NMEBoot.inventory.modules.Luck
 import NoMathExpectation.NMEBoot.inventory.modules.Reloading
+import NoMathExpectation.NMEBoot.sending.Cooldown
 import NoMathExpectation.NMEBoot.utils.*
 import NoMathExpectation.NMEBoot.wolframAlpha.Conversation
 import net.mamoe.mirai.console.command.*
@@ -15,6 +16,7 @@ import net.mamoe.mirai.message.data.MessageSource.Key.quote
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
+import kotlin.time.Duration
 
 internal fun registerCommands() {
     //composite commands
@@ -39,6 +41,7 @@ internal fun registerCommands() {
     CommandEval.register()
     CommandBrainFuck.register()
     CommandBefunge.register()
+    CommandCooldown.register()
 }
 
 object CommandHello : SimpleCommand(
@@ -284,3 +287,27 @@ object CommandEval : SingleStringCommand(
     }
 }
 
+object CommandCooldown : SimpleCommand(
+    plugin,
+    "cooldown",
+    "cd",
+    description = "设置冷却",
+    parentPermission = usePermission
+) {
+    @Handler
+    suspend fun MemberCommandSender.handle(time: String) {
+        if (!hasAdminPermission() && !isGroupAdmin()) {
+            return
+        }
+
+        val duration = Duration.parse(time)
+        if (duration.isNegative()) {
+            sendMessage("请提供一个非负的间隔")
+            return
+        }
+
+        Cooldown[group.id] = FixedDelayUseCounter(1, duration)
+        sendMessage("已设置指令间隔为$time")
+    }
+
+}
