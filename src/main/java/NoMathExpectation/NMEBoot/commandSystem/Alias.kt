@@ -51,6 +51,9 @@ object Alias : AutoSavePluginConfig("alias") {
             job.join(1000)
             if (job.isAlive) {
                 logger.warning("Alias: Skipped ${p.from} -> ${p.to} due to timed out.")
+                if (after != this) {
+                    logger.info("Alias: '$this' -> '$after'")
+                }
             }
         }
         //if (before == after) {
@@ -66,7 +69,7 @@ object Alias : AutoSavePluginConfig("alias") {
         //}
 
         if (after != this) {
-            logger.info("Alias: '$this' -> '$after'")
+            logger.info("Alias: Result: '$this' -> '$after'")
         }
 
         logger.verbose("Alias: String outgoing '$after'")
@@ -148,8 +151,9 @@ object Alias : AutoSavePluginConfig("alias") {
     }
 
     fun add(group: Long, p: AliasItem) {
-        replaces[group].add(p)
-        logger.info("Alias: Added '${p.from}' -> '${p.to}' at position ${replaces.size - 1}")
+        val aliasItems = replaces[group]
+        aliasItems.add(p)
+        logger.info("Alias: Added '${p.from}' -> '${p.to}' at position ${aliasItems.size - 1}")
     }
 
     fun add(group: Long, p: AliasItem, pos: Int) {
@@ -199,7 +203,7 @@ object Alias : AutoSavePluginConfig("alias") {
         +"//alias ...\n"
         +"help :显示此帮助\n"
         +"show :显示全部别称\n"
-        +"add \"<regex>\" \"<regex>\" [applyIn] [applyOut] [pos] :添加新别称\n"
+        +"add \"<regex>\" \"<regex>\" [applyIn] [applyOut] [protected] [pos] :添加新别称\n"
         +"remove <pos> :移除一条别称\n"
         +"move <from> <to> :将一条别称移动到新的位置\n"
         +"protect <pos> :保护/取消保护别称\n"

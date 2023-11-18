@@ -45,9 +45,9 @@ object RhythmCafeSearchEngine {
     }
 
     @JvmBlockingBridge
-    suspend fun search(query: String?): String {
+    suspend fun search(query: String?, itemPerPage: Int = 5): String {
         return try {
-            sendRequest(Request(q = query ?: ""))
+            sendRequest(Request(q = query ?: "", per_page = itemPerPage))
             toString()
         } catch (e: HttpRequestTimeoutException) {
             "请求超时"
@@ -136,7 +136,7 @@ object RhythmCafeSearchEngine {
     fun sendHelp() = buildString {
         append("//chart...\n")
         append("help :显示此帮助\n")
-        append("search <text> :搜索谱面\n")
+        append("search <text> [itemPerPage] :搜索谱面（有空格请用双引号括起）\n")
         append("page <i> :将搜索结果翻到第i页\n")
         append("info <i> :显示当前页中第i个谱面的描述\n")
         append("link <i> :获取当前页中第i个谱面的链接\n")
