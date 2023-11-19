@@ -147,6 +147,6 @@ object RhythmCafeSearchEngine {
         append("info <i> :显示当前页中第i个谱面的描述\n")
         append("link <i> :获取当前页中第i个谱面的链接\n")
         append("link2 <i> :获取当前页中第i个谱面的镜像链接\n")
-        append("download <i> :下载当前页中第i个谱面")
+        append("download <i> :下载当前页中第i个谱面（不支持在饭制部使用）")
     }
 }

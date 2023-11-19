@@ -1,6 +1,7 @@
 package NoMathExpectation.NMEBoot.commands
 
 import NoMathExpectation.NMEBoot.RDLounge.rhythmCafe.RhythmCafeSearchEngine
+import NoMathExpectation.NMEBoot.commandSystem.services.RDLoungeIntegrated
 import NoMathExpectation.NMEBoot.utils.plugin
 import NoMathExpectation.NMEBoot.utils.rdlPermission
 import net.mamoe.mirai.console.command.CommandSender
@@ -88,6 +89,10 @@ object CommandChart : CompositeCommand(
     @SubCommand
     @Description("下载并上传谱面至群文件")
     suspend fun MemberCommandSender.download(index: Int) {
+        if (group.id == RDLoungeIntegrated.RDLOUNGE) {
+            return
+        }
+
         if (!RhythmCafeSearchEngine.isSearched()) {
             sendMessage("请先进行一次搜索。")
             return
