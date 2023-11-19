@@ -46,6 +46,10 @@ object RhythmCafeSearchEngine {
 
     @JvmBlockingBridge
     suspend fun search(query: String?, itemPerPage: Int = 5): String {
+        if (itemPerPage <= 0) {
+            return "请输入一个正整数"
+        }
+
         return try {
             sendRequest(Request(q = query ?: "", per_page = itemPerPage))
             toString()
