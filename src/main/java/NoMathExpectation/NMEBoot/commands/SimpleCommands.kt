@@ -6,6 +6,8 @@ import NoMathExpectation.NMEBoot.inventory.modules.Reloading
 import NoMathExpectation.NMEBoot.sending.Cooldown
 import NoMathExpectation.NMEBoot.utils.*
 import NoMathExpectation.NMEBoot.wolframAlpha.Conversation
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import net.mamoe.mirai.console.command.*
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
 import net.mamoe.mirai.console.util.safeCast
@@ -257,15 +259,56 @@ object CommandEval : SingleStringCommand(
         val timeout = 30L
         val memory = (256L * 1024 * 1024).toString()
 
-        var tle = false
-        val process = Runtime.getRuntime()
-            .exec(arrayOf("docker", "run", "--rm", "-m", memory, "--name", name, "-i", "kscripting/kscript", "-"))
-        process.outputStream.use {
-            it.write(text.toByteArray())
+        val quoted = originalMessage[QuoteReply.Key]?.source
+
+        val script = """
+            data class Message(val from: Long, val to: Long, val text: String)
+            
+            val quoted: Message? = ${
+            quoted?.let {
+                """
+                        Message(
+                            ${quoted.fromId},
+                            ${quoted.targetId},
+                            "${
+                    quoted.originalMessage.serializeToMiraiCode()
+                        .replace("\\", "\\\\")
+                        .replace("\"", "\\\"")
+                        .replace("$", "${'$'}{'$'}")
+                }",
+                        )
+                    """.trimIndent()
+            } ?: "null"
         }
-        if (!process.waitFor(timeout, TimeUnit.SECONDS)) {
-            tle = true
-            Runtime.getRuntime().exec("docker stop $name")
+            
+            try {
+                val result: Any? = run {
+                    $text
+                }
+                
+                if (result !is Unit) {
+                    println()
+                    print(result)
+                }
+            } catch (e: Throwable) {
+                println()
+                print(e.stackTraceToString())
+            }
+            
+        """.trimIndent()
+
+        var tle = false
+        val process = withContext(Dispatchers.IO) {
+            val process = Runtime.getRuntime()
+                .exec(arrayOf("docker", "run", "--rm", "-m", memory, "--name", name, "-i", "kscripting/kscript", "-"))
+            process.outputStream.use {
+                it.write(script.toByteArray())
+            }
+            if (!process.waitFor(timeout, TimeUnit.SECONDS)) {
+                tle = true
+                Runtime.getRuntime().exec("docker stop $name")
+            }
+            process
         }
 
         val err = process.errorStream.bufferedReader().use { it.readText() }
@@ -277,7 +320,7 @@ object CommandEval : SingleStringCommand(
             .joinToString("\n")
             .takeIf(String::isNotEmpty) ?: "No output."
 
-        var message = output.toPlainText().toMessageChain()
+        var message = output.deserializeMiraiCode(sender.subject)
         kotlin.runCatching { originalMessage.quote() }
             .getOrNull()
             ?.let {
