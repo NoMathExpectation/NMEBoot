@@ -8,6 +8,7 @@ import java.io.*;
 import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
@@ -147,7 +148,10 @@ public class Utils {
 
         Process p = newFfmpegProcess(f.getPath(), path);
         try {
-            p.waitFor();
+            if (!p.waitFor(10, TimeUnit.MINUTES)) {
+                p.destroy();
+                throw new RuntimeException(writeStreamToString(p.getInputStream()) + "\n" + writeStreamToString(p.getErrorStream()));
+            }
         } catch (InterruptedException ignored) {
         }
         

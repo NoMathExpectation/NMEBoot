@@ -1,23 +1,36 @@
 package NoMathExpectation.NMEBoot.commands
 
+import NoMathExpectation.NMEBoot.FileUtils
 import NoMathExpectation.NMEBoot.Main
+import NoMathExpectation.NMEBoot.Utils
 import NoMathExpectation.NMEBoot.inventory.modules.Luck
 import NoMathExpectation.NMEBoot.inventory.modules.Reloading
+import NoMathExpectation.NMEBoot.inventory.modules.reload
 import NoMathExpectation.NMEBoot.sending.Cooldown
 import NoMathExpectation.NMEBoot.utils.*
 import NoMathExpectation.NMEBoot.wolframAlpha.Conversation
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.mamoe.mirai.console.command.*
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
+import net.mamoe.mirai.console.command.ConsoleCommandSender.sendMessage
+import net.mamoe.mirai.console.data.AutoSavePluginConfig
+import net.mamoe.mirai.console.data.value
+import net.mamoe.mirai.console.plugin.jvm.reloadPluginConfig
 import net.mamoe.mirai.console.util.safeCast
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.message.code.MiraiCode.deserializeMiraiCode
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.message.data.MessageSource.Key.quote
+import net.mamoe.mirai.utils.ExternalResource.Companion.uploadAsImage
+import okhttp3.internal.toHexString
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
+import kotlin.streams.toList
 import kotlin.time.Duration
 
 internal fun registerCommands() {
@@ -44,6 +57,8 @@ internal fun registerCommands() {
     CommandBrainFuck.register()
     CommandBefunge.register()
     CommandCooldown.register()
+    CommandEmojiFusion.register()
+    CommandConvert.register()
 }
 
 object CommandHello : SimpleCommand(
@@ -353,4 +368,103 @@ object CommandCooldown : SimpleCommand(
         sendMessage("已设置指令间隔为$time")
     }
 
+}
+
+object CommandEmojiFusion : SimpleCommand(
+    plugin,
+    "emojifusion",
+    "ef",
+    description = "融合emoji",
+    parentPermission = usePermission
+) {
+    object Config : AutoSavePluginConfig("emoji_fusion") {
+        val regex: String by value("^$")
+
+        val revisions: List<Int> by value()
+
+        init {
+            reload {
+                plugin.reloadPluginConfig(this)
+            }
+        }
+    }
+
+    private val emojiRegex get() = Config.regex.toRegex()
+
+    @Handler
+    suspend fun AbstractUserCommandSender.handle(emojis: String) {
+        if (emojiRegex.matchEntire(emojis) == null) {
+            sendMessage("发现无效的emoji")
+            return
+        }
+
+        val codePoints = emojis.codePoints().toList().toMutableList()
+        if (codePoints.size < 2) {
+            sendMessage("emoji数量不足")
+            return
+        }
+
+        val emoji1 = codePoints.removeAt(Random.nextInt(codePoints.size)).toHexString()
+        val emoji2 = codePoints.removeAt(Random.nextInt(codePoints.size)).toHexString()
+
+        try {
+            Config.revisions.forEach {
+                val fe1 = if (it < 20220500) emoji1.padStart(4, '0') else emoji1
+                val fe2 = if (it < 20220500) emoji2.padStart(4, '0') else emoji2
+
+                val res =
+                    ktorClient.get("https://www.gstatic.com/android/keyboard/emojikitchen/$it/u$fe1/u${fe1}_u$fe2.png")
+                if (res.status != HttpStatusCode.OK) {
+                    return@forEach
+                }
+
+                res.bodyAsChannel()
+                    .toExternalResource()
+                    .use {
+                        sendMessage(it.uploadAsImage(subject))
+                    }
+                return
+            }
+        } catch (e: Exception) {
+            logger.error(e)
+            sendMessage("获取emoji失败")
+        }
+    }
+}
+
+object CommandConvert : SimpleCommand(
+    plugin,
+    "convert",
+    description = "用ffmpeg转换文件",
+    parentPermission = usePermission
+) {
+    @Handler
+    suspend fun CommandContext.handle(type: String = "ogg") {
+        val subject = sender.subject
+        if (subject !is Group) {
+            sendMessage("只能在群里使用此指令")
+            return
+        }
+
+        kotlin.runCatching {
+            logger.info("文件转换开始")
+
+            val before = FileUtils.getQuotedAbsoluteFile(subject, originalMessage).let { FileUtils.download(it) }
+            if (before == null) {
+                sendMessage("未找到引用文件")
+                return
+            }
+            before.deleteOnExit()
+            logger.info("文件名：${before.name}，转换类型：$type")
+
+            val after = Utils.audioAndVideoConvert(before, type)
+            after.deleteOnExit()
+            FileUtils.uploadFile(subject, after)
+
+            logger.info("文件转换结束")
+        }.getOrElse {
+            logger.error(it)
+            subject.sendMessage("转换失败")
+        }
+    }
 }
