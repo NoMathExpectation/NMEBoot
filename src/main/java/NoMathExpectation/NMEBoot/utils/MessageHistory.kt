@@ -4,8 +4,11 @@ import NoMathExpectation.NMEBoot.Main
 import NoMathExpectation.NMEBoot.commands.CommandStats
 import NoMathExpectation.NMEBoot.sending.FoldIgnore
 import NoMathExpectation.NMEBoot.utils.MessageHistory.randomAsMessage
+import com.seaboat.text.analyzer.segment.DictSegment
+import com.seaboat.text.analyzer.segment.Segment
 import kotlinx.datetime.Clock
 import net.mamoe.mirai.console.command.CommandSender.Companion.asCommandSender
+import net.mamoe.mirai.console.data.AutoSavePluginConfig
 import net.mamoe.mirai.contact.*
 import net.mamoe.mirai.event.Event
 import net.mamoe.mirai.event.EventPriority
@@ -17,8 +20,9 @@ import net.mamoe.mirai.message.data.buildMessageChain
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
+import kotlin.random.Random
 
-object MessageHistory {
+object MessageHistory : AutoSavePluginConfig("message_history") {
     private fun record(event: MessageEvent) = transaction {
         MessageHistoryTable.insert {
             it[sender] = event.sender.id
@@ -79,7 +83,7 @@ object MessageHistory {
         }
     }
 
-    fun random(group: Long? = null, bot: Long? = null) = transaction {
+    fun random(group: Long? = null, bot: Long? = null, count: Int) = transaction {
         var query =
             MessageHistoryTable.select { ((MessageHistoryTable.message notLike "//%") and (MessageHistoryTable.message neq "")) }
         group?.let {
@@ -88,7 +92,11 @@ object MessageHistory {
         bot?.let {
             query = query.andWhere { MessageHistoryTable.sender neq it }
         }
-        query.orderBy(SQLRandom()).limit(1).firstOrNull()
+        query.orderBy(SQLRandom()).limit(count)
+    }
+
+    fun random(group: Long? = null, bot: Long? = null) = transaction {
+        random(group, bot, 1).firstOrNull()
     }
 
     fun randomAsMessage(group: Long? = null, bot: Long? = null): Pair<MessageChain, MessageChain>? {
@@ -98,6 +106,26 @@ object MessageHistory {
         }
         val msg2 = FoldIgnore + message[MessageHistoryTable.message].deserializeMiraiCode()
         return msg1 to msg2
+    }
+
+    private val segmenter: Segment = DictSegment.get()
+    fun randomGarbage(
+        group: Long? = null,
+        bot: Long? = null,
+        count: Int = 10,
+        filter: Regex = "[\\p{Punct}\\w]+".toRegex()
+    ) = buildString {
+        val wordlist = transaction {
+            MessageHistory.random(group, bot, count)
+                .asSequence()
+                .flatMap { segmenter.seg(it[MessageHistoryTable.message])!! }
+                .map { it.replaceAfterLast('/', "").replace(filter, "") }
+                .toMutableList()
+        }
+
+        repeat(count) {
+            append(wordlist.removeAt(Random.nextInt(wordlist.size)))
+        }
     }
 
     init {

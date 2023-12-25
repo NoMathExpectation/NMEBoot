@@ -13,6 +13,10 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.withContext
 import net.mamoe.mirai.console.command.*
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
@@ -117,15 +121,43 @@ object CommandHistory : SimpleCommand(
     description = "随机一条历史消息",
     parentPermission = usePermission
 ) {
-    @Handler
-    suspend fun MemberCommandSender.handle() {
-        val history = MessageHistory.randomAsMessage(group.id, bot.id) ?: run {
-            sendMessage("找不到历史消息。")
-            return
-        }
+    enum class Mode {
+        DEFAULT, RANDOM
+    }
 
-        sendMessage(history.first)
-        sendMessage(history.second)
+    object Config : AutoSavePluginConfig("history") {
+        val randomCountLimit by value(3000)
+        val randomFilterRegex by value("[\\p{Punct}\\w]+")
+
+        init {
+            reload {
+                plugin.reloadPluginConfig(this)
+            }
+        }
+    }
+
+    @Handler
+    suspend fun MemberCommandSender.handle(mode: Mode = Mode.DEFAULT, vararg args: String) {
+        when (mode) {
+            Mode.DEFAULT -> run def@{
+                val history = MessageHistory.randomAsMessage(group.id, bot.id) ?: run {
+                    sendMessage("找不到历史消息。")
+                    return@def
+                }
+
+                sendMessage(history.first)
+                sendMessage(history.second)
+            }
+
+            Mode.RANDOM -> {
+                val count = args.getOrNull(0)?.toIntOrNull() ?: 10
+                if (count !in 1..Config.randomCountLimit) {
+                    sendMessage("阿巴阿巴")
+                    return
+                }
+                sendMessage(MessageHistory.randomGarbage(group.id, bot.id, count, Config.randomFilterRegex.toRegex()))
+            }
+        }
     }
 }
 
@@ -407,28 +439,25 @@ object CommandEmojiFusion : SimpleCommand(
         val emoji1 = codePoints.removeAt(Random.nextInt(codePoints.size)).toHexString()
         val emoji2 = codePoints.removeAt(Random.nextInt(codePoints.size)).toHexString()
 
-        try {
-            Config.revisions.forEach {
-                val fe1 = if (it < 20220500) emoji1.padStart(4, '0') else emoji1
-                val fe2 = if (it < 20220500) emoji2.padStart(4, '0') else emoji2
+        Config.revisions.asFlow().transform {
+            val fe1 = if (it < 20220500) emoji1.padStart(4, '0') else emoji1
+            val fe2 = if (it < 20220500) emoji2.padStart(4, '0') else emoji2
 
-                val res =
-                    ktorClient.get("https://www.gstatic.com/android/keyboard/emojikitchen/$it/u$fe1/u${fe1}_u$fe2.png")
-                if (res.status != HttpStatusCode.OK) {
-                    return@forEach
-                }
+            val url = "https://www.gstatic.com/android/keyboard/emojikitchen/$it/u$fe1/u${fe1}_u$fe2.png"
+            logger.info("Fetching emoji from $url")
 
-                res.bodyAsChannel()
-                    .toExternalResource()
-                    .use {
-                        sendMessage(it.uploadAsImage(subject))
-                    }
-                return
+            val res =
+                ktorClient.get(url)
+            if (res.status != HttpStatusCode.OK) {
+                return@transform
             }
-        } catch (e: Exception) {
-            logger.error(e)
-            sendMessage("获取emoji失败")
-        }
+
+            emit(res)
+        }.catch {
+            logger.error(it)
+        }.firstOrNull()?.bodyAsChannel()?.toExternalResource()?.use {
+            sendMessage(it.uploadAsImage(subject))
+        } ?: sendMessage("获取emoji失败")
     }
 }
 

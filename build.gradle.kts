@@ -15,6 +15,7 @@ val exposedVersion: String by project
 
 repositories {
     maven("https://maven.aliyun.com/repository/public")
+    mavenLocal()
     mavenCentral()
     gradlePluginPortal()
 }
@@ -38,6 +39,9 @@ dependencies {
 
     implementation("com.github.plexpt:chatgpt:1.1.2")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.14.0")
+
+    implementation("com.seaboat:TextAnalyzer:0.2.0-SNAPSHOT")
+    shadowLink("com.seaboat:TextAnalyzer")
 
     implementation(fileTree("locallib") { include("*.jar") })
 }
