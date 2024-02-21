@@ -37,7 +37,7 @@ public final class Main extends JavaPlugin {
     public static WordleMirai wordle = new WordleMirai(new File("config/NoMathExpectation.NMEBoot/wordle.txt"), 6, 25);
 
     private Main() {
-        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.3.14-2023121403")
+        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.3.14-2024011301")
                 .name("NMEBoot")
                 .author("NoMathExpectation")
                 .build());
@@ -80,7 +80,7 @@ public final class Main extends JavaPlugin {
 
         //加载box
         CardPool box;
-        if (CardSystemData.INSTANCE.getBox().size() == 0) {
+        if (CardSystemData.INSTANCE.getBox().isEmpty()) {
             box = new CardPool("box", "交换盒", 0L, true);
         } else {
             int boxSize = CardSystemData.INSTANCE.getBox().size();
@@ -106,7 +106,7 @@ public final class Main extends JavaPlugin {
                 NormalUser.addUser(NormalUser.SERIALIZER.deserialize(userBytes));
             } catch (Exception e) {
                 getLogger().error("加载某用户失败!");
-                e.printStackTrace();
+                getLogger().error(e);
                 throw new RuntimeException(e);
             }
         }
@@ -116,7 +116,7 @@ public final class Main extends JavaPlugin {
                 CardUser.addUser(CardUser.SERIALIZER.deserialize(userBytes));
             } catch (Exception e) {
                 getLogger().error("加载某用户失败!");
-                e.printStackTrace();
+                getLogger().error(e);
                 throw new RuntimeException(e);
             }
         }
@@ -186,7 +186,7 @@ public final class Main extends JavaPlugin {
                 userData.add(CardUser.SERIALIZER.serialize(user));
             } catch (IOException e) {
                 getLogger().error("保存用户:" + user.showSimple(true) + ")失败！");
-                e.printStackTrace();
+                getLogger().error(e);
             }
         }
         CardSystemData.INSTANCE.setUser(userData);
@@ -197,7 +197,7 @@ public final class Main extends JavaPlugin {
                 userData.add(NormalUser.SERIALIZER.serialize(user));
             } catch (IOException e) {
                 getLogger().error("保存用户:" + user.showSimple(true) + "失败！");
-                e.printStackTrace();
+                getLogger().error(e);
             }
         }
         NormalUserStats.INSTANCE.setCheckInCount(NormalUser.getCheckInCount());
@@ -215,7 +215,7 @@ public final class Main extends JavaPlugin {
             CardSystemData.INSTANCE.setBox(byteList);
         } catch (IOException e) {
             getLogger().error("保存交换盒失败！");
-            e.printStackTrace();
+            getLogger().error(e);
         }
     }
 }

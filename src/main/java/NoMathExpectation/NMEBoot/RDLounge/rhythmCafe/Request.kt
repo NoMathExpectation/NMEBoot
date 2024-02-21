@@ -16,4 +16,9 @@ internal data class Request(
     val page: Int = 1,
     val sort_by: String = "_text_match:desc,indexed:desc,last_updated:desc",
     val num_typos: String = "2, 1, 1, 1, 0"
-)
+) {
+    companion object {
+        const val PR = "approval:=[10..20]"
+        const val ANY = "approval:=[-1..20]"
+    }
+}

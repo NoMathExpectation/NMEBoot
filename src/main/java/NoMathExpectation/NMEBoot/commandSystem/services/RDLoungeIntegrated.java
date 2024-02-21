@@ -251,7 +251,7 @@ public final class RDLoungeIntegrated implements Executable {
                         break;
 
                     case "search":
-                        from.sendMessage(RhythmCafeSearchEngine.INSTANCE.search(msg.replaceFirst("//chart[\\s\n]search[\\s\n]", ""), 5)).recallIn(60000);
+                        from.sendMessage(RhythmCafeSearchEngine.INSTANCE.search(msg.replaceFirst("//chart[\\s\n]search[\\s\n]", ""), 5, false)).recallIn(60000);
                         break;
 
                     case "page":

@@ -22,8 +22,8 @@ object CommandChart : CompositeCommand(
 
     @SubCommand
     @Description("搜索谱面")
-    suspend fun CommandSender.search(keyword: String, itemPerPage: Int = 10) {
-        sendMessage(RhythmCafeSearchEngine.search(keyword, itemPerPage))
+    suspend fun CommandSender.search(keyword: String = "", itemPerPage: Int = 10, peerReview: Boolean = false) {
+        sendMessage(RhythmCafeSearchEngine.search(keyword, itemPerPage, peerReview))
     }
 
     @SubCommand

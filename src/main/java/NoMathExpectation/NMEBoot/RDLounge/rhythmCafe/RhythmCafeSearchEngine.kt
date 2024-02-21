@@ -8,6 +8,7 @@ import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.resources.*
 import io.ktor.client.request.*
+import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
@@ -31,7 +32,7 @@ object RhythmCafeSearchEngine {
             requestTimeoutMillis = 5000
         }
         defaultRequest {
-            url("https://api.rhythm.cafe")
+            url("https://orchardb.fly.dev")
             header("x-typesense-api-key", apiKey)
         }
     }
@@ -40,18 +41,28 @@ object RhythmCafeSearchEngine {
     private lateinit var currentSearch: Result
 
     private suspend fun sendRequest(request: Request) {
+        val response = httpClient.get(request)
+        require(response.status.isSuccess()) { "请求失败" }
+
         currentRequest = request
-        currentSearch = httpClient.get(currentRequest).body()
+        currentSearch = response.body()
     }
 
     @JvmBlockingBridge
-    suspend fun search(query: String?, itemPerPage: Int = 5): String {
+    suspend fun search(query: String?, itemPerPage: Int = 10, peerReview: Boolean = false): String {
         if (itemPerPage <= 0) {
             return "请输入一个正整数"
         }
 
         return try {
-            sendRequest(Request(q = query ?: "", per_page = itemPerPage))
+            sendRequest(
+                Request(
+                    q = query ?: "",
+                    per_page = itemPerPage,
+                    filter_by = if (peerReview) Request.PR else Request.ANY,
+                    sort_by = if (peerReview) "_text_match:desc,indexed:desc,last_updated:desc" else "_text_match:desc,last_updated:desc"
+                )
+            )
             toString()
         } catch (e: HttpRequestTimeoutException) {
             "请求超时"
@@ -96,6 +107,8 @@ object RhythmCafeSearchEngine {
             append(matchedLevel.document.song)
             append("\n作者: ")
             append(matchedLevel.document.authors.joinToString())
+            append("\n")
+            append(matchedLevel.document.url2)
             append("\n")
         }
     }
@@ -146,7 +159,7 @@ object RhythmCafeSearchEngine {
     fun sendHelp() = buildString {
         append("//chart...\n")
         append("help :显示此帮助\n")
-        append("search <text> [itemPerPage] :搜索谱面（有空格请用双引号括起）\n")
+        append("search [text] [itemPerPage] [peerReview] :搜索谱面（有空格请用双引号括起）\n")
         append("page <i> :将搜索结果翻到第i页\n")
         append("info <i> :显示当前页中第i个谱面的描述\n")
         append("link <i> :获取当前页中第i个谱面的链接\n")
