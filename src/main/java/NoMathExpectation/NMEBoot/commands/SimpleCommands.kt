@@ -3,6 +3,7 @@ package NoMathExpectation.NMEBoot.commands
 import NoMathExpectation.NMEBoot.FileUtils
 import NoMathExpectation.NMEBoot.Main
 import NoMathExpectation.NMEBoot.Utils
+import NoMathExpectation.NMEBoot.commands.CommandOffset.sendBpmOffsetAnalyzeMessage
 import NoMathExpectation.NMEBoot.inventory.modules.Luck
 import NoMathExpectation.NMEBoot.inventory.modules.Reloading
 import NoMathExpectation.NMEBoot.inventory.modules.reload
@@ -20,7 +21,6 @@ import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.withContext
 import net.mamoe.mirai.console.command.*
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
-import net.mamoe.mirai.console.command.ConsoleCommandSender.sendMessage
 import net.mamoe.mirai.console.data.AutoSavePluginConfig
 import net.mamoe.mirai.console.data.value
 import net.mamoe.mirai.console.plugin.jvm.reloadPluginConfig
@@ -31,11 +31,14 @@ import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.message.data.MessageSource.Key.quote
 import net.mamoe.mirai.utils.ExternalResource.Companion.uploadAsImage
 import okhttp3.internal.toHexString
+import java.io.File
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.math.roundToInt
 import kotlin.random.Random
 import kotlin.streams.toList
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 internal fun registerCommands() {
     //composite commands
@@ -63,6 +66,8 @@ internal fun registerCommands() {
     CommandCooldown.register()
     CommandEmojiFusion.register()
     CommandConvert.register()
+    CommandOffset.register()
+    //CommandFileOffset.register()
 }
 
 object CommandHello : SimpleCommand(
@@ -464,14 +469,29 @@ object CommandEmojiFusion : SimpleCommand(
 object CommandConvert : SimpleCommand(
     plugin,
     "convert",
-    description = "用ffmpeg转换文件",
+    description = "用ffmpeg转换文件，输出文件会在10分钟后自动删除，默认也会自动分析文件的bpm与偏移",
     parentPermission = usePermission
 ) {
+    private object Config : AutoSavePluginConfig("convert") {
+        val convertTimeout: Long by value(60L)
+        val fileDeleteTime: Long by value(600L)
+
+        init {
+            reload {
+                plugin.reloadPluginConfig(this)
+            }
+        }
+    }
+
     @Handler
-    suspend fun CommandContext.handle(type: String = "ogg") {
+    suspend fun CommandContext.handle(
+        analyzeBpmAndOffset: Boolean = true,
+        type: String = "ogg",
+        video: Boolean = false
+    ) {
         val subject = sender.subject
         if (subject !is Group) {
-            sendMessage("只能在群里使用此指令")
+            sender.sendMessage("只能在群里使用此指令")
             return
         }
 
@@ -480,20 +500,87 @@ object CommandConvert : SimpleCommand(
 
             val before = FileUtils.getQuotedAbsoluteFile(subject, originalMessage).let { FileUtils.download(it) }
             if (before == null) {
-                sendMessage("未找到引用文件")
+                sender.sendMessage("未找到引用文件")
                 return
             }
             before.deleteOnExit()
             logger.info("文件名：${before.name}，转换类型：$type")
 
-            val after = Utils.audioAndVideoConvert(before, type)
+            val after = Utils.audioAndVideoConvert(before, type, Config.convertTimeout, video)
             after.deleteOnExit()
-            FileUtils.uploadFile(subject, after)
+            FileUtils.uploadFile(subject, after).deleteAfter(Config.fileDeleteTime.seconds)
 
             logger.info("文件转换结束")
-        }.getOrElse {
+
+            if (!analyzeBpmAndOffset) {
+                return
+            }
+
+            sendBpmOffsetAnalyzeMessage(after)
+        }.onFailure {
             logger.error(it)
-            subject.sendMessage("转换失败")
+            sender.sendMessage("文件转换失败")
+        }
+    }
+}
+
+object CommandOffset : SimpleCommand(
+    plugin,
+    "offset",
+    "bpm",
+    description = "测量音频文件的bpm和偏移",
+    parentPermission = usePermission
+) {
+    @Handler
+    suspend fun CommandContext.handle(knownBpm: Double? = null) {
+        val subject = sender.subject
+        if (subject !is Group) {
+            sender.sendMessage("只能在群里使用此指令")
+            return
+        }
+
+        val before = FileUtils.getQuotedAbsoluteFile(subject, originalMessage).let { FileUtils.download(it) }
+        if (before == null) {
+            sender.sendMessage("未找到引用文件")
+            return
+        }
+        before.deleteOnExit()
+
+        sendBpmOffsetAnalyzeMessage(before, knownBpm)
+    }
+
+    suspend fun CommandContext.sendBpmOffsetAnalyzeMessage(
+        file: File,
+        knownBpm: Double? = null,
+    ) {
+        kotlin.runCatching {
+            val (bpm, adjustedBpm, offset) = BpmOffsetAnalyzer.getBpmAndOffset(file, knownBpm)
+            sender.sendMessage(buildMessageChain {
+                +originalMessage.quote()
+                +"bpm: %.3f (%.3f)\n".format(adjustedBpm, bpm)
+                +"偏移: ${(offset * 1000).roundToInt()}ms"
+            })
+        }.onFailure {
+            logger.error(it)
+            sender.sendMessage(originalMessage.quote() + "分析文件失败")
+        }
+    }
+}
+
+object CommandFileOffset : SimpleCommand(
+    plugin,
+    "fileoffset",
+    "filebpm",
+    description = "测量音频文件的bpm和偏移",
+    parentPermission = adminPermission
+) {
+    @Handler
+    suspend fun CommandContext.handle(file: String, knownBpm: Double? = null) {
+        kotlin.runCatching {
+            sendBpmOffsetAnalyzeMessage(File(file), knownBpm)
+        }.onFailure {
+            logger.error(it)
+            sender.sendMessage("测量失败")
         }
     }
 }

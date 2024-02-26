@@ -1,5 +1,6 @@
 package NoMathExpectation.NMEBoot;
 
+import NoMathExpectation.NMEBoot.utils.MessageHistoryKt;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.contact.file.AbsoluteFile;
 import net.mamoe.mirai.contact.file.AbsoluteFileFolder;
@@ -8,6 +9,7 @@ import net.mamoe.mirai.event.GlobalEventChannel;
 import net.mamoe.mirai.event.ListeningStatus;
 import net.mamoe.mirai.event.events.GroupMessagePostSendEvent;
 import net.mamoe.mirai.message.MessageReceipt;
+import net.mamoe.mirai.message.data.FileMessage;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.QuoteReply;
 import net.mamoe.mirai.utils.ExternalResource;
@@ -25,7 +27,6 @@ import java.net.http.HttpConnectTimeoutException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -192,16 +193,30 @@ public class FileUtils {
         if (!message.contains(QuoteReply.Key)) {
             return null;
         }
-        String replyString = message.get(QuoteReply.Key).getSource().getOriginalMessage().contentToString();
-        if (!replyString.startsWith("[文件]")) {
+//        String replyString = message.get(QuoteReply.Key).getSource().getOriginalMessage().contentToString();
+//        if (!replyString.startsWith("[文件]")) {
+//            return null;
+//        }
+
+        QuoteReply quoted = message.get(QuoteReply.Key);
+        if (quoted == null) {
             return null;
         }
+        MessageChain roaming = MessageHistoryKt.roaming(quoted.getSource(), group);
+        if (roaming == null) {
+            return null;
+        }
+        FileMessage fileMessage = roaming.get(FileMessage.Key);
+        if (fileMessage == null) {
+            return null;
+        }
+        return fileMessage.toAbsoluteFile(group);
 
-        ArrayList<AbsoluteFile> files = new ArrayList<>();
-        addFileOrFolderToFileList(files, group.getFiles().getRoot());
-
-
-        return files.stream().filter(f -> f.getName().startsWith(replyString.substring(4))).findFirst().orElse(null);
+//        ArrayList<AbsoluteFile> files = new ArrayList<>();
+//        addFileOrFolderToFileList(files, group.getFiles().getRoot());
+//
+//
+//        return files.stream().filter(f -> f.getName().startsWith(replyString.substring(4))).findFirst().orElse(null);
     }
 
     private static void addFileOrFolderToFileList(@NotNull List<AbsoluteFile> files, @NotNull AbsoluteFileFolder ff) {

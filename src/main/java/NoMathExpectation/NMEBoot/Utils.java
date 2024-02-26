@@ -123,13 +123,23 @@ public class Utils {
     public static final String FFMPEG = "plugin-libraries/ffmpeg/bin/ffmpeg.exe";
 
     @NotNull
-    public static Process newFfmpegProcess(@NotNull String input, @NotNull String output) throws IOException {
-        return Runtime.getRuntime().exec(new String[] {FFMPEG, "-xerror", "-nostdin", "-y", "-i", input, output});
+    public static Process newFfmpegProcess(@NotNull String input, @NotNull String output, boolean video) throws IOException {
+        if (video) {
+            return Runtime.getRuntime().exec(new String[]{FFMPEG, "-xerror", "-nostdin", "-y", "-i", input, output});
+        } else {
+            return Runtime.getRuntime().exec(new String[]{FFMPEG, "-xerror", "-nostdin", "-vn", "-y", "-i", input, output});
+        }
     }
 
     @NotNull
     @Contract("_, _ -> new")
     public static File audioAndVideoConvert(@NotNull File f, @NotNull String type) throws IOException {
+        return audioAndVideoConvert(f, type, 60, true);
+    }
+
+    @NotNull
+    @Contract("_, _, _, _ -> new")
+    public static File audioAndVideoConvert(@NotNull File f, @NotNull String type, long timeout, boolean video) throws IOException {
         String path = f.getPath();
         if (path.endsWith(".")) {
             path += type;
@@ -146,9 +156,9 @@ public class Utils {
         File after = new File(path);
         after.deleteOnExit();
 
-        Process p = newFfmpegProcess(f.getPath(), path);
+        Process p = newFfmpegProcess(f.getPath(), path, video);
         try {
-            if (!p.waitFor(10, TimeUnit.MINUTES)) {
+            if (!p.waitFor(timeout, TimeUnit.SECONDS)) {
                 p.destroy();
                 throw new RuntimeException(writeStreamToString(p.getInputStream()) + "\n" + writeStreamToString(p.getErrorStream()));
             }

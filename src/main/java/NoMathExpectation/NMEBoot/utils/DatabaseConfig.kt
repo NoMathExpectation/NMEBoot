@@ -23,8 +23,7 @@ object DatabaseConfig : AutoSavePluginConfig("database") {
     fun load() {
         Database.connect("jdbc:sqlite:$path", "org.sqlite.JDBC")
         transaction {
-            SchemaUtils.create(MessageHistoryTable)
-            SchemaUtils.create(EventHistoryTable)
+            SchemaUtils.createMissingTablesAndColumns(MessageHistoryTable, EventHistoryTable)
         }
     }
 }

@@ -1,22 +1,24 @@
 package NoMathExpectation.NMEBoot.utils
 
-import NoMathExpectation.NMEBoot.Main
 import NoMathExpectation.NMEBoot.commands.CommandStats
 import NoMathExpectation.NMEBoot.sending.FoldIgnore
 import NoMathExpectation.NMEBoot.utils.MessageHistory.randomAsMessage
 import com.seaboat.text.analyzer.segment.DictSegment
 import com.seaboat.text.analyzer.segment.Segment
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.datetime.Clock
+import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
 import net.mamoe.mirai.console.command.CommandSender.Companion.asCommandSender
 import net.mamoe.mirai.console.data.AutoSavePluginConfig
 import net.mamoe.mirai.contact.*
+import net.mamoe.mirai.contact.roaming.RoamingSupported
 import net.mamoe.mirai.event.Event
 import net.mamoe.mirai.event.EventPriority
 import net.mamoe.mirai.event.GlobalEventChannel
 import net.mamoe.mirai.event.events.*
 import net.mamoe.mirai.message.code.MiraiCode.deserializeMiraiCode
-import net.mamoe.mirai.message.data.MessageChain
-import net.mamoe.mirai.message.data.buildMessageChain
+import net.mamoe.mirai.message.data.*
+import net.mamoe.mirai.utils.MiraiInternalApi
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -25,6 +27,7 @@ import kotlin.random.Random
 object MessageHistory : AutoSavePluginConfig("message_history") {
     private fun record(event: MessageEvent) = transaction {
         MessageHistoryTable.insert {
+            it[ids] = event.message.sourceOrNull?.ids?.joinToString() ?: ""
             it[sender] = event.sender.id
             it[group] = when (event) {
                 is GroupMessageEvent -> event.group.id
@@ -44,6 +47,7 @@ object MessageHistory : AutoSavePluginConfig("message_history") {
 
         transaction {
             MessageHistoryTable.insert {
+                it[ids] = event.message.sourceOrNull?.ids?.joinToString() ?: ""
                 it[sender] = event.bot.id
                 it[group] = when (event) {
                     is GroupMessagePostSendEvent -> event.target.id
@@ -70,7 +74,7 @@ object MessageHistory : AutoSavePluginConfig("message_history") {
     }
 
     fun recordStart() {
-        val channel = GlobalEventChannel.parentScope(Main.INSTANCE)
+        val channel = GlobalEventChannel.parentScope(plugin)
         channel.subscribeAlways<MessageEvent>(priority = EventPriority.MONITOR) {
             record(it)
         }
@@ -252,6 +256,7 @@ object MessageHistory : AutoSavePluginConfig("message_history") {
 }
 
 object MessageHistoryTable : LongIdTable() {
+    val ids = text("ids").default("")
     val sender = long("sender")
     val group = long("group").nullable()
     val name = varchar("name", 127)
@@ -286,3 +291,55 @@ internal fun nudgeForRandomMessage() {
         randomAsMessage(from.id, e.bot.id)?.second?.let { from.sendMessage(it) }
     }
 }
+
+@JvmBlockingBridge
+suspend fun MessageSource.roaming(contact: Contact?): MessageChain? {
+//    val subject = when (this) {
+//        is OnlineMessageSource.Incoming -> fromId
+//        is OnlineMessageSource.Outgoing -> targetId
+//        is OfflineMessageSource -> if (botId == fromId) targetId else fromId
+//        else -> return null
+//    }
+
+    val id = contact?.id ?: return null
+    val idsString = ids.joinToString()
+    @OptIn(MiraiInternalApi::class)
+    transaction {
+        when (contact) {
+            is Friend, is Member, is TempUser, is Stranger -> {
+                MessageHistoryTable.select {
+                    MessageHistoryTable.sender eq id
+                }
+            }
+
+            is Group -> {
+                MessageHistoryTable.select {
+                    MessageHistoryTable.group eq id
+                }
+            }
+
+            else -> throw IllegalArgumentException("Unsupported contact type: $contact")
+        }.andWhere {
+            MessageHistoryTable.ids eq idsString
+        }.firstOrNull()?.let {
+            it[MessageHistoryTable.message]
+        }
+    }?.deserializeMiraiCode(contact)
+        ?.let {
+            return it
+        }
+
+
+    if (contact !is RoamingSupported) {
+        return null
+    }
+
+    return contact.roamingMessages
+        .getMessagesIn(time.toLong() - 10L, time.toLong() + 10L)
+        .firstOrNull {
+            it.ids.contentEquals(ids)
+        }
+}
+
+@JvmBlockingBridge
+suspend fun MessageChain.roaming(contact: Contact) = sourceOrNull?.roaming(contact)
