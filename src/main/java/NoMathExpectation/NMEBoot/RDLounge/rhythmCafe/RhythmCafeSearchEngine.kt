@@ -12,7 +12,6 @@ import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
-import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.contact.Group
@@ -48,7 +47,7 @@ object RhythmCafeSearchEngine {
         currentSearch = response.body()
     }
 
-    @JvmBlockingBridge
+    //@jvmblockingbridge
     suspend fun search(query: String?, itemPerPage: Int = 10, peerReview: Boolean = false): String {
         if (itemPerPage <= 0) {
             return "请输入一个正整数"
@@ -69,7 +68,7 @@ object RhythmCafeSearchEngine {
         }
     }
 
-    @JvmBlockingBridge
+    //@jvmblockingbridge
     suspend fun pageTo(page: Int): String {
         return try {
             sendRequest(currentRequest.copy(page = page))
@@ -83,7 +82,7 @@ object RhythmCafeSearchEngine {
 
     fun getLink2(index: Int) = currentSearch.hits[index - 1].document.url2
 
-    @JvmBlockingBridge
+    //@jvmblockingbridge
     suspend fun downloadAndUpload(group: Group, index: Int) = try {
         FileUtils.uploadFile(group, FileUtils.download(getLink2(index)))
     } catch (e: Exception) {
@@ -113,11 +112,11 @@ object RhythmCafeSearchEngine {
         }
     }
 
-    @JvmName("getDescriptionJavaWithContact") // why @JvmBlockingBridge doesn't work here?
+    @JvmName("getDescriptionJavaWithContact") // why //@jvmblockingbridge doesn't work here?
     fun getDescription(index: Int, from: Contact): MessageChain =
         runBlocking { RhythmCafeSearchEngine.getDescription(index, from) }
 
-    @JvmBlockingBridge
+    //@jvmblockingbridge
     suspend fun getDescription(index: Int, contact: Contact? = null) = buildMessageChain {
         val level = currentSearch.hits[index - 1].document
 

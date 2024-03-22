@@ -1,7 +1,7 @@
 package NoMathExpectation.NMEBoot.commandSystem
 
-import NoMathExpectation.NMEBoot.Main
 import NoMathExpectation.NMEBoot.inventory.modules.reload
+import NoMathExpectation.NMEBoot.utils.logger
 import NoMathExpectation.NMEBoot.utils.plugin
 import net.mamoe.mirai.console.data.AutoSavePluginConfig
 import net.mamoe.mirai.console.data.value
@@ -11,7 +11,6 @@ import net.mamoe.mirai.message.data.buildMessageChain
 
 object Block: AutoSavePluginConfig("block") {
     private val blocks: MutableMap<Long, MutableMap<Long, MutableList<String>>> by value()
-    private val logger = Main.INSTANCE.logger
 
     init {
         reload {

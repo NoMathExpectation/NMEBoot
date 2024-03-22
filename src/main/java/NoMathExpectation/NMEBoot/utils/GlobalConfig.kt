@@ -1,6 +1,6 @@
 package NoMathExpectation.NMEBoot.utils
 
-import NoMathExpectation.NMEBoot.Main
+import NoMathExpectation.NMEBoot.PluginMain
 import NoMathExpectation.NMEBoot.inventory.NormalUser
 import NoMathExpectation.NMEBoot.inventory.modules.reload
 import kotlinx.coroutines.async
@@ -22,7 +22,7 @@ internal object GlobalConfig : AutoSavePluginConfig("globalConfig") {
     }
 }
 
-internal val plugin: Main by lazy { Main.INSTANCE }
+internal val plugin: PluginMain by lazy { PluginMain }
 
 internal val logger by lazy { plugin.logger }
 

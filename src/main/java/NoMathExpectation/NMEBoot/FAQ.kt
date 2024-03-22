@@ -3,7 +3,6 @@ package NoMathExpectation.NMEBoot
 import NoMathExpectation.NMEBoot.commandSystem.UsingGroup
 import NoMathExpectation.NMEBoot.inventory.modules.reload
 import NoMathExpectation.NMEBoot.utils.plugin
-import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
 import net.mamoe.mirai.console.data.AutoSavePluginConfig
 import net.mamoe.mirai.console.data.value
 import net.mamoe.mirai.console.plugin.jvm.reloadPluginConfig
@@ -87,7 +86,7 @@ object FAQ : AutoSavePluginConfig("faq") {
         discard(group)
     }
 
-    @JvmBlockingBridge
+    //@jvmblockingbridge
     suspend fun send(contact: Contact, name: String) {
         groups[contact.id]?.get(name)?.second?.let {
             for (msg in it) {

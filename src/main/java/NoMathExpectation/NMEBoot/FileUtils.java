@@ -202,7 +202,7 @@ public class FileUtils {
         if (quoted == null) {
             return null;
         }
-        MessageChain roaming = MessageHistoryKt.roaming(quoted.getSource(), group);
+        MessageChain roaming = MessageHistoryKt.roamingBlocking(quoted.getSource(), group);
         if (roaming == null) {
             return null;
         }

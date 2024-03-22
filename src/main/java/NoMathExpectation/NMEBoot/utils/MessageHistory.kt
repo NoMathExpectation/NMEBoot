@@ -6,8 +6,8 @@ import NoMathExpectation.NMEBoot.utils.MessageHistory.randomAsMessage
 import com.seaboat.text.analyzer.segment.DictSegment
 import com.seaboat.text.analyzer.segment.Segment
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
-import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
 import net.mamoe.mirai.console.command.CommandSender.Companion.asCommandSender
 import net.mamoe.mirai.console.data.AutoSavePluginConfig
 import net.mamoe.mirai.contact.*
@@ -292,7 +292,9 @@ internal fun nudgeForRandomMessage() {
     }
 }
 
-@JvmBlockingBridge
+fun MessageSource.roamingBlocking(contact: Contact?) = runBlocking { roaming(contact) }
+
+//@jvmblockingbridge
 suspend fun MessageSource.roaming(contact: Contact?): MessageChain? {
 //    val subject = when (this) {
 //        is OnlineMessageSource.Incoming -> fromId
@@ -341,5 +343,5 @@ suspend fun MessageSource.roaming(contact: Contact?): MessageChain? {
         }
 }
 
-@JvmBlockingBridge
+//@jvmblockingbridge
 suspend fun MessageChain.roaming(contact: Contact) = sourceOrNull?.roaming(contact)

@@ -1,6 +1,5 @@
 package NoMathExpectation.NMEBoot.utils
 
-import NoMathExpectation.NMEBoot.Main
 import NoMathExpectation.NMEBoot.inventory.modules.reload
 import net.mamoe.mirai.console.data.AutoSavePluginConfig
 import net.mamoe.mirai.console.data.value
@@ -8,7 +7,6 @@ import net.mamoe.mirai.console.plugin.jvm.reloadPluginConfig
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.events.GroupMessageSyncEvent
 import net.mamoe.mirai.event.events.MessageEvent
-import net.mamoe.mirai.event.globalEventChannel
 import net.mamoe.mirai.message.data.MessageChain
 
 internal object Repeat : AutoSavePluginConfig("repeat") {
@@ -56,9 +54,9 @@ internal object Repeat : AutoSavePluginConfig("repeat") {
         else -> false
     }
 
-    fun startMonitor() = Main.INSTANCE.globalEventChannel().subscribeAlways<MessageEvent> { e ->
+    fun startMonitor() = botEventChannel.subscribeAlways<MessageEvent> { e ->
         if (repeat(e)) {
-            Main.INSTANCE.logger.debug("Message repeated: ${e.message.contentToString()}")
+            logger.debug("Message repeated: ${e.message.contentToString()}")
         }
     }
 

@@ -4,7 +4,6 @@ import NoMathExpectation.NMEBoot.inventory.modules.Reloading
 import NoMathExpectation.NMEBoot.inventory.modules.reload
 import com.alibaba.fastjson2.JSONException
 import com.github.plexpt.chatgpt.Chatbot
-import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
 import net.mamoe.mirai.console.data.AutoSavePluginConfig
 import net.mamoe.mirai.console.data.value
 import net.mamoe.mirai.console.plugin.jvm.reloadPluginConfig
@@ -28,7 +27,7 @@ object ChatGPT : AutoSavePluginConfig("ChatGPT") {
 
     private suspend fun chat0(id: Long, msg: String) = get(id).getChatResponse(msg)["message"].toString()
 
-    @JvmBlockingBridge
+    //@jvmblockingbridge
     suspend fun chat(id: Long, msg: String) = try {
         logger.info("ChatGPT: Message from group $id: $msg")
         chat0(id, msg)
@@ -42,7 +41,7 @@ object ChatGPT : AutoSavePluginConfig("ChatGPT") {
         logger.info("ChatGPT: Rollback conversation for group $id.")
     }
 
-    @JvmBlockingBridge
+    //@jvmblockingbridge
     suspend fun refresh(id: Long) {
         instances[id]?.refreshSession()
         logger.info("ChatGPT: Refreshed session for group $id.")

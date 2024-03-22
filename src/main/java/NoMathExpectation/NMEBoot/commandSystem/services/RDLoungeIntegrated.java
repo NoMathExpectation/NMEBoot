@@ -251,7 +251,8 @@ public final class RDLoungeIntegrated implements Executable {
                         break;
 
                     case "search":
-                        from.sendMessage(RhythmCafeSearchEngine.INSTANCE.search(msg.replaceFirst("//chart[\\s\n]search[\\s\n]", ""), 5, false)).recallIn(60000);
+                        //remove due to removal of JvmBlockingBridge
+                        //from.sendMessage(RhythmCafeSearchEngine.INSTANCE.search(msg.replaceFirst("//chart[\\s\n]search[\\s\n]", ""), 5, false)).recallIn(60000);
                         break;
 
                     case "page":
@@ -261,7 +262,8 @@ public final class RDLoungeIntegrated implements Executable {
                         }
                         try {
                             int page = Integer.decode(cmd[2]);
-                            from.sendMessage(RhythmCafeSearchEngine.INSTANCE.pageTo(page)).recallIn(60000);
+                            //remove due to removal of JvmBlockingBridge
+                            //from.sendMessage(RhythmCafeSearchEngine.INSTANCE.pageTo(page)).recallIn(60000);
                         } catch (IllegalArgumentException ex) {
                             from.sendMessage("请输入一个非负整数！");
                         }
@@ -312,7 +314,8 @@ public final class RDLoungeIntegrated implements Executable {
                         try {
                             int index = Integer.decode(cmd[2]);
                             from.sendMessage("开始下载");
-                            RhythmCafeSearchEngine.INSTANCE.downloadAndUpload((Group) e.getSubject(), index);
+                            //remove due to removal of JvmBlockingBridge
+                            //RhythmCafeSearchEngine.INSTANCE.downloadAndUpload((Group) e.getSubject(), index);
                         } catch (IllegalArgumentException ex) {
                             from.sendMessage("请输入一个非负整数！");
                         } catch (IndexOutOfBoundsException ex) {

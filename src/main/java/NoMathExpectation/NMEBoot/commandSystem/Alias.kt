@@ -5,7 +5,6 @@ import NoMathExpectation.NMEBoot.sending.AliasIgnore
 import NoMathExpectation.NMEBoot.utils.logger
 import NoMathExpectation.NMEBoot.utils.plugin
 import kotlinx.serialization.Serializable
-import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
 import net.mamoe.mirai.console.data.AutoSavePluginConfig
 import net.mamoe.mirai.console.data.PluginDataExtensions.withEmptyDefault
 import net.mamoe.mirai.console.data.value
@@ -141,11 +140,11 @@ object Alias : AutoSavePluginConfig("alias") {
     fun Message.aliasOut(contact: Contact) = alias(contact) { it.applyOut }
 
     fun Contact.alias() = object : Contact by this {
-        @JvmBlockingBridge
+        //@jvmblockingbridge
         override suspend fun sendMessage(message: Message) =
             this@alias.sendMessage(message.alias(this))
 
-        @JvmBlockingBridge
+        //@jvmblockingbridge
         override suspend fun sendMessage(message: String) =
             this@alias.sendMessage(message.alias(id))
     }

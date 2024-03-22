@@ -15,7 +15,6 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
-import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
 import net.mamoe.mirai.console.data.AutoSavePluginConfig
 import net.mamoe.mirai.console.data.PluginDataExtensions.withEmptyDefault
 import net.mamoe.mirai.console.data.value
@@ -47,7 +46,7 @@ class CardRepository private constructor(
         private val repos: MutableMap<String, CardRepository> by value() // id -> CardRepository
 
         @JvmStatic
-        @JvmBlockingBridge
+        //@jvmblockingbridge
         suspend fun reloadRepositories() {
             repos.values.forEach {
                 try {

@@ -1,7 +1,7 @@
 package NoMathExpectation.NMEBoot.wolframAlpha
 
-import NoMathExpectation.NMEBoot.Main
 import NoMathExpectation.NMEBoot.inventory.modules.reload
+import NoMathExpectation.NMEBoot.utils.logger
 import NoMathExpectation.NMEBoot.utils.plugin
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -15,7 +15,6 @@ import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
-import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
 import net.mamoe.mirai.console.data.AutoSavePluginConfig
 import net.mamoe.mirai.console.data.value
 import net.mamoe.mirai.console.plugin.jvm.reloadPluginConfig
@@ -44,8 +43,6 @@ class Conversation private constructor() {
                 plugin.reloadPluginConfig(this)
             }
         }
-
-        private val logger = Main.INSTANCE.logger
 
         private val conversations: MutableMap<Long, Conversation> = HashMap()
 
@@ -77,7 +74,7 @@ class Conversation private constructor() {
         lastResult!!
     }
 
-    @JvmBlockingBridge
+    //@jvmblockingbridge
     suspend fun query(question: String): String {
         logger.info("开始请求wolfram api，问题：$question")
         val result = query(Query(APP_ID, question, conversationid = lastResult?.conversationID, s = lastResult?.s))

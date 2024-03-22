@@ -6,7 +6,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
 import net.mamoe.mirai.contact.file.AbsoluteFileFolder
 import kotlin.time.Duration
 
@@ -55,8 +54,7 @@ object AutoFileRemove {
         logger.info("文件${absoluteFileFolder.absolutePath}将在${instant}后删除")
     }
 
-    @JvmBlockingBridge
-    suspend fun launchRoutine() = plugin.launch { routine() }
+    fun launchRoutine() = plugin.launch { routine() }
 }
 
 suspend fun AbsoluteFileFolder.deleteAfter(instant: Instant) {

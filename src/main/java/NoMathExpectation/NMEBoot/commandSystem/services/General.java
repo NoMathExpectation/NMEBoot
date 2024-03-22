@@ -10,7 +10,6 @@ import NoMathExpectation.NMEBoot.Utils;
 import NoMathExpectation.NMEBoot.commandSystem.*;
 import NoMathExpectation.NMEBoot.utils.ChatGPT;
 import NoMathExpectation.NMEBoot.utils.MessageHistory;
-import NoMathExpectation.NMEBoot.wolframAlpha.Conversation;
 import kotlin.Pair;
 import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.contact.Group;
@@ -457,7 +456,8 @@ public final class General implements Executable {
                         from.sendMessage("已移除");
                         break;
                     default:
-                        FAQ.INSTANCE.send(from, cmd[1]);
+                        //remove due to removal of JvmBlockingBridge
+                        //FAQ.INSTANCE.send(from, cmd[1]);
                 }
                 break;
             case "checkin":
@@ -551,7 +551,8 @@ public final class General implements Executable {
                     break;
                 }
                 try {
-                    from.sendMessage(Objects.requireNonNull(Conversation.get(from.getId()).query(msg.replaceFirst("//ask(\\s+|\n)", ""))));
+                    //remove due to removal of JvmBlockingBridge
+                    //from.sendMessage(Objects.requireNonNull(Conversation.get(from.getId()).query(msg.replaceFirst("//ask(\\s+|\n)", ""))));
                 } catch (Exception ex) {
                     ex.printStackTrace();
                     from.sendMessage(ex.getMessage());
@@ -569,7 +570,8 @@ public final class General implements Executable {
                                 from.sendMessage(ChatGPT.INSTANCE.getHelp());
                                 break;
                             case "send":
-                                from.sendMessage(new QuoteReply(e.getSource()).plus(ChatGPT.INSTANCE.chat(from.getId(), msg.replaceFirst("//chat\\s+send\\s*", ""))));
+                                //remove due to removal of JvmBlockingBridge
+                                //from.sendMessage(new QuoteReply(e.getSource()).plus(ChatGPT.INSTANCE.chat(from.getId(), msg.replaceFirst("//chat\\s+send\\s*", ""))));
                                 break;
                             case "rollback":
                                 ChatGPT.INSTANCE.rollback(from.getId());

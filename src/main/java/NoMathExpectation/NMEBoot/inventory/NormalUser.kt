@@ -7,7 +7,6 @@ import NoMathExpectation.NMEBoot.utils.getFriend
 import NoMathExpectation.NMEBoot.utils.logger
 import NoMathExpectation.NMEBoot.utils.reloadAsJson
 import kotlinx.serialization.Serializable
-import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
 import net.mamoe.mirai.console.command.CommandSender
 import net.mamoe.mirai.console.command.descriptor.CommandValueArgumentParser
 import net.mamoe.mirai.console.command.descriptor.ExistingUserValueArgumentParser
@@ -129,7 +128,7 @@ class NormalUser private constructor(
     fun tryAndDiscardItem(item: Item, overriddenOnDiscard: (NormalUser.() -> Unit)? = null) =
         tryAndDiscardItemStack(item count 1, overriddenOnDiscard)
 
-    @JvmBlockingBridge
+    //@jvmblockingbridge
     suspend fun useItemStack(
         itemStack: ItemStack<out Item>,
         overriddenOnUse: (suspend NormalUser.() -> Boolean)? = null
@@ -165,7 +164,7 @@ class NormalUser private constructor(
         return true
     }
 
-    @JvmBlockingBridge
+    //@jvmblockingbridge
     suspend fun useItem(item: Item, overriddenOnUse: (suspend NormalUser.() -> Boolean)? = null) =
         useItemStack(item count 1, overriddenOnUse)
 

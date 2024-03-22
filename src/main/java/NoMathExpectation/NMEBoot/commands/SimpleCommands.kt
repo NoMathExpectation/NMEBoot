@@ -1,7 +1,7 @@
 package NoMathExpectation.NMEBoot.commands
 
 import NoMathExpectation.NMEBoot.FileUtils
-import NoMathExpectation.NMEBoot.Main
+import NoMathExpectation.NMEBoot.PluginMain
 import NoMathExpectation.NMEBoot.Utils
 import NoMathExpectation.NMEBoot.commands.CommandOffset.sendBpmOffsetAnalyzeMessage
 import NoMathExpectation.NMEBoot.inventory.modules.Luck
@@ -219,7 +219,7 @@ object CommandWordle : RawCommand(
     description = "wordle",
     parentPermission = usePermission
 ) {
-    val wordle by lazy { Main.wordle }
+    private val wordle by lazy { PluginMain.wordle }
 
     override suspend fun CommandSender.onCommand(args: MessageChain) {
         if (this !is AbstractUserCommandSender) {

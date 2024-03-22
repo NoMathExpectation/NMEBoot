@@ -9,10 +9,10 @@ import NoMathExpectation.NMEBoot.commandSystem.NormalUserStats;
 import NoMathExpectation.NMEBoot.commands.InterceptingCommandCall;
 import NoMathExpectation.NMEBoot.commands.SimpleCommandsKt;
 import NoMathExpectation.NMEBoot.inventory.ItemLibraryKt;
-import NoMathExpectation.NMEBoot.inventory.card.CardRepository;
 import NoMathExpectation.NMEBoot.inventory.temporal.DataTransfer;
 import NoMathExpectation.NMEBoot.naptcha.CaptchaDispatcher;
 import NoMathExpectation.NMEBoot.sending.InspectingSendEventsKt;
+import NoMathExpectation.NMEBoot.simbot.SimConfig;
 import NoMathExpectation.NMEBoot.utils.*;
 import net.mamoe.mirai.console.command.CommandManager;
 import net.mamoe.mirai.console.extension.PluginComponentStorage;
@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+@Deprecated(since = "1.4.0")
 public final class Main extends JavaPlugin {
     public static final Main INSTANCE = new Main();
     public static ExecuteCenter executeCenter;
@@ -35,7 +36,7 @@ public final class Main extends JavaPlugin {
     public static WordleMirai wordle = new WordleMirai(new File("config/NoMathExpectation.NMEBoot/wordle.txt"), 6, 25);
 
     private Main() {
-        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.3.16-2024022701")
+        super(new JvmPluginDescriptionBuilder("NoMathExpectation.NMEBoot", "1.4.0-2024022801")
                 .name("NMEBoot")
                 .author("NoMathExpectation")
                 .build());
@@ -122,7 +123,8 @@ public final class Main extends JavaPlugin {
         //新物品系统
         ItemLibraryKt.registerAllItems();
 
-        CardRepository.reloadRepositories();
+        //remove due to removal of JvmBlockingBridge
+        //CardRepository.reloadRepositories();
 
         PermissionsKt.registerPermissions();
 
@@ -153,6 +155,9 @@ public final class Main extends JavaPlugin {
         //修复协议
         //FixProtocolVersion.update();
 
+        //simbot
+        SimConfig.INSTANCE.start();
+
         //end
         getLogger().info("NMEBoot已加载。");
     }
@@ -162,6 +167,7 @@ public final class Main extends JavaPlugin {
 //        RDLoungeIntegrated.AUCTION_CENTER.stop();
         KtorClientKt.getKtorClient().close();
 //        save();
+        SimConfig.INSTANCE.stop();
         getLogger().info("NMEBoot已停用。");
     }
 
