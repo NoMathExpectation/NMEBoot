@@ -20,7 +20,10 @@ import net.mamoe.mirai.message.code.MiraiCode.deserializeMiraiCode
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.utils.MiraiInternalApi
 import org.jetbrains.exposed.dao.id.LongIdTable
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.andWhere
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import kotlin.random.Random
 
@@ -89,7 +92,8 @@ object MessageHistory : AutoSavePluginConfig("message_history") {
 
     fun random(group: Long? = null, bot: Long? = null, count: Int) = transaction {
         var query =
-            MessageHistoryTable.select { ((MessageHistoryTable.message notLike "//%") and (MessageHistoryTable.message neq "")) }
+            MessageHistoryTable.selectAll()
+                .where { ((MessageHistoryTable.message notLike "//%") and (MessageHistoryTable.message neq "")) }
         group?.let {
             query = query.andWhere { MessageHistoryTable.group eq it }
         }
@@ -165,7 +169,7 @@ object MessageHistory : AutoSavePluginConfig("message_history") {
                     +"\n"
 
                     +"群消息总数："
-                    +MessageHistoryTable.select { MessageHistoryTable.group eq it.id }.count().toString()
+                    +MessageHistoryTable.selectAll().where { MessageHistoryTable.group eq it.id }.count().toString()
                     +"\n"
                 }
 
@@ -309,15 +313,11 @@ suspend fun MessageSource.roaming(contact: Contact?): MessageChain? {
     transaction {
         when (contact) {
             is Friend, is Member, is TempUser, is Stranger -> {
-                MessageHistoryTable.select {
-                    MessageHistoryTable.sender eq id
-                }
+                MessageHistoryTable.selectAll().where { MessageHistoryTable.sender eq id }
             }
 
             is Group -> {
-                MessageHistoryTable.select {
-                    MessageHistoryTable.group eq id
-                }
+                MessageHistoryTable.selectAll().where { MessageHistoryTable.group eq id }
             }
 
             else -> throw IllegalArgumentException("Unsupported contact type: $contact")

@@ -16,7 +16,7 @@ import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.data.buildMessageChain
 import org.jetbrains.exposed.sql.andWhere
 import org.jetbrains.exposed.sql.or
-import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object CommandEat : SimpleCommand(
@@ -43,7 +43,8 @@ object CommandEat : SimpleCommand(
 
         if (subject !is Group || EatConfig.isEmpty(subject!!.id)) transaction {
             var foodMessageSelect =
-                MessageHistoryTable.select { (MessageHistoryTable.message like "%吃%") or (MessageHistoryTable.message like "%炫%") }
+                MessageHistoryTable.selectAll()
+                    .where { (MessageHistoryTable.message like "%吃%") or (MessageHistoryTable.message like "%炫%") }
             bot?.let { foodMessageSelect = foodMessageSelect.andWhere { MessageHistoryTable.sender neq it.id } }
 
             val foodMessageString = foodMessageSelect.orderBy(SQLRandom())
