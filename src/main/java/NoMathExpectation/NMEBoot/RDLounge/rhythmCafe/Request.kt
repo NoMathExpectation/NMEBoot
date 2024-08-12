@@ -20,5 +20,8 @@ internal data class Request(
     companion object {
         const val PR = "approval:=[10..20]"
         const val ANY = "approval:=[-1..20]"
+        const val PENDING = "approval:=[0..9]"
+
+        const val MAX_PER_PAGE = 250
     }
 }

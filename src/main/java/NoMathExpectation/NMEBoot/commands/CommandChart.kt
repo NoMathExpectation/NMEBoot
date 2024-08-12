@@ -1,5 +1,6 @@
 package NoMathExpectation.NMEBoot.commands
 
+import NoMathExpectation.NMEBoot.RDLounge.rhythmCafe.Request
 import NoMathExpectation.NMEBoot.RDLounge.rhythmCafe.RhythmCafeSearchEngine
 import NoMathExpectation.NMEBoot.commandSystem.services.RDLoungeIntegrated
 import NoMathExpectation.NMEBoot.utils.plugin
@@ -106,6 +107,18 @@ object CommandChart : CompositeCommand(
             RhythmCafeSearchEngine.downloadAndUpload(subject, index)
         } catch (e: Exception) {
             sendMessage("传输失败")
+        }
+    }
+
+    @SubCommand
+    @Description("获取待定谱面数")
+    suspend fun CommandSender.pending() {
+        kotlin.runCatching {
+            val count = RhythmCafeSearchEngine.getPendingLevelCount()
+            val countStr = if (count >= Request.MAX_PER_PAGE) "${count - 1}+" else count
+            sendMessage("待定谱面数：$countStr")
+        }.onFailure {
+            sendMessage("请求失败")
         }
     }
 }

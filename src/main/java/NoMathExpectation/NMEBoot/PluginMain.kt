@@ -17,7 +17,7 @@ import java.io.File
 object PluginMain : KotlinPlugin(
     JvmPluginDescription(
         "NoMathExpectation.NMEBoot",
-        "1.4.1-2024032301",
+        "1.4.2-2024052502",
         "NMEBoot"
     ) {
         author("NoMathExpectation")

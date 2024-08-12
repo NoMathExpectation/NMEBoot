@@ -155,6 +155,13 @@ object RhythmCafeSearchEngine {
         +"标签: ${level.tags.joinToString()}"
     }
 
+    suspend fun getPendingLevelCount() = httpClient.get(
+        Request(
+            filter_by = Request.PENDING,
+            per_page = Request.MAX_PER_PAGE,
+        )
+    ).body<Result>().hits.count()
+
     fun sendHelp() = buildString {
         append("//chart...\n")
         append("help :显示此帮助\n")
